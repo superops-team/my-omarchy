@@ -1,0 +1,84 @@
+diff --git a/bin/omarchy-provision-owner b/bin/omarchy-provision-owner
+index 4c21ff4..826663a 100755
+--- a/bin/omarchy-provision-owner
++++ b/bin/omarchy-provision-owner
+@@ -622,11 +622,79 @@ apply_keyboard() {
+     systemd-firstboot --keymap="$keymap" --force >>"$LOG_FILE" 2>&1 || \
+       localectl set-keymap "$keymap" >>"$LOG_FILE" 2>&1 || \
+       log_step "could not persist keymap $keymap"
++    persist_xkb_layout "$keymap"
+   else
+     log_step "keymap $keymap unknown to localectl; keeping the default"
+   fi
+ }
+ 
++# Hyprland reads XKBLAYOUT/XKBVARIANT from /etc/vconsole.conf. localectl stores
++# its converted XKB layout in the X11 keyboard config instead, so write the
++# converted values back next to KEYMAP or the password typed during setup can be
++# decoded with one layout and checked later with another.
++persist_xkb_layout() {
++  local keymap="$1" layout="" variant="" model="" options="" key value
++
++  while IFS='=' read -r key value; do
++    case "$key" in
++      layout) layout=$value ;;
++      variant) variant=$value ;;
++      model) model=$value ;;
++      options) options=$value ;;
++    esac
++  done < <(
++    localectl --no-pager status 2>/dev/null | awk -F: '
++      /^[[:space:]]*X11 Layout:/ {
++        sub(/^[[:space:]]+/, "", $2)
++        print "layout=" $2
++      }
++      /^[[:space:]]*X11 Variant:/ {
++        sub(/^[[:space:]]+/, "", $2)
++        print "variant=" $2
++      }
++      /^[[:space:]]*X11 Model:/ {
++        sub(/^[[:space:]]+/, "", $2)
++        print "model=" $2
++      }
++      /^[[:space:]]*X11 Options:/ {
++        sub(/^[[:space:]]+/, "", $2)
++        print "options=" $2
++      }
++    '
++  )
++
++  if [[ -z $layout && -r /usr/share/systemd/kbd-model-map ]]; then
++    while IFS='=' read -r key value; do
++      case "$key" in
++        layout) layout=$value ;;
++        variant) variant=$value ;;
++        model) model=$value ;;
++        options) options=$value ;;
++      esac
++    done < <(
++      awk -v keymap="$keymap" '
++        $1 == keymap {
++          if ($2 != "-") print "layout=" $2
++          if ($3 != "-") print "model=" $3
++          if ($4 != "-") print "variant=" $4
++          if ($5 != "-") print "options=" $5
++          exit
++        }
++      ' /usr/share/systemd/kbd-model-map
++    )
++  fi
++
++  [[ -n $layout ]] || layout="$keymap"
++
++  {
++    printf 'KEYMAP=%s\n' "$keymap"
++    printf 'XKBLAYOUT=%s\n' "$layout"
++    [[ -z $model ]] || printf 'XKBMODEL=%s\n' "$model"
++    [[ -z $variant ]] || printf 'XKBVARIANT=%s\n' "$variant"
++    [[ -z $options ]] || printf 'XKBOPTIONS=%s\n' "$options"
++  } >/etc/vconsole.conf
++}
++
+ # The same username/password/name/email form as the ISO configurator's Step 2.
+ user_form() {
+   step "Let's setup your user account..."

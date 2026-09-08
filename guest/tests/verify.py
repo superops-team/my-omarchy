@@ -171,6 +171,7 @@ def main() -> None:
             "notification-hover-close",
             "notification-screen-privacy",
             "update-free-space-message",
+            "provision-keyboard-xkb-sync",
         ],
         "Omarchy backports are explicitly ordered and identified",
     )
@@ -199,6 +200,19 @@ def main() -> None:
         and "/usr/share/my-omarchy/build-spec.json" in update_free_space_patch
         and "df -h /" in update_free_space_patch,
         "update free-space backport clarifies the guest VM disk requirement",
+    )
+
+    keyboard_sync_patch = read(GUEST / "patches/omarchy/provision-keyboard-xkb-sync.patch")
+    check(
+        'persist_xkb_layout "$keymap"' in keyboard_sync_patch
+        and "localectl --no-pager status" in keyboard_sync_patch
+        and "/usr/share/systemd/kbd-model-map" in keyboard_sync_patch
+        and "XKBLAYOUT=%s" in keyboard_sync_patch
+        and "XKBMODEL=%s" in keyboard_sync_patch
+        and "XKBVARIANT=%s" in keyboard_sync_patch
+        and "XKBOPTIONS=%s" in keyboard_sync_patch
+        and "/etc/vconsole.conf" in keyboard_sync_patch,
+        "provisioning backport persists matching console and XKB keyboard layouts",
     )
 
     post_build_installers = authenticity["postBuildUserInstallers"]
@@ -284,6 +298,22 @@ def main() -> None:
         "fakeroot" in requested_packages and "fakeroot" in packages,
         "factory transaction includes fakeroot for AUR package builds",
     )
+    fcitx_packages = {
+        "fcitx5",
+        "fcitx5-chinese-addons",
+        "fcitx5-configtool",
+        "fcitx5-gtk",
+        "fcitx5-qt",
+    }
+    check(
+        fcitx_packages.issubset(requested_packages) and fcitx_packages.issubset(packages),
+        "factory transaction includes Fcitx5 with Chinese, GTK, Qt, and config tool support",
+    )
+    check(
+        "noto-fonts-cjk" in requested_packages and "noto-fonts-cjk" in packages,
+        "factory transaction includes Noto CJK fonts",
+    )
+
     yay = spec.get("supplyChain", {}).get("yay", {})
     check(
         set(yay)
@@ -583,8 +613,37 @@ def main() -> None:
         GUEST / "native-overlay/etc/systemd/user/omarchy-fcitx5.service.d/10-guard.conf"
     )
     check(
-        "ConditionPathExists=/usr/bin/fcitx5" in fcitx_guard,
-        "fcitx5 user unit is inert until the omitted binary is installed",
+        "factory image ships fcitx5 by default" in fcitx_guard
+        and "ConditionPathExists=/usr/bin/fcitx5" in fcitx_guard,
+        "fcitx5 user unit is guarded but shipped by the factory image",
+    )
+    fcitx_profile = read(GUEST / "native-overlay/etc/skel/.config/fcitx5/profile")
+    check(
+        "DefaultIM=pinyin" in fcitx_profile
+        and "Name=keyboard-us" in fcitx_profile
+        and "Name=pinyin" in fcitx_profile,
+        "new users receive a default Fcitx5 profile with Pinyin enabled",
+    )
+    sddm_wayland = read(GUEST / "native-overlay/etc/sddm.conf.d/10-wayland.conf")
+    sddm_hyprland = read(GUEST / "native-overlay/usr/share/sddm/hyprland.lua")
+    check(
+        "CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.lua"
+        in sddm_wayland
+        and "local function read_vconsole()" in sddm_hyprland
+        and "local non_latin_layouts =" in sddm_hyprland
+        and 'kb_layout = vconsole.XKBLAYOUT or "us"' in sddm_hyprland
+        and 'kb_variant = vconsole.XKBVARIANT or ""' in sddm_hyprland
+        and 'kb_model = vconsole.XKBMODEL or ""' in sddm_hyprland
+        and 'kb_options = vconsole.XKBOPTIONS or "compose:caps,shift:both_capslock_cancel"'
+        in sddm_hyprland
+        and 'if not kb_options:find("grp:", 1, true) then' in sddm_hyprland,
+        "SDDM Wayland greeter reads the persisted XKB layout, model, and options",
+    )
+    check(
+        '"$root/etc/skel/.config/fcitx5/profile"' in configure
+        and '"$root/etc/sddm.conf.d/10-wayland.conf"' in configure
+        and '"$root/usr/share/sddm/hyprland.lua"' in configure,
+        "rootfs configuration installs Chinese input and SDDM keyboard defaults with explicit modes",
     )
     bt_agent_guard = read(
         GUEST / "native-overlay/etc/systemd/user/bt-agent.service.d/10-guard.conf"

@@ -90,6 +90,11 @@ chmod 0755 \
   "$root/usr/local/sbin/my-omarchy-touch-id-enroll" \
   "$root/usr/local/lib/my-omarchy/install-vivaldi-arm64" \
   "$root/usr/lib/systemd/system-generators/my-omarchy-ssh-access"
+chmod 0644 \
+  "$root/etc/skel/.config/fcitx5/profile" \
+  "$root/etc/sddm.conf.d/10-wayland.conf" \
+  "$root/usr/share/sddm/hyprland.lua"
+
 
 vivaldi_key=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["supplyChain"]["vivaldi"]["signingKey"])' "$spec")
 [[ $vivaldi_key == keys/vivaldi-package-composer-key11.asc ]] || fail "unexpected Vivaldi key path"

@@ -333,6 +333,20 @@
             "afterSha256": "8e8102cb08ff4fde4f89c64a7febeca0ba142c309e20e581ae0cf295f6e7f093"
           }
         ]
+      },
+      {
+        "id": "provision-keyboard-xkb-sync",
+        "description": "Persist first-boot keyboard selection as both console KEYMAP and XKB layout so later Hyprland and SDDM password prompts decode the same keys used during setup.",
+        "reference": "https://github.com/basecamp/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/bin/omarchy-provision-owner",
+        "patch": "patches/omarchy/provision-keyboard-xkb-sync.patch",
+        "patchSha256": "ea95ab27a205130b085ca5f947ccf0853194a1fbbed0952e8ee07158eebcbe98",
+        "targets": [
+          {
+            "path": "bin/omarchy-provision-owner",
+            "beforeSha256": "5c71fd5730473850a598628e1d82dda3b5517a31b8a8b1e64e24e08ee73b7dea",
+            "afterSha256": "d19334d7da8c857782b2d9fa283cb83a61ba4ab0fb3bc6118afb99b2ea2b6ad4"
+          }
+        ]
       }
     ],
     "postBuildUserInstallers": [
