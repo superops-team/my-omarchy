@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="macos/OmarchyIcon.svg" width="128" height="128" alt="Legacy application icon pending replacement">
+  <img src="macos/OmarchyIcon.svg" width="128" height="128" alt="My Omarchy Portal M app icon">
 </p>
 
 <h1 align="center">My Omarchy</h1>
@@ -30,9 +30,9 @@ maintained Try Omarchy distribution.
 
 <img width="800" src="https://github.com/user-attachments/assets/1368a8f5-5099-43e4-8d3b-3d7d7fba0326" />
 
-The Omarchy mark in the app icon is sourced from the
-[official Omarchy brand kit](https://omarchy.org/brand/) and remains subject to
-Omarchy's trademark rights.
+The app icon uses My Omarchy's original Portal M identity. See the
+[brand asset notes](docs/brand/my-omarchy-brand.md) for the mark construction,
+palette, and engineering provenance check.
 
 ## Highlights
 

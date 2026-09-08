@@ -2,14 +2,6 @@
   "schemaVersion": 1,
   "entries": [
     {
-      "path": "CONTRIBUTING.md",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "brand",
-      "ownerPhase": "1B",
-      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
-    },
-    {
       "path": "LICENSE",
       "pattern": "legacy-display-name",
       "expectedCount": 1,
@@ -61,17 +53,17 @@
       "path": "README.md",
       "pattern": "legacy-compact-name",
       "expectedCount": 1,
-      "category": "brand",
-      "ownerPhase": "1B",
-      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Remaining user-facing references describe current host bundle, app path, or release output until Phase 1C replaces them."
     },
     {
       "path": "README.md",
       "pattern": "legacy-display-name",
       "expectedCount": 20,
-      "category": "brand",
-      "ownerPhase": "1B",
-      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Remaining user-facing references describe current host bundle, app path, or release output until Phase 1C replaces them."
     },
     {
       "path": "README.md",
@@ -101,9 +93,9 @@
       "path": "docs/architecture.md",
       "pattern": "legacy-display-name",
       "expectedCount": 5,
-      "category": "brand",
-      "ownerPhase": "1B",
-      "reason": "Updated when current product-facing documentation adopts My Omarchy branding in Phase 1B."
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Remaining user-facing references describe current host bundle, app path, or release output until Phase 1C replaces them."
     },
     {
       "path": "docs/architecture.md",
@@ -133,17 +125,17 @@
       "path": "docs/releasing.md",
       "pattern": "legacy-compact-name",
       "expectedCount": 1,
-      "category": "brand",
-      "ownerPhase": "1B",
-      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Remaining user-facing references describe current host bundle, app path, or release output until Phase 1C replaces them."
     },
     {
       "path": "docs/releasing.md",
       "pattern": "legacy-display-name",
       "expectedCount": 1,
-      "category": "brand",
-      "ownerPhase": "1B",
-      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Remaining user-facing references describe current host bundle, app path, or release output until Phase 1C replaces them."
     },
     {
       "path": "docs/releasing.md",
@@ -776,14 +768,6 @@
       "category": "host-identity",
       "ownerPhase": "1C",
       "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
-    },
-    {
-      "path": "macos/OmarchyIcon.svg",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "brand",
-      "ownerPhase": "1B",
-      "reason": "Replaced by the original My Omarchy visual identity in Phase 1B."
     },
     {
       "path": "macos/Package.swift",
@@ -1906,6 +1890,14 @@
       "reason": "Preserves explicit predecessor attribution and approved migration context."
     },
     {
+      "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-1b-brand-assets-design.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 3,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves approved design context for removing predecessor brand assets."
+    },
+    {
       "path": "scripts/build-cache.py",
       "pattern": "legacy-compact-name",
       "expectedCount": 1,
@@ -1960,14 +1952,6 @@
       "category": "build-resource",
       "ownerPhase": "1D",
       "reason": "Removed with guest build resource and ABI naming in Phase 1D."
-    },
-    {
-      "path": "tests/test-pack-app-icon.py",
-      "pattern": "legacy-compact-name",
-      "expectedCount": 6,
-      "category": "brand",
-      "ownerPhase": "1B",
-      "reason": "Updated with the My Omarchy app icon and brand artifact in Phase 1B."
     },
     {
       "path": "tests/test-product-identity.py",

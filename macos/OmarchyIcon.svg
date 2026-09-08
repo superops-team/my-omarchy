@@ -1,15 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg"
   width="1024" height="1024" viewBox="0 0 1024 1024"
   role="img" aria-labelledby="title desc">
-  <title id="title">Try Omarchy app icon</title>
-  <desc id="desc">The official Omarchy logo, centered on a dark rounded tile.</desc>
-  <rect x="100" y="100" width="824" height="824" rx="191"
-    fill="#151912" stroke="#9ECE6A" stroke-opacity="0.28" stroke-width="4"/>
-  <!-- Official mark from omacom/omarchy-site@70d4015 (SHA-256 4d00403e...),
-       preserved without recoloring. See https://omarchy.org/brand/. -->
-  <g transform="translate(212 212) scale(0.5)">
-    <path clip-rule="evenodd"
-      d="m1200 1200h-480v-80h400v-1040h-479.996v160h-400v720h720v-720h-80v-80h159.996v880h-400v160h-640v-1200h1200zm-1120-80h480v-80h-400l.004-400h-80.004zm0-560h80.004v-400h400v-80h-480.004z"
-      fill="#9ece6a" fill-rule="evenodd"/>
-  </g>
+  <title id="title">My Omarchy app icon</title>
+  <desc id="desc">Portal M logo: a stable virtual-machine boundary with a geometric M and an entry path into a personal Omarchy workspace.</desc>
+  <defs>
+    <linearGradient id="tile" x1="180" y1="120" x2="844" y2="904" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#20272A"/>
+      <stop offset="1" stop-color="#101417"/>
+    </linearGradient>
+    <linearGradient id="portal" x1="412" y1="252" x2="612" y2="562" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2AD6B5"/>
+      <stop offset="1" stop-color="#D8F275"/>
+    </linearGradient>
+  </defs>
+  <rect x="88" y="88" width="848" height="848" rx="196" fill="url(#tile)"/>
+  <rect x="124" y="124" width="776" height="776" rx="164"
+    fill="none" stroke="#D8F275" stroke-opacity="0.36" stroke-width="18"/>
+  <path d="M286 744V274h132l94 154 94-154h132v470H602V480l-90 148-90-148v264H286Z"
+    fill="#EFF6F3"/>
+  <path d="M418 274h188l-94 154-94-154Z" fill="url(#portal)"/>
+  <path d="M738 274v470H602V480l136-206Z" fill="#D8F275" fill-opacity="0.92"/>
+  <path d="M512 428l90-148h-52l-38 62-38-62h-56l94 148Z" fill="#151A1D" fill-opacity="0.22"/>
+  <path d="M286 744h452" stroke="#2AD6B5" stroke-opacity="0.22" stroke-width="18" stroke-linecap="round"/>
 </svg>

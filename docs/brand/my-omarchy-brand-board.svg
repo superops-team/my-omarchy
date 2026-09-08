@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">My Omarchy brand board</title>
+  <desc id="desc">A brand board for My Omarchy showing the Portal M logo, wordmark, small-size previews, palette, and application examples.</desc>
+  <rect width="1600" height="1000" fill="#0E1113"/>
+  <g transform="translate(72 64)">
+    <text x="0" y="0" fill="#EFF6F3" font-family="-apple-system, BlinkMacSystemFont, SF Pro Display, sans-serif" font-size="54" font-weight="700">My Omarchy</text>
+    <text x="2" y="42" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="18">personal Omarchy workspace for macOS</text>
+  </g>
+  <g transform="translate(72 154)">
+    <rect x="0" y="0" width="460" height="460" rx="8" fill="#151A1D"/>
+    <rect x="98" y="76" width="264" height="264" rx="60" fill="#151A1D" stroke="#D8F275" stroke-width="14" stroke-opacity="0.52"/>
+    <path d="M162 304V132h47l21 35 21-35h47v172h-49v-93l-19 32-19-32v93h-49Z" fill="#EFF6F3"/>
+    <path d="M209 132h42l-21 35-21-35Z" fill="#2AD6B5"/>
+    <path d="M298 132v172h-49v-93l49-79Z" fill="#D8F275"/>
+    <text x="98" y="394" fill="#EFF6F3" font-family="-apple-system, BlinkMacSystemFont, SF Pro Display, sans-serif" font-size="34" font-weight="650">Portal M</text>
+  </g>
+  <g transform="translate(572 154)">
+    <rect x="0" y="0" width="420" height="210" rx="8" fill="#151A1D"/>
+    <text x="32" y="78" fill="#EFF6F3" font-family="-apple-system, BlinkMacSystemFont, SF Pro Display, sans-serif" font-size="46" font-weight="650">My Omarchy</text>
+    <text x="34" y="122" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="18">enter your own Linux workspace</text>
+    <rect x="32" y="154" width="84" height="10" rx="5" fill="#D8F275"/>
+    <rect x="126" y="154" width="84" height="10" rx="5" fill="#2AD6B5"/>
+  </g>
+  <g transform="translate(1032 154)">
+    <rect x="0" y="0" width="496" height="210" rx="8" fill="#151A1D"/>
+    <text x="30" y="52" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="16">SMALL SIZE CHECK</text>
+    <g transform="translate(34 78)">
+      <rect width="96" height="96" rx="22" fill="#151A1D" stroke="#D8F275" stroke-width="7"/><path d="M26 70V26h13l9 15 9-15h13v44H57V46l-9 15-9-15v24H26Z" fill="#EFF6F3"/><path d="M39 26h18l-9 15-9-15Z" fill="#2AD6B5"/>
+    </g>
+    <g transform="translate(166 94)">
+      <rect width="64" height="64" rx="15" fill="#151A1D" stroke="#D8F275" stroke-width="6"/><path d="M17 47V17h9l6 10 6-10h9v30h-9V31l-6 10-6-10v16h-9Z" fill="#EFF6F3"/>
+    </g>
+    <g transform="translate(270 110)">
+      <rect width="32" height="32" rx="8" fill="#151A1D" stroke="#D8F275" stroke-width="4"/><path d="M9 24V8h5l2 4 2-4h5v16h-5v-8l-2 4-2-4v8H9Z" fill="#EFF6F3"/>
+    </g>
+  </g>
+  <g transform="translate(572 404)">
+    <rect x="0" y="0" width="420" height="210" rx="8" fill="#151A1D"/>
+    <text x="30" y="52" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="16">PALETTE</text>
+    <rect x="32" y="86" width="74" height="74" rx="8" fill="#151A1D" stroke="#2A3236"/>
+    <rect x="126" y="86" width="74" height="74" rx="8" fill="#EFF6F3"/>
+    <rect x="220" y="86" width="74" height="74" rx="8" fill="#D8F275"/>
+    <rect x="314" y="86" width="74" height="74" rx="8" fill="#2AD6B5"/>
+    <text x="32" y="184" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="13">#151A1D</text>
+    <text x="126" y="184" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="13">#EFF6F3</text>
+    <text x="220" y="184" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="13">#D8F275</text>
+    <text x="314" y="184" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="13">#2AD6B5</text>
+  </g>
+  <g transform="translate(1032 404)">
+    <rect x="0" y="0" width="496" height="210" rx="8" fill="#151A1D"/>
+    <rect x="32" y="34" width="432" height="142" rx="8" fill="#101417" stroke="#2A3236"/>
+    <rect x="32" y="34" width="432" height="28" rx="8" fill="#0B0D10"/>
+    <circle cx="52" cy="48" r="5" fill="#596167"/><circle cx="70" cy="48" r="5" fill="#596167"/><circle cx="88" cy="48" r="5" fill="#596167"/>
+    <text x="54" y="102" fill="#EFF6F3" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="18">$ my-omarchy run</text>
+    <text x="54" y="134" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="15">booting isolated workspace</text>
+  </g>
+  <g transform="translate(72 664)">
+    <rect x="0" y="0" width="1456" height="240" rx="8" fill="#151A1D"/>
+    <text x="38" y="76" fill="#EFF6F3" font-family="-apple-system, BlinkMacSystemFont, SF Pro Display, sans-serif" font-size="42" font-weight="650">Your own Omarchy, contained.</text>
+    <text x="40" y="122" fill="#8B9498" font-family="-apple-system, BlinkMacSystemFont, SF Pro Text, sans-serif" font-size="22">A native Mac shell around a personal Linux desktop workspace.</text>
+    <path d="M40 170h240" stroke="#D8F275" stroke-width="10" stroke-linecap="round"/>
+    <path d="M306 170h120" stroke="#2AD6B5" stroke-width="10" stroke-linecap="round"/>
+  </g>
+</svg>

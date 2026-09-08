@@ -13,6 +13,7 @@ import unittest
 REPOSITORY = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = REPOSITORY / "config/product-identity.json"
 SCHEMA_PATH = REPOSITORY / "config/product-identity.schema.json"
+ALLOWLIST_PATH = REPOSITORY / "config/legacy-identity-allowlist.json"
 SCANNER = REPOSITORY / "scripts/verify-product-identity.py"
 CONTRACT_VALIDATOR = REPOSITORY / "scripts/verify-product-contract.py"
 
@@ -123,6 +124,18 @@ class ProductIdentityContractTests(unittest.TestCase):
 
         self.assertEqual(0, result.returncode, result.stdout)
         self.assertIn("product identity baseline verification passed", result.stdout)
+
+    def test_phase_1b_brand_entries_are_cleared_from_the_allowlist(self) -> None:
+        allowlist = json.loads(ALLOWLIST_PATH.read_text())
+
+        self.assertEqual(
+            [],
+            [
+                entry
+                for entry in allowlist["entries"]
+                if entry["ownerPhase"] == "1B"
+            ],
+        )
 
 
 class LegacyIdentityScannerTests(unittest.TestCase):

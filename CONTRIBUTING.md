@@ -2,8 +2,8 @@
 
 Thanks for helping build My Omarchy. The sole maintained product and repository
 is `superops-team/my-omarchy`: a native Apple Silicon macOS app that runs pinned
-upstream Omarchy in a project-built ARM64 virtual machine image. Try Omarchy is
-a separate legacy product and is not maintained here. Until the approved
+upstream Omarchy in a project-built ARM64 virtual machine image. The predecessor
+product is separate and is not maintained here. Until the approved
 product-foundation specification is implemented, legacy identifiers in the
 source describe the current baseline and must not be published as My Omarchy.
 

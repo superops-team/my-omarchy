@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Portal M construction</title>
+  <desc id="desc">Construction diagram for the My Omarchy Portal M logo, showing the virtual machine boundary, geometric M, and entry path.</desc>
+  <rect width="1200" height="800" fill="#101417"/>
+  <g transform="translate(84 72)">
+    <text x="0" y="0" fill="#EFF6F3" font-family="-apple-system, BlinkMacSystemFont, SF Pro Display, sans-serif" font-size="42" font-weight="650">My Omarchy Portal M</text>
+    <text x="2" y="42" fill="#8B9498" font-family="SFMono-Regular, ui-monospace, Menlo, monospace" font-size="18">VM boundary / geometric M / entry path</text>
+  </g>
+  <g transform="translate(108 156)">
+    <rect x="0" y="0" width="488" height="488" rx="92" fill="#151A1D" stroke="#D8F275" stroke-opacity="0.36" stroke-width="10"/>
+    <g stroke="#2A3236" stroke-width="1">
+      <path d="M61 0v488M122 0v488M183 0v488M244 0v488M305 0v488M366 0v488M427 0v488"/>
+      <path d="M0 61h488M0 122h488M0 183h488M0 244h488M0 305h488M0 366h488M0 427h488"/>
+    </g>
+    <path d="M114 366V122h70l60 96 60-96h70v244h-76V231l-54 90-54-90v135h-76Z" fill="#EFF6F3"/>
+    <path d="M184 122h120l-60 96-60-96Z" fill="#2AD6B5"/>
+    <path d="M374 122v244h-76V231l76-109Z" fill="#D8F275"/>
+  </g>
+  <g transform="translate(700 178)" fill="none" stroke-linecap="round">
+    <rect x="0" y="0" width="280" height="280" rx="58" stroke="#D8F275" stroke-width="10" stroke-opacity="0.55"/>
+    <path d="M61 218V62h47l32 52 32-52h47v156h-50v-86l-29 49-29-49v86H61Z" fill="#EFF6F3" stroke="none"/>
+    <path d="M108 62h64l-32 52-32-52Z" fill="#2AD6B5" stroke="none"/>
+    <path d="M219 62v156h-50v-86l50-70Z" fill="#D8F275" stroke="none"/>
+    <path d="M0 338h84" stroke="#D8F275" stroke-width="8"/>
+    <text x="104" y="345" fill="#EFF6F3" stroke="none" font-family="-apple-system, BlinkMacSystemFont, SF Pro Display, sans-serif" font-size="24">Stable VM boundary</text>
+    <path d="M0 392h84" stroke="#EFF6F3" stroke-width="8"/>
+    <text x="104" y="399" fill="#EFF6F3" stroke="none" font-family="-apple-system, BlinkMacSystemFont, SF Pro Display, sans-serif" font-size="24">Readable M</text>
+    <path d="M0 446h84" stroke="#2AD6B5" stroke-width="8"/>
+    <text x="104" y="453" fill="#EFF6F3" stroke="none" font-family="-apple-system, BlinkMacSystemFont, SF Pro Display, sans-serif" font-size="24">Entry path</text>
+  </g>
+</svg>

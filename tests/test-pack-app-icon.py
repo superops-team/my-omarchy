@@ -13,6 +13,10 @@ import zlib
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 PACKER = REPOSITORY / "macos/pack-app-icon.py"
+APP_ICON = REPOSITORY / "macos/OmarchyIcon.svg"
+BRAND_DOC = REPOSITORY / "docs/brand/my-omarchy-brand.md"
+BRAND_BOARD = REPOSITORY / "docs/brand/my-omarchy-brand-board.svg"
+CONSTRUCTION = REPOSITORY / "docs/brand/portal-m-construction.svg"
 REPRESENTATIONS = (
     ("icon_16x16.png", 16, b"icp4"),
     ("icon_16x16@2x.png", 32, b"ic11"),
@@ -25,6 +29,32 @@ REPRESENTATIONS = (
     ("icon_512x512.png", 512, b"ic09"),
     ("icon_512x512@2x.png", 1024, b"ic10"),
 )
+
+
+class BrandAssetTests(unittest.TestCase):
+    def test_app_icon_is_the_original_portal_m_identity(self) -> None:
+        svg = APP_ICON.read_text()
+        predecessor_name = "Try " + "Omarchy"
+        predecessor_origin = "official " + "Omarchy logo"
+        predecessor_brand_url = "omarchy.org/" + "brand"
+        predecessor_source = "omacom/" + "omarchy-site"
+
+        self.assertIn("<title id=\"title\">My Omarchy app icon</title>", svg)
+        self.assertIn("Portal M", svg)
+        self.assertIn("#D8F275", svg)
+        self.assertIn("#2AD6B5", svg)
+        self.assertNotIn(predecessor_name, svg)
+        self.assertNotIn(predecessor_origin, svg)
+        self.assertNotIn(predecessor_brand_url, svg)
+        self.assertNotIn(predecessor_source, svg)
+
+    def test_brand_assets_document_the_portal_m_system(self) -> None:
+        for path in (BRAND_DOC, BRAND_BOARD, CONSTRUCTION):
+            self.assertTrue(path.is_file(), f"missing brand asset: {path}")
+            contents = path.read_text()
+            self.assertIn("Portal M", contents)
+            self.assertIn("#D8F275", contents)
+            self.assertIn("#2AD6B5", contents)
 
 
 def png_chunk(chunk_type: bytes, contents: bytes) -> bytes:
@@ -74,7 +104,7 @@ def read_icns(path: Path) -> list[tuple[bytes, bytes]]:
 class AppIconPackerTests(unittest.TestCase):
     @staticmethod
     def create_iconset(root: Path) -> Path:
-        iconset = root / "TryOmarchy.iconset"
+        iconset = root / "MyOmarchy.iconset"
         iconset.mkdir()
         for name, pixels, _ in REPRESENTATIONS:
             (iconset / name).write_bytes(solid_png(pixels, pixels))
@@ -116,7 +146,7 @@ class AppIconPackerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             iconset = self.create_iconset(root)
-            output = root / "TryOmarchy.icns"
+            output = root / "MyOmarchy.icns"
             result = self.invoke(iconset, output)
             self.assertEqual(0, result.returncode, result.stderr)
 
@@ -136,7 +166,7 @@ class AppIconPackerTests(unittest.TestCase):
             root = Path(temporary)
             iconset = self.create_iconset(root)
             (iconset / "icon_128x128@2x.png").unlink()
-            output = root / "TryOmarchy.icns"
+            output = root / "MyOmarchy.icns"
             output.write_bytes(b"keep existing output")
 
             result = self.invoke(iconset, output)
@@ -148,7 +178,7 @@ class AppIconPackerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             iconset = self.create_iconset(root)
-            output = root / "TryOmarchy.icns"
+            output = root / "MyOmarchy.icns"
             image = iconset / "icon_16x16.png"
 
             image.write_bytes(b"not a png")
@@ -182,7 +212,7 @@ class AppIconPackerTests(unittest.TestCase):
             root = Path(temporary)
             iconset = self.create_iconset(root)
             (iconset / "icon_32x32@2x.png").write_bytes(solid_png(63, 64))
-            output = root / "TryOmarchy.icns"
+            output = root / "MyOmarchy.icns"
 
             result = self.invoke(iconset, output)
             self.assertNotEqual(0, result.returncode)
@@ -196,7 +226,7 @@ class AppIconPackerTests(unittest.TestCase):
             root = Path(temporary)
             iconset = self.create_iconset(root)
             (iconset / "old-logo.png").write_bytes(solid_png(16, 16))
-            output = root / "TryOmarchy.icns"
+            output = root / "MyOmarchy.icns"
 
             result = self.invoke(iconset, output)
             self.assertNotEqual(0, result.returncode)
