@@ -15,7 +15,7 @@ PACKAGE_NOTARY_PROFILE ?= $(RELEASE_NOTARY_PROFILE)
 FORCE ?= 0
 
 .DEFAULT_GOAL := help
-.PHONY: help doctor verify-identity verify-release-identity test guest runtime app build run run-ephemeral reset update-omarchy package package-preflight release release-preflight clean clean-all clean-guest
+.PHONY: help doctor verify-identity verify-release-identity verify-release-evidence release-preflight-local test guest runtime app build run run-ephemeral reset update-omarchy package package-preflight release release-preflight clean clean-all clean-guest
 
 help:
 	@printf '%s\n' \
@@ -25,6 +25,8 @@ help:
 	  '  make verify-identity Check the reviewed legacy identity baseline' \
 	  '  make verify-release-identity' \
 	  '                      Require all migration-owned identities to be removed' \
+	  '  make verify-release-evidence EVIDENCE=release-evidence.json' \
+	  '                      Validate a release evidence file locally' \
 	  '  make test           Run native and guest contract tests' \
 	  '  make build          Build only changed guest, runtime, and app inputs' \
 	  '  make build FORCE=1  Rebuild every component' \
@@ -57,10 +59,25 @@ verify-identity:
 verify-release-identity:
 	@PYTHONDONTWRITEBYTECODE=1 $(ROOT)/scripts/verify-product-identity.py --mode release
 
+verify-release-evidence:
+	@[[ -n "$(strip $(EVIDENCE))" ]] || { echo 'error: EVIDENCE=release-evidence.json is required' >&2; exit 1; }
+	@PYTHONDONTWRITEBYTECODE=1 $(ROOT)/scripts/release-preflight.py \
+	  --root "$(ROOT)" \
+	  --evidence "$(EVIDENCE)" \
+	  $(RELEASE_PREFLIGHT_FLAGS)
+
+release-preflight-local:
+	@[[ -n "$(strip $(EVIDENCE))" ]] || { echo 'error: EVIDENCE=release-evidence.json is required' >&2; exit 1; }
+	@PYTHONDONTWRITEBYTECODE=1 $(ROOT)/scripts/release-preflight.py \
+	  --root "$(ROOT)" \
+	  --evidence "$(EVIDENCE)" \
+	  $(RELEASE_PREFLIGHT_FLAGS)
+
 test: verify-identity
 	@PYTHONDONTWRITEBYTECODE=1 python3 "$(ROOT)/tests/test-doctor.py"
 	@PYTHONDONTWRITEBYTECODE=1 python3 "$(ROOT)/tests/test-product-identity.py"
 	@PYTHONDONTWRITEBYTECODE=1 python3 "$(ROOT)/tests/test-host-identity.py"
+	@PYTHONDONTWRITEBYTECODE=1 python3 "$(ROOT)/tests/test-release-gate.py"
 	@PYTHONDONTWRITEBYTECODE=1 python3 "$(ROOT)/tests/test-build-cache.py"
 	@PYTHONDONTWRITEBYTECODE=1 python3 "$(ROOT)/tests/test-pack-app-icon.py"
 	@$(ROOT)/guest/test

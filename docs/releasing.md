@@ -80,6 +80,26 @@ input.
 passing baseline check is not sufficient: it only proves that migration-owned
 legacy identities have not grown or drifted.
 
+Release evidence is validated separately from signing and publishing:
+
+```sh
+make verify-release-evidence EVIDENCE=release-evidence.json
+```
+
+For local development of evidence files before a release tag exists, maintainers
+may run:
+
+```sh
+make verify-release-evidence \
+  EVIDENCE=tests/fixtures/release-evidence/prerelease-pass.json \
+  RELEASE_PREFLIGHT_FLAGS=--skip-git-state
+```
+
+The local evidence gate validates repository identity, candidate id, version and
+tag shape, DMG name and digest shape, check summaries, and the prerelease or
+stable device matrix. It does not sign, notarize, upload, publish, or attest an
+artifact; those remain release-workflow responsibilities.
+
 The saved boot-kit ABI is a compatibility boundary. Do not change it or remove
 support for an existing value without a reviewed preserving migration or an
 explicitly confirmed reset path.

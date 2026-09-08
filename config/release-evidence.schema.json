@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/superops-team/my-omarchy/blob/main/config/release-evidence.schema.json",
+  "title": "My Omarchy release evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "gateProfile",
+    "candidateId",
+    "repository",
+    "version",
+    "tag",
+    "commit",
+    "buildNumber",
+    "artifact",
+    "environment",
+    "checks",
+    "deviceQualification",
+    "knownLimitations",
+    "generatedAt",
+    "approvedBy"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "gateProfile": {"enum": ["prerelease", "stable"]},
+    "candidateId": {"type": "string", "pattern": "^my-omarchy-[0-9]+\\.[0-9]+\\.[0-9]+-[0-9a-f]{7,40}$"},
+    "repository": {"const": "superops-team/my-omarchy"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][A-Za-z0-9.]+)?$"},
+    "tag": {"type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][A-Za-z0-9.]+)?$"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "buildNumber": {"type": "string", "pattern": "^[1-9][0-9]*$"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sha256", "size"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^MyOmarchy-[0-9]+\\.[0-9]+\\.[0-9]+(?:[-.][A-Za-z0-9.]+)?-arm64\\.dmg$"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size": {"type": "integer", "minimum": 1},
+        "githubAssetId": {"type": "integer", "minimum": 1}
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["macOS", "architecture", "swift", "xcode"],
+      "properties": {
+        "macOS": {"type": "string", "minLength": 1},
+        "architecture": {"const": "arm64"},
+        "swift": {"type": "string", "minLength": 1},
+        "xcode": {"type": "string", "minLength": 1}
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "status", "command", "summary"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "status": {"enum": ["pass", "fail", "blocked"]},
+          "command": {"type": "string", "minLength": 1},
+          "summary": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "deviceQualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["devices"],
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "chip", "macOS", "macOSRole", "status", "summary"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "chip": {"type": "string", "minLength": 1},
+              "macOS": {"type": "string", "minLength": 1},
+              "macOSRole": {"enum": ["minimum", "latest", "additional"]},
+              "status": {"enum": ["pass", "fail", "blocked"]},
+              "summary": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    "knownLimitations": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "generatedAt": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T"},
+    "approvedBy": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "gateProfile": "prerelease",
+  "candidateId": "my-omarchy-0.1.0-abcdef1",
+  "repository": "superops-team/my-omarchy",
+  "version": "0.1.0",
+  "tag": "v0.1.0",
+  "commit": "abcdef1234567890abcdef1234567890abcdef12",
+  "buildNumber": "42",
+  "artifact": {
+    "name": "MyOmarchy-0.1.0-arm64.dmg",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "size": 123456789,
+    "githubAssetId": 1001
+  },
+  "environment": {
+    "macOS": "15.6",
+    "architecture": "arm64",
+    "swift": "6.1",
+    "xcode": "/Applications/Xcode.app"
+  },
+  "checks": [
+    {
+      "name": "make test",
+      "status": "pass",
+      "command": "make test",
+      "summary": "All required checks passed on the release runner."
+    }
+  ],
+  "deviceQualification": {
+    "devices": [
+      {
+        "id": "mac-mini-m2-ci-01",
+        "chip": "M2",
+        "macOS": "15.6",
+        "macOSRole": "latest",
+        "status": "pass",
+        "summary": "P0 prerelease E2E passed."
+      }
+    ]
+  },
+  "knownLimitations": [
+    "Prerelease qualification covers one Apple Silicon Mac only."
+  ],
+  "generatedAt": "2026-09-08T00:00:00Z",
+  "approvedBy": "release-owner"
+}
