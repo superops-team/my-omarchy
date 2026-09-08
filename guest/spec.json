@@ -204,9 +204,9 @@
       {
         "id": "touch-id-sudo-menu",
         "description": "Add an explicit opt-in control for My Omarchy Touch ID sudo authentication under Setup > Security.",
-        "reference": "https://github.com/omacom/my-omarchy/issues/133",
+        "reference": "https://github.com/superops-team/my-omarchy/issues/133",
         "patch": "patches/omarchy/touch-id-sudo-menu.patch",
-        "patchSha256": "9a415cd0fe2377b49b5ad78668158e167419bb88a537516e46fe4a3321689b6a",
+        "patchSha256": "ff0b65432a3b664558f9e1e53341572538a5195bc5490473951bfa78c53ae280",
         "targets": [
           {
             "path": "config/omarchy/extensions/omarchy-menu.jsonc",

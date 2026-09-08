@@ -223,7 +223,7 @@ def main() -> None:
         )
         check(
             backport.get("reference", "").startswith(
-                ("https://github.com/basecamp/omarchy/", "https://github.com/omacom/my-omarchy/")
+                ("https://github.com/basecamp/omarchy/", "https://github.com/superops-team/my-omarchy/")
             ),
             f"backport has a public review reference: {backport['id']}",
         )

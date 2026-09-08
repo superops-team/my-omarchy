@@ -151,7 +151,7 @@ if text.count(marker) != 1 or "\n[my-omarchy]\n" in text:
 block = """
 # Immutable packages assembled from the checksummed My Omarchy build spec.
 # Keep this before remote repositories so Omarchy's explicit package reinstall
-# resolves the patched Hyprland package locally.
+# can resolve patched and ARM64-only packages locally.
 [my-omarchy]
 SigLevel = Optional TrustAll
 Server = file:///usr/share/my-omarchy/repo
