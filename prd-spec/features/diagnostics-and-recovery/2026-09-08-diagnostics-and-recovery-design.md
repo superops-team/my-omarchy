@@ -56,6 +56,10 @@
 
 错误对象包含 code、stage、用户标题、影响、建议动作、可重试性、是否可能涉及数据风险和关联日志 session ID。
 
+所有错误码由仓库内唯一、版本化的 error registry 定义，命名为 `MYO-<DOMAIN>-<NNN>`，例如 `MYO-STORAGE-001`、`MYO-QMP-001`。每条记录必须包含稳定 code、stage、severity、默认用户文案、retryable、dataRisk、允许的 recovery actions、首次引入版本和废弃替代项。已公开 code 不得改变语义或复用；只能标记 deprecated 并保留解析能力。
+
+同时发生多个错误时，`FailureClassifier` 按以下优先级选择用户页主因：数据完整性风险 > active generation/lifecycle 状态 > VM 启动失败 > 外设或 bridge 降级 > unknown。同一级别选择事件链中最早的直接失败，派生错误作为 secondary causes 保存。UI 只展示一个主因，但诊断包必须保留完整因果链。
+
 ### FR-2：持久日志
 
 为 launcher、QEMU、QMP、audio/camera/clipboard bridge、storage/lifecycle 建立统一 session 日志。日志写入 `~/Library/Logs/My Omarchy/`，单文件和总容量均有限制，默认保留最近 10 次 session 或 50 MiB，以先到者为准。写入必须异步且不能阻塞 QEMU stderr drain。
@@ -74,7 +78,7 @@
 
 ### FR-6：启动与健康超时
 
-启动阶段定义可观测状态：preflight、storage prepare、QEMU spawned、QMP ready、guest boot、graphical ready。每阶段有独立 timeout 和错误码；正常慢启动不能被统一误判为 QEMU 崩溃。graphical ready 信号必须来自受约束的 guest service，并绑定启动 session。
+启动阶段定义可观测状态：preflight、storage prepare、QEMU spawned、QMP ready、guest boot、graphical ready。每阶段有独立 timeout 和错误码；正常慢启动不能被统一误判为 QEMU 崩溃。graphical ready 信号必须来自受约束的 guest service，并绑定启动 session nonce、QEMU instance ID、product identity、target generation、boot-kit digest 和单调 sequence；任一字段不匹配或 report 重放都视为 stale report，不能推动启动或升级状态。
 
 ### FR-7：故障注入
 
@@ -104,6 +108,17 @@
 
 未知错误显示 session ID、退出阶段和安全的通用动作，不再默认建议重装。只有 bundle 签名或资源完整性失败时才建议从官方 My Omarchy Release 重新安装。
 
+### 4.4 故障注入的数据不变性
+
+数据不变性按故障类型验证，不要求运行中 VM 的整个 raw disk hash 恒定：
+
+- host storage/lifecycle 故障：验证 active pointer、source generation metadata 和非目标 host 文件未改变；
+- QMP、bridge、端口和日志故障：允许 guest 正常运行产生磁盘写入，但不得改变 active pointer 或生成非法 generation；
+- guest 数据完整性：测试前写入固定 fixture，受控关闭 VM 后校验 fixture 文件内容和 hash；
+- upgrade candidate 故障：允许 candidate 变化，source generation 必须保持可启动且 fixture hash 不变。
+
+故障注入报告必须记录允许变化集合和禁止变化集合；仅比较 metadata 或仅比较整盘 hash 均不足以通过。
+
 ## 5. 边界情况
 
 | 场景 | 处理方式 |
@@ -117,7 +132,7 @@
 
 ## 6. 涉及文件
 
-- `macos/Sources/OmarchyVMHelper/QEMUGPULauncher.swift`
+- 当前 `macos/Sources/OmarchyVMHelper/QEMUGPULauncher.swift`（Phase 1C 实施后使用 My Omarchy 目标模块名）
 - `VMApplicationController`、QMP、bridge 和 storage 模块
 - 启动菜单与错误对话框
 - shell launcher 的稳定 marker/error code 输出
@@ -131,6 +146,8 @@
 3. 至少十类故障具有稳定 error code、准确标题和对应安全动作。
 4. 磁盘满、端口冲突、权限拒绝、boot kit 损坏不得统一提示重装。
 5. 导出包包含 App、guest、runtime、macOS、机型、阶段和 session ID，可用于复现。
-6. 每项故障注入都验证 active VM disk hash 或 metadata 未被意外修改。
+6. 每项故障注入按故障类型验证 active pointer、generation metadata 和非目标 host 文件；受控关机后校验 guest fixture 文件 hash。运行中 bridge/QMP 故障不要求整个 raw disk hash 恒定。
 7. Factory Reset 始终保持独立确认，不因诊断流程降低保护。
 8. 所有支持链接指向 `superops-team/my-omarchy`。
+9. error registry 中的 code 唯一且不可复用；多错误 fixture 按既定优先级产生唯一主因并保留 secondary causes。
+10. 错误 nonce、QEMU instance、product identity、generation 或 sequence 的 health report 均被拒绝且不能推动 lifecycle 状态。

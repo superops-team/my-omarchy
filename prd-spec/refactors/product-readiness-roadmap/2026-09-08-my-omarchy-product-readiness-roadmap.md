@@ -45,41 +45,42 @@ My Omarchy 要从当前仓库演进为 `superops-team/my-omarchy` 独立维护�
 
 ### Phase 1：My Omarchy 产品身份与品牌
 
-产出：
+Phase 1 拆为四个可独立评审和回滚的里程碑：
 
-- 完成新 Logo 和品牌资产。
-- 全面替换 App、bundle、数据、guest ABI、构建与文档命名。
-- 更新所有仓库和支持链接。
-- 建立 My Omarchy v1 factory 和 storage identity。
+- Phase 1A — Identity Contract：冻结名称、bundle、路径、schema、guest ABI、允许历史引用和唯一发布入口。
+- Phase 1B — Brand Assets：完成新 Logo、AppIcon、品牌测试板、来源记录和商标近似审查。
+- Phase 1C — Host Identity：替换 App、bundle、Preferences、Cache、Saved State、数据根、进程、socket、构建和文档命名。
+- Phase 1D — Guest ABI：替换 guest package/repo/path、kernel 参数、virtio port、artifact，并建立 My Omarchy v1 factory 和 storage identity。
 
-退出门禁：与 Try Omarchy 并行安装和数据隔离测试通过；旧 mark 不再进入产物；语义扫描只剩允许的历史引用。
+退出门禁：四个里程碑均独立通过测试；与 Try Omarchy 并行安装和数据隔离测试通过；旧 mark 不再进入产物；语义扫描只剩允许的历史引用。
 
 ### Phase 2：发布门禁最小闭环
 
 产出：
 
 - 单一 release 命令、版本/tag、clean build、签名、公证、Gatekeeper 和 checksum。
-- 至少一台真实 Apple Silicon Mac 对最终 DMG 完成 P0 E2E。
-- 发布 `release-evidence.json`。
+- 不可变 Draft Release candidate、candidate ID、SHA-256 和版本化 evidence schema。
+- 至少一台已登记的真实 Apple Silicon Mac 从 Draft Release 下载最终 DMG 并完成 P0 E2E。
+- 将同一 candidate 提升为公开 prerelease，并发布签名/attested `release-evidence.json`。
 
-退出门禁：能够从 `superops-team/my-omarchy/releases` 下载并验证第一个 My Omarchy prerelease。
+退出门禁：能够从 `superops-team/my-omarchy/releases` 下载并验证第一个明确标注功能和设备限制的 My Omarchy 0.x prerelease；公开 asset 与被 E2E 验证的 Draft asset 具有相同 asset ID、size 和 SHA-256。
 
 ### Phase 3：轻量运行时
 
 产出：
 
-- 自动资源档。
+- benchmark spike 和冻结后的自动资源档。
 - discard/fstrim 和空间展示。
 - idle、启动、sleep、1080p30 性能基线。
 
-退出门禁：8 GiB/16 GiB 支持设备通过资源和空间回收标准，性能报告进入发布证据。
+退出门禁：8–15 GiB、16–23 GiB 和 24 GiB 以上代表设备完成资源 spike；至少 8 GiB/16 GiB 支持设备通过机器可判定的资源、性能和空间回收标准，报告进入发布证据。
 
 ### Phase 4：诊断与恢复
 
 产出：
 
 - 结构化错误、持久日志、脱敏诊断包。
-- 阶段性启动健康与故障注入。
+- 唯一 error registry、绑定 session/instance/generation 的阶段性启动健康与故障注入。
 - 对应错误的非破坏性恢复动作。
 
 退出门禁：P0/P1 故障均有准确错误码、日志和安全动作，未知错误不再默认建议重装。
@@ -88,11 +89,13 @@ My Omarchy 要从当前仓库演进为 `superops-team/my-omarchy` 独立维护�
 
 产出：
 
-- 从第一个 My Omarchy prerelease 到后续版本的事务升级。
-- 健康检查、回滚窗口、升级 journal。
-- 离线备份与恢复。
+- 冻结 storage metadata、update manifest、host journal、guest health report 和 backup manifest 五个 schema。
+- 封存 source-v1、source-v2、target-v3 三代签名测试资产。
+- 从两个历史 My Omarchy prerelease 到当前版本的事务升级。
+- 健康检查、回滚窗口、升级 journal、签名信任和 anti-rollback。
+- 原子离线备份与恢复。
 
-退出门禁：至少两个历史 My Omarchy factory 的真实 VM 完成升级；中断注入和完整恢复演练通过。
+退出门禁：封存的 source-v1、source-v2 真实 VM 均升级至 target-v3；journal 每个非终态的中断注入、签名/回退攻击测试和完整恢复演练通过。
 
 ### Phase 6：稳定版资格
 
@@ -122,14 +125,16 @@ Phase 1 产品身份 ----> Phase 2 发布门禁
 
 生命周期升级必须以已经发布的 My Omarchy prerelease 为 source generation，因此不能早于 Phase 2。诊断与健康信号是安全提交和回滚的基础，因此 Phase 5 依赖 Phase 4。
 
+Phase 2 必须封存 source-v1；Phase 3 或 Phase 4 结束后的第二个 prerelease 封存 source-v2；Phase 5 当前构建作为 target-v3。若没有这三代不可变 fixture，Phase 5 不得声称满足“两代升级”验收。
+
 ## 6. 变更与提交边界
 
 每个阶段单独分支和评审，至少按以下边界拆分：
 
-1. 文档与 identity 常量；
-2. 品牌资产；
-3. host bundle/路径；
-4. guest ABI 与 artifact；
+1. Phase 1A 文档、identity 常量和扫描规则；
+2. Phase 1B 品牌资产与合规记录；
+3. Phase 1C host bundle/路径；
+4. Phase 1D guest ABI 与 artifact；
 5. 测试和旧引用清理；
 6. 各专题功能。
 
@@ -150,6 +155,8 @@ My Omarchy 1.0 只有在以下条件全部满足时才算产品就绪：
 9. 所有下载、Issue、安全报告和版本来源指向 `superops-team/my-omarchy`。
 10. README、架构、发布说明和实际代码合同一致。
 
+Phase 2 的 0.x prerelease 不受第 6、7 项阻断，但必须标记为 prerelease，并在 README、Release notes 和 App About 中明确“尚不承诺跨版本无损升级、回滚和整机备份恢复”。除该例外外，prerelease 仍必须满足产品身份、Try Omarchy 隔离、签名、公证、单设备 P0 E2E 和发布证据要求。任何版本只有满足以上全部十项才能标记 stable 或 1.0。
+
 ## 8. 风险与缓解
 
 | 风险 | 缓解 |
@@ -166,20 +173,23 @@ My Omarchy 1.0 只有在以下条件全部满足时才算产品就绪：
 - 每个专题按自身验收标准完成单元、契约、集成和真实设备验证。
 - 每阶段结束执行全仓名称、路径、链接、版本和文档一致性扫描。
 - 每个 prerelease 保存 DMG、SHA-256、provenance、E2E 和性能报告，作为后续升级 source fixture。
+- Phase 2 封存 source-v1，后续 prerelease 封存 source-v2，Phase 5 构建 target-v3；旧 fixture 不得按新源码重建。
 - 1.0 前进行一次从全新安装到升级、备份、恢复、Reset、卸载的完整生命周期演练。
 
 ## 10. 分层任务与交付物
 
 | 层级 | 任务 | 交付物 | 依赖 |
 |------|------|--------|------|
-| 产品与品牌 | identity 清单、Logo、资产和退役说明 | 品牌包、identity contract、文档 | Phase 0 |
+| 产品合同 | identity 清单、允许引用和退役说明 | identity contract、扫描规则 | Phase 0 |
+| 品牌 | Logo、资产、测试板和近似审查 | 品牌包、审查记录 | Identity Contract |
 | Host 基础 | bundle、路径、设置、socket、版本来源 | 可并行安装的 My Omarchy App | 产品身份 |
 | Guest 基础 | 包、repo、路径、kernel 参数、virtio port | My Omarchy factory v1 | 产品身份 |
-| 发布工程 | preflight、签名、公证、证据、E2E | 可下载 prerelease | Host/Guest v1 |
+| 发布工程 | preflight、签名、公证、Draft candidate、证据、E2E | 可下载 prerelease、source-v1 | Host/Guest v1 |
 | 运行时 | resource profile、discard、trim、benchmark | 轻量运行报告 | prerelease 基线 |
 | 可观测性 | 日志、错误模型、诊断包、health | 故障注入报告 | Host/Guest v1 |
-| 生命周期 | update manifest、candidate、journal、rollback | 两代 VM 升级证明 | 发布工程、health |
-| 数据保护 | export/import、hash、恢复演练 | 备份格式和恢复报告 | storage identity |
+| 生命周期合同 | 五个 schema、签名信任、journal 状态机 | 生命周期 SDD 与契约测试 | 发布工程、health |
+| 生命周期实现 | candidate、migration、rollback、三代 fixture | 两代 VM 升级证明 | 生命周期合同 |
+| 数据保护 | 原子 export/import、sparse disk、hash、恢复演练 | 备份格式和恢复报告 | storage identity、backup schema |
 
 ## 11. 预估排期
 
@@ -188,11 +198,16 @@ My Omarchy 1.0 只有在以下条件全部满足时才算产品就绪：
 | 阶段 | 预计工程周 | 里程碑 | 风险缓冲 |
 |------|------------|--------|----------|
 | Phase 0 | 0.5–1 | 干净基线、identity 清单 | toolchain 与现有输入法变更 |
-| Phase 1 | 2–3 | My Omarchy App/factory v1、品牌资产 | 全仓 ABI 改名、Logo 审查 |
-| Phase 2 | 1.5–2.5 | 首个签名 prerelease 和 E2E evidence | 公证、设备可用性 |
-| Phase 3 | 1.5–2 | 资源/trim/性能门禁 | APFS discard 行为、性能噪声 |
+| Phase 1A | 0.5–1 | Identity Contract | ABI 清单遗漏 |
+| Phase 1B | 1–2 | Logo、AppIcon、品牌规范和审查 | Logo 与商标审查 |
+| Phase 1C | 1–1.5 | Host identity 和数据隔离 | bundle/TCC/路径残留 |
+| Phase 1D | 1–1.5 | Guest ABI、factory v1 | host/guest 协议漂移 |
+| Phase 2 | 2–3 | 不可变 candidate、首个签名 prerelease、source-v1 和 E2E evidence | 公证、设备可用性 |
+| Phase 3 | 2–3 | benchmark spike、资源/trim/性能门禁 | APFS discard 行为、性能噪声 |
 | Phase 4 | 2–3 | 结构化诊断与故障恢复 | 跨进程日志和错误归因 |
-| Phase 5 | 4–6 | 两代升级、回滚、备份恢复 | 数据一致性和中断恢复 |
+| Phase 5A | 1–1.5 | 生命周期 schema、签名与状态机 | 协议歧义 |
+| Phase 5B | 3–4.5 | source-v1/source-v2 到 target-v3 的升级回滚 | 数据一致性和中断恢复 |
+| Phase 5C | 1.5–2.5 | 原子备份与恢复 | sparse disk 与空间预算 |
 | Phase 6 | 1–2 | 支持矩阵和 1.0 资格审查 | 多设备回归与缺陷修复 |
 
-建议总量为 12.5–19.5 工程周。Phase 1–2 完成后即可发布明确标注限制的 prerelease；1.0 必须等待 Phase 6。
+按上表逐项相加，建议总量为 16.5–26.5 工程周。外部品牌/商标审查、公证服务和测试设备排队不计入工程周。Phase 1–2 完成后即可发布明确标注限制的 0.x prerelease；只有完成 Phase 6 和第 7 节全部十项 DoD 才能发布 stable 1.0。

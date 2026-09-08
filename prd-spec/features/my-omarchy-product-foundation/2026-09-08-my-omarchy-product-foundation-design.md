@@ -121,6 +121,12 @@ README 和发布文档必须包含简短声明：My Omarchy 是由 `superops-tea
 
 发布前必须完成名称与 Logo 的商标近似审查，并在 README/THIRD_PARTY_NOTICES 中清楚区分 My Omarchy 原创代码与上游 Omarchy。不得暗示 My Omarchy 是 Basecamp 官方发行版。
 
+品牌交付必须指定一名品牌 owner 和一名独立合规 reviewer；两者不能由同一人同时签字。审查记录至少包含检索日期、检索地域与数据库、关键词和图形近似范围、已知近似项、差异分析、结论、遗留风险和最终批准人。若团队没有法务资源，产品 owner 必须在记录中明确接受该风险，不得以无责任人的“已审查”勾选项代替。
+
+### FR-6：品牌可测试性
+
+Logo 可辨识性使用固定测试板验收：在浅色、深色和单色背景上分别输出 16、32、128、512、1024 px 位图，不允许手工按尺寸修改图形。16 px 与 32 px 版本必须保持主体轮廓连续、负空间不粘连，并能与同板中的 Try Omarchy、Omarchy 官方 mark 及常见虚拟机产品图标区分。测试板、参与评审者、结果和批准日期作为发布证据保存。
+
 ## 5. 实现边界
 
 ### 5.1 替换分类
@@ -157,7 +163,7 @@ README 和发布文档必须包含简短声明：My Omarchy 是由 `superops-tea
 - `README.md`、`CONTRIBUTING.md`、`SECURITY.md`、`THIRD_PARTY_NOTICES.md`、`LICENSE`
 - `Makefile`、`.github/workflows/*`、`scripts/*`、`tests/*`
 - `macos/Info.plist`、`macos/Package.swift`、`macos/Sources/*`、`macos/Tests/*`
-- `macos/*.sh`、`macos/OmarchyIcon.svg`、App icon 生成流程
+- `macos/*.sh`、当前 `macos/OmarchyIcon.svg`（实施后必须重命名为 My Omarchy 目标资产）、App icon 生成流程
 - `guest/spec.json`、`guest/scripts/*`、`guest/native-overlay/*`、`guest/factory-overlay/*`、`guest/tests/*`
 - 新品牌资产目录与品牌规范文档
 
@@ -169,8 +175,8 @@ README 和发布文档必须包含简短声明：My Omarchy 是由 `superops-tea
 4. My Omarchy 的 Reset 和 `make clean-all` 不访问 Try Omarchy 路径。
 5. 所有下载、Issue、源码和安全入口指向 `superops-team/my-omarchy`。
 6. guest manifest、包、repo、kernel 参数和 virtio port 均通过新 ABI 合同测试。
-7. 新 Logo 在 16、32、128、512、1024 px 下通过可辨识性检查，并具有单色/反白版本。
-8. Logo 及 App 图标不再包含旧官方 Omarchy mark，完成来源与商标审查记录。
+7. 新 Logo 使用同一矢量源在固定测试板输出 16、32、128、512、1024 px；16/32 px 主体轮廓连续、负空间不粘连，并具有单色/反白版本。
+8. Logo 及 App 图标不再包含旧官方 Omarchy mark；品牌 owner 与独立合规 reviewer 完成包含检索范围、近似项、结论和风险接受人的审查记录。
 9. 全新安装、权限申请、Factory Reset、外置路径和清理流程完成真实 Mac 验证。
 
 ## 9. 发布阻断条件

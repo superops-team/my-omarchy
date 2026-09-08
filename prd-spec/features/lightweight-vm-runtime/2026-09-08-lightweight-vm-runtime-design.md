@@ -50,15 +50,15 @@
 
 ### FR-1：资源策略
 
-默认资源档由宿主物理内存和逻辑 CPU 自动选择：
+默认资源档由宿主物理内存区间和逻辑 CPU 自动选择。下表数值在 Phase 3 benchmark spike 通过前属于候选默认值；spike 必须在 8–15、16–23、24 GiB 以上三个区间的代表设备验证后，才能冻结为 `VMResourceProfile v1`：
 
-| 宿主资源 | 默认 vCPU | guest RAM |
+| 宿主物理内存区间 | 候选默认 vCPU | 候选 guest RAM |
 |----------|-----------|-----------|
-| 8 GiB 内存 | 4 | 2560 MiB |
-| 16 GiB 内存 | 4 | 4096 MiB |
-| 24 GiB 及以上 | 6 | 4096 MiB |
+| 8 GiB ≤ RAM < 16 GiB | 4 | 2560 MiB |
+| 16 GiB ≤ RAM < 24 GiB | 4 | 4096 MiB |
+| RAM ≥ 24 GiB | 6 | 4096 MiB |
 
-宿主少于 4 个逻辑 CPU 或少于 8 GiB 内存时拒绝启动并说明要求。默认不得使用 8 vCPU。资源策略必须集中在一个版本化模型中，并由 launcher 和测试共同消费，禁止 shell 与 Swift 各自复制阈值。
+最终 vCPU 还必须受宿主 active processor count 裁剪，始终至少为宿主保留 2 个逻辑 CPU；若宿主少于 4 个逻辑 CPU 或少于 8 GiB 内存则拒绝启动并说明要求。默认不得使用 8 vCPU。资源策略必须集中在一个版本化模型中，并由 launcher 和测试共同消费，禁止 shell 与 Swift 各自复制阈值。
 
 ### FR-2：用户配置档
 
@@ -70,7 +70,7 @@ guest 保留 zram。若使用 virtio-balloon，必须通过 QMP 与 macOS memory
 
 ### FR-4：磁盘 discard 合同
 
-QEMU block 后端必须支持 guest discard 映射到 APFS sparse file hole punching。实现需显式声明 `discard=unmap`，是否启用 `detect-zeroes=unmap` 由数据完整性和性能测试决定。guest 必须启用 `fstrim.timer`，并允许用户从诊断界面手动触发安全 trim。
+QEMU block 后端必须支持 guest discard 映射到 APFS sparse file hole punching。实现需显式声明 `discard=unmap`，是否启用 `detect-zeroes=unmap` 由数据完整性和性能测试决定。guest 必须启用 `fstrim.timer`。Phase 3 先从启动菜单和受控 CLI 提供手动安全 trim；Phase 4 的诊断界面只能复用同一个 storage controller 能力，不能实现第二套 trim 逻辑。
 
 ### FR-5：磁盘占用展示
 
@@ -83,12 +83,14 @@ QEMU block 后端必须支持 guest discard 映射到 APFS sparse file hole punc
 | 指标 | v1 预算 |
 |------|---------|
 | 已进入桌面后的 QEMU 空闲 CPU | 5 分钟中位数不高于 20% 单核，且不高于已批准基线 1.25 倍 |
-| 8 GiB Mac 宿主 memory pressure | 10 分钟空闲/轻浏览期间不得进入持续红色压力 |
+| 8 GiB Mac 宿主 memory pressure | 10 分钟场景中红色 pressure 样本连续不超过 30 秒，红色样本占比不超过 5% |
 | 冷启动到可交互桌面 | 同机型不高于基线 1.25 倍 |
-| 睡眠时 VM CPU | 暂停后接近 0 |
-| 1080p30 视频 | 记录 dropped frames、QEMU CPU、整机能耗和音画同步；不得比基线退化超过 20% |
+| 睡眠时 VM CPU | QMP 确认 paused 后第 30–330 秒，QEMU CPU 中位数不高于 1% 单核且 p95 不高于 3% 单核 |
+| 1080p30 视频 | dropped-frame ratio、QEMU CPU 中位数和整机能耗不得比基线退化超过 20%；使用带时间码的固定测试片测得音画偏移绝对值 p95 不超过 100 ms，且不得比基线恶化超过 20 ms |
 
-绝对功耗受机型影响，只按同设备、同系统、同测试内容比较。建立三次运行的中位数，首次基线需人工批准。
+绝对功耗受机型影响，只按同设备、同系统、同测试内容比较。建立三次运行的中位数，首次基线需人工批准。每项指标必须在 benchmark schema 中固定采样工具、单位、采样间隔、起止事件、窗口、聚合算法、阈值和无效运行条件；不得以自然语言判断替代 gate。
+
+“可交互桌面”定义为受约束 guest service 同时确认 graphical session active、compositor ready、input round-trip probe 成功，并返回与本次 QEMU 实例绑定的 session nonce。冷启动计时从 QEMU process spawn 到该报告被 host 验证。memory pressure 使用 macOS 系统公开压力状态采样，每 5 秒一个样本；CPU 使用同一采样器以单个逻辑核 100% 为单位。
 
 ### FR-7：CPU-only 视频说明
 
@@ -104,9 +106,11 @@ Swift launcher 采集 `ProcessInfo.physicalMemory` 与 active processor count，
 
 数据流为：guest ext4 discard → virtio-blk → QEMU raw block backend → APFS sparse file。测试必须同时观察 guest `fstrim` 返回、raw 文件 logical bytes 和 macOS `stat` allocated blocks；只看到 guest 命令成功不算验收。
 
+标准 trim fixture 在新建并完成一次启动的 VM 中生成 2 GiB 固定种子的伪随机数据和 2 GiB 零值数据，记录写入并 `sync` 后相对初始值增加的 allocated bytes；随后删除、再次 `sync`、执行 `fstrim -v`、关闭 VM，并在 30 秒内每 5 秒采样一次宿主 allocated blocks。回收率按“峰值新增 allocated bytes 中已经释放的比例”计算。三次运行中位数必须至少为 80%，任一次不得低于 70%；logical bytes 不参与回收率分母。
+
 ### 4.3 性能测试
 
-提供固定的空闲、轻浏览、1080p30 和 sleep/wake 场景。脚本只负责采样，结果写入 JSON；阈值判断使用同机型已批准基线。测试内容、浏览器版本、分辨率和电源状态必须固定。
+提供固定的空闲、轻浏览、1080p30 和 sleep/wake 场景。采样和阈值判断都由脚本执行，结果写入版本化 JSON；阈值判断使用同机型已批准基线。视频测试片必须包含可机器识别的同步音脉冲和画面时间码，由采集结果计算音画偏移，不使用人耳主观判断作为发布门禁。测试内容、浏览器版本、分辨率、电源状态、散热状态和后台进程上限必须固定。出现温度限制、电池供电、系统更新或后台 CPU 超过约定上限时，本轮标记为 invalid，不得计入三次中位数。
 
 ## 5. 边界情况
 
@@ -122,18 +126,18 @@ Swift launcher 采集 `ProcessInfo.physicalMemory` 与 active processor count，
 ## 6. 涉及文件
 
 - `macos/run-qemu-gpu.sh`
-- `macos/Sources/OmarchyVMHelper/*` 和对应测试
+- 当前 `macos/Sources/OmarchyVMHelper/*`（Phase 1C 实施后使用 My Omarchy 目标模块名）和对应测试
 - `guest/spec.json`、systemd overlay、guest contract tests
 - 存储集成测试和性能测试脚本
 - README、release evidence 和支持矩阵
 
 ## 7. 验收标准
 
-1. 8/16/24 GiB 宿主分别选择表中资源值，异常输入被拒绝。
+1. 8、10/12、16、18/20、24 GiB 及更高内存宿主按区间选择候选资源值，并受 CPU 保留规则裁剪；异常输入被拒绝。
 2. 默认任何机型均不再分配 8 vCPU。
-3. 在 guest 写入并删除至少 4 GiB 可压缩和不可压缩测试数据后，trim 使宿主 allocated bytes 回收至少 80% 的对应新增占用。
+3. 使用固定 trim fixture 完成三次测试，宿主新增 allocated bytes 的回收率中位数至少为 80%，单次不低于 70%；报告包含 logical bytes、allocated bytes、采样时点和 `fstrim` 输出。
 4. trim 后执行 guest 文件系统检查、重启与数据 hash 校验。
 5. VM UI 同时显示逻辑容量和实际宿主占用。
-6. 支持矩阵设备通过空闲 CPU、memory pressure、启动和 sleep 预算。
+6. 支持矩阵设备通过机器可判定的空闲 CPU、memory pressure、启动和 sleep 预算；每个结果均能追溯到 benchmark schema、设备和原始样本。
 7. 1080p30 性能报告进入 release evidence，CPU-only 限制在文档中保持醒目。
 8. resource profile、discard 和 fstrim 均有确定性合同测试与真实机验证。

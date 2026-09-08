@@ -72,11 +72,18 @@ release gate 顺序固定为：
 
 ### FR-4：支持矩阵
 
-稳定发布至少覆盖最低支持 macOS 与当前最新稳定 macOS，以及两个 Apple Silicon 芯片代际。未验证的新 macOS 大版本只能标为“未验证”，不得自动包含在“或更高版本”的支持承诺中。
+发布门禁分为两个 profile：
+
+- `prerelease`：至少一台列入支持清单的真实 Apple Silicon Mac 通过全部 P0 E2E；Release 必须标记 prerelease，并逐项列出尚未验证的 macOS、芯片代际和功能限制。
+- `stable`：最低支持 macOS 与当前最新稳定 macOS 均通过，且至少覆盖两个 Apple Silicon 芯片代际；全部 P0 E2E 和适用于稳定版的专题门禁必须通过。
+
+未验证的新 macOS 大版本只能标为“未验证”，不得自动包含在“或更高版本”的支持承诺中。稳定版的同一台设备可以同时满足一个 macOS 版本和一个芯片代际维度，但完整矩阵不得少于两台物理设备。
 
 ### FR-5：证据产物
 
-每次发布生成机器可读 `release-evidence.json` 和人类可读报告，包含：版本、tag、commit、构建主机、Xcode/Swift、macOS、DMG hash、guest identity、QEMU 版本、测试结果、E2E 设备矩阵、已知限制和批准人。不得包含证书私钥、路径中的用户名或其他敏感信息。
+每次发布生成机器可读 `release-evidence.json` 和人类可读报告。JSON 使用版本化 schema，至少包含：`schemaVersion`、`gateProfile`、`candidateId`、版本、tag、commit、构建号、构建主机类别、Xcode/Swift、macOS、DMG SHA-256、guest/factory digest、QEMU 版本、测试结果引用、E2E 设备矩阵、已知限制、生成时间和批准人。不得包含证书私钥、路径中的用户名或其他敏感信息。
+
+证据必须绑定不可变 candidate 和精确 DMG digest。最终证据以 GitHub artifact attestation 或等价的项目签名机制签署；CI 必须验证 schema、签名、仓库身份、tag/commit、candidate ID 和 digest 一致，单独替换 JSON 或 DMG 均会失败。
 
 ### FR-6：发布源统一
 
@@ -88,8 +95,11 @@ DMG、源码、Release notes、Issue 和 checksum 只能发布到 `superops-team
 
 - PR CI：确定性单元、契约、静态兼容性与脚本测试。
 - Release build：在受控 Apple Silicon 构建机执行完整重建、签名和公证。
-- Device qualification：在真实设备矩阵安装最终 DMG 并产生 E2E 记录。
-- Publish：仅当三层均为 pass 时允许上传 GitHub Release。
+- Candidate staging：为公证后的最终 DMG 生成 `candidateId` 和 SHA-256，并上传到 `superops-team/my-omarchy` 的 GitHub Draft Release；Draft 不作为公开下载或支持入口。
+- Device qualification：从 Draft Release 下载该 candidate，在 gate profile 要求的真实设备矩阵安装并产生 E2E 记录。
+- Publish：仅当 PR CI、Release build 和对应 gate profile 的 Device qualification 均为 pass 时，将同一个 Draft Release 和同一 digest 的 DMG 提升为公开 prerelease 或 stable Release。qualification 后禁止重新构建、重新签名、重新打包或替换 DMG。
+
+候选成功状态固定为 `built -> staged -> qualifying -> qualified -> published`；`built` 到 `qualifying` 的任一状态均可转为终态 `rejected`，但 `rejected` 不能转为 `published`。失败 candidate 保留失败证据但不得发布；重试构建必须生成新的 `candidateId`。
 
 ### 4.2 E2E 可重复性
 
@@ -97,7 +107,11 @@ DMG、源码、Release notes、Issue 和 checksum 只能发布到 `superops-team
 
 ### 4.3 发布可追溯性
 
-App 的 `CFBundleShortVersionString` 来自 semver tag，`CFBundleVersion` 来自单调递增构建号；两者与 guest provenance 一起嵌入 App。最终 checksum 对公证后的 DMG 计算。
+App 的 `CFBundleShortVersionString` 来自 semver tag。`CFBundleVersion` 的唯一权威来源为受保护 release workflow 的 GitHub Actions `run_number`，以十进制字符串写入；本地只能构建非发布产物，不能分配正式构建号。release preflight 必须验证同一仓库内 tag、commit、构建号组合唯一且构建号高于已有公开 Release。两者与 guest provenance 一起嵌入 App。最终 checksum 对公证后的 DMG 计算。
+
+### 4.4 发布状态与制品不变性
+
+release workflow 创建 Draft Release 后，记录 asset API 返回的 asset ID、size 和 SHA-256。真实设备 runner 必须通过 Draft asset 下载，不能使用构建机工作目录副本。Publish 阶段重新下载并校验相同 asset；只有 asset ID、size、digest、签名和公证票据全部一致时才允许改变 Release 可见性。
 
 ## 5. 边界情况
 
@@ -109,6 +123,8 @@ App 的 `CFBundleShortVersionString` 来自 semver tag，`CFBundleVersion` 来�
 | 最新 macOS 尚无设备 | 缩窄支持声明，不伪造兼容结论 |
 | 工作区存在未提交文件 | preflight 立即失败 |
 | E2E 需要隐私权限 | 使用专用测试用户并记录授权状态，不复用开发者授权 |
+| qualification 后发现需要修复 | 拒绝当前 candidate；修复后从 clean build 生成新 candidate，不替换原 asset |
+| Draft asset 无权被测试设备读取 | 使用最小权限 GitHub token 下载；不允许回退到未经 digest 绑定的临时文件 |
 
 ## 6. 涉及文件
 
@@ -124,8 +140,9 @@ App 的 `CFBundleShortVersionString` 来自 semver tag，`CFBundleVersion` 来�
 1. dirty tree、错误 tag、版本不一致、缺少 `Testing` 模块均在构建前失败。
 2. release 命令强制执行完整测试和 clean rebuild。
 3. 最终 DMG 通过 codesign、notary、stapler、Gatekeeper 和挂载后 App 复验。
-4. 从 GitHub Release 下载的 DMG 在干净测试用户下完成首次启动。
-5. E2E 清单中的全部 P0 路径在支持矩阵设备通过。
+4. qualification 从 GitHub Draft Release 下载 DMG；发布后再次从公开 GitHub Release 下载，并验证二者 asset ID、size 和 SHA-256 对应同一 candidate。
+5. `prerelease` 在至少一台已登记设备通过全部 P0 E2E；`stable` 在最低/最新 macOS 和至少两个 Apple Silicon 代际的完整矩阵通过。
 6. Release 页面包含 DMG、SHA-256、源码 commit、已知限制和验证报告。
-7. `release-evidence.json` 可由 CI 校验且不泄露敏感信息。
+7. `release-evidence.json` 通过版本化 schema、签名/attestation、candidate identity 和 artifact digest 校验，且不泄露敏感信息。
 8. README 不再保留与实际证据冲突的“尚未验证”或过宽支持声明。
+9. qualification 后任何 asset 替换、重新打包或 digest 漂移都会阻断 Publish。
