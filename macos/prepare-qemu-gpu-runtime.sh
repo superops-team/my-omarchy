@@ -117,7 +117,7 @@ publish_dir=
 remove_generated_dir() {
   local path=$1
   [[ -n $path && ( -e $path || -L $path ) ]] || return 0
-  if [[ $path == /private/tmp/omarchy-qemu-gpu-runtime.* || \
+  if [[ $path == /private/tmp/my-omarchy-qemu-gpu-runtime.* || \
         $path == "$build_dir"/.qemu-gpu-runtime.* ]]; then
     rm -rf -- "$path"
     return
@@ -139,7 +139,7 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-work_dir=$(mktemp -d /private/tmp/omarchy-qemu-gpu-runtime.XXXXXX)
+work_dir=$(mktemp -d /private/tmp/my-omarchy-qemu-gpu-runtime.XXXXXX)
 archive_dir="$work_dir/archives"
 extract_dir="$work_dir/extracted"
 staged_runtime="$work_dir/runtime"

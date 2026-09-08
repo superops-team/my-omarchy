@@ -10,10 +10,10 @@
 # the launcher is killed while QEMU is still writing the disk.
 
 QEMU_PERSISTENT_STORAGE_SCHEMA=2
-QEMU_PERSISTENT_STORAGE_KIND='omarchy-qemu-persistent-disk'
-QEMU_PERSISTENT_STORAGE_BOOT_KIT_KIND='omarchy-qemu-boot-kit'
+QEMU_PERSISTENT_STORAGE_KIND='my-omarchy-persistent-disk'
+QEMU_PERSISTENT_STORAGE_BOOT_KIT_KIND='my-omarchy-boot-kit'
 QEMU_PERSISTENT_STORAGE_BOOT_ABI='qemu-arm64-direct-v1'
-QEMU_PERSISTENT_STORAGE_ROOT_MARKER='omarchy-qemu-storage-root-v1'
+QEMU_PERSISTENT_STORAGE_ROOT_MARKER='my-omarchy-storage-root-v1'
 QEMU_PERSISTENT_STORAGE_LOCK_FD=9
 QEMU_PERSISTENT_STORAGE_QEMU_ADD_FD='fd=9,set=77,opaque=omarchy-persistent-lock'
 QEMU_PERSISTENT_STORAGE_INCOMPATIBLE_STATUS=78
@@ -168,7 +168,7 @@ _qps_assert_source_disk() {
 # `df -P` names the device in its first field and `mount` keys its listing on
 # the same device, so matching on the device avoids parsing mount points. Those
 # routinely contain spaces, both for the default location under "Application
-# Support/Try Omarchy" and for anything under /Volumes.
+# Support/My Omarchy" and for anything under /Volumes.
 _qps_volume_filesystem() {
   local qps_path=$1
   local qps_device=''
@@ -292,7 +292,7 @@ _qps_prepare_state_root() {
       _qps_fail 'HOME is unavailable; cannot locate Application Support'
       return 1
     }
-    qps_configured_root="$HOME/Library/Application Support/Try Omarchy/VM/v1"
+    qps_configured_root="$HOME/Library/Application Support/My Omarchy/VM/v1"
   fi
   _qps_assert_safe_root_path "$qps_configured_root" || return 1
 
@@ -318,7 +318,7 @@ _qps_prepare_state_root() {
   }
   _qps_assert_safe_root_path "$qps_root" || return 1
 
-  qps_marker="$qps_root/.omarchy-qemu-storage"
+  qps_marker="$qps_root/.my-omarchy-storage"
   if [[ ! -e $qps_marker && ! -L $qps_marker ]]; then
     if _qps_write_root_marker "$qps_marker"; then
       :
@@ -504,7 +504,7 @@ _qps_validate_metadata() {
 _qps_read_metadata_fields() {
   local qps_path=$1
   local qps_content=''
-  local qps_pattern='^\{"bundleIdentity":"([0-9a-f]{64})","kind":"omarchy-qemu-persistent-disk","schemaVersion":([12]),"sourceRootfs":\{"bytes":([1-9][0-9]*),"sha256":"([0-9a-f]{64})"\}\}$'
+  local qps_pattern='^\{"bundleIdentity":"([0-9a-f]{64})","kind":"my-omarchy-persistent-disk","schemaVersion":([12]),"sourceRootfs":\{"bytes":([1-9][0-9]*),"sha256":"([0-9a-f]{64})"\}\}$'
 
   _qps_assert_private_regular_file "$qps_path" 'persistent-disk metadata' || return 1
   [[ $(_qps_size "$qps_path") -le 16384 ]] || {
@@ -743,7 +743,7 @@ _qps_write_boot_metadata() {
 _qps_read_boot_metadata() {
   local qps_path=$1
   local qps_content=''
-  local qps_pattern='^\{"bootABI":"([A-Za-z0-9._-]+)","bundleIdentity":"([0-9a-f]{64})","commandLine":\{"bytes":([1-9][0-9]*),"sha256":"([0-9a-f]{64})"\},"initramfs":\{"bytes":([1-9][0-9]*),"sha256":"([0-9a-f]{64})"\},"kernel":\{"bytes":([1-9][0-9]*),"sha256":"([0-9a-f]{64})"\},"kind":"omarchy-qemu-boot-kit","schemaVersion":1\}$'
+  local qps_pattern='^\{"bootABI":"([A-Za-z0-9._-]+)","bundleIdentity":"([0-9a-f]{64})","commandLine":\{"bytes":([1-9][0-9]*),"sha256":"([0-9a-f]{64})"\},"initramfs":\{"bytes":([1-9][0-9]*),"sha256":"([0-9a-f]{64})"\},"kernel":\{"bytes":([1-9][0-9]*),"sha256":"([0-9a-f]{64})"\},"kind":"my-omarchy-boot-kit","schemaVersion":1\}$'
 
   _qps_assert_private_regular_file "$qps_path" 'boot-kit metadata' || return 1
   [[ $(_qps_size "$qps_path") -le 16384 ]] || return 1

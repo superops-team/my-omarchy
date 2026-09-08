@@ -6,7 +6,7 @@ usage() {
   cat <<'EOF'
 Usage: macos/build-qemu-gpu-runtime.sh [--archive-dir DIR]
 
-Build the pinned QEMU/VirGL source stack with Try Omarchy's Cocoa identity,
+Build the pinned QEMU/VirGL source stack with My Omarchy's Cocoa identity,
 dynamic-display, immersive-mode, and pause-ownership patches, then relocate,
 sign, validate, and
 atomically stage it at:
@@ -62,14 +62,14 @@ qemu_url="https://gitlab.com/qemu-project/qemu/-/archive/$qemu_commit/$qemu_arch
 qemu_sha256=7563781d7dec46f11509801e027f852597235d29ca7afa44a07ed9d8b108b8cd
 
 texture_patch_sha256=b20bdf9a7d7ccda5b86366ad9d09a3bf95308b98a06b1ece281344405bcc7ab9
-gpu_fix_patch_sha256=b554e1ef9910d0891d69ee0fe84e479559c057dc28291e36e1524031808fc69f
-identity_patch_sha256=5c9358c2858a74d6a678eacaae550a021f3e616c98c4e4e98c0e50bd869a0666
+gpu_fix_patch_sha256=9b3b639ef79751acd70134b883d8d3ce552dda6307e97452cb593371ef3e89fb
+identity_patch_sha256=c520ecf3eda8e321b9c198201750eda20df34b98395ad0dbf42efbd5aacb3636
 display_patch_sha256=1ce59350b6b8e6842bc0c9ca34c97f54cb75e85e2d7b35e5b483858654c4d693
-immersive_patch_sha256=2462463932f7db0d659f754f7f9c182884564dbcd7d4b8e523f1b57f0bd9fe5b
-full_grab_patch_sha256=d94aaa7b8b8b97eb25a5ace2b3a1268985e1b16e4e6201847b926b8ee709dbfb
-pause_ownership_patch_sha256=1a5729b36eb3e437395d41883a10c3c652df71d289d5df84d95aebd49c78a8f0
+immersive_patch_sha256=68a72ea8146131c0a8d1e402c5be577feada6bc3c502d5087eb2f785692a686b
+full_grab_patch_sha256=0e8aaa69ab9a7d7f2778994b54a9a7a4f867abbc849202ddc1708697317cbaad
+pause_ownership_patch_sha256=a6f13f3a57215c8c8ced2c8dc00262163d21f2a251b660538f5b3715a20b5fd5
 audio_device_patch_sha256=03aca71c26163c337338cc3b2013c35430690fc0e8b66c5ce92a42f59a9b3334
-shared_folder_patch_sha256=41247692501655393ae3a40f56915472ab29b6e89c5173e33db1f62cca56632f
+shared_folder_patch_sha256=a878c312a67f8eed4ac15daba3d45ff3ecd9750eee3a05e8158b71c1547795db
 strchrnul_patch_sha256=ec1048dd0e8ebe53bf7e8a3bca9bf2f5f4336cd607d4cd077437470e9a32094a
 macos_deployment_target=15.0
 
@@ -173,7 +173,7 @@ work_dir=
 remove_work_dir() {
   local path=$1
   [[ -n $path && ( -e $path || -L $path ) ]] || return 0
-  [[ $path == /private/tmp/omarchy-qemu-source-build.* ]] || \
+  [[ $path == /private/tmp/my-omarchy-qemu-source-build.* ]] || \
     die "refusing to remove unexpected scratch path: $path"
   rm -rf -- "$path"
 }
@@ -190,7 +190,7 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-work_dir=$(mktemp -d /private/tmp/omarchy-qemu-source-build.XXXXXX)
+work_dir=$(mktemp -d /private/tmp/my-omarchy-qemu-source-build.XXXXXX)
 archive_dir="$work_dir/archives"
 listing_dir="$work_dir/listings"
 source_parent="$work_dir/source"
@@ -326,22 +326,22 @@ mkdir -p "$source_dir/subprojects/keycodemapdb" "$source_dir/subprojects/dtc"
 tar -xzf "$keycodemap_archive" -C "$source_dir/subprojects/keycodemapdb" --strip-components=1
 tar -xzf "$dtc_archive" -C "$source_dir/subprojects/dtc" --strip-components=1
 
-verify_file_sha "Try Omarchy texture-borrowing patch" "$texture_patch" "$texture_patch_sha256"
-verify_file_sha "Try Omarchy GPU-resolution patch" "$gpu_fix_patch" "$gpu_fix_patch_sha256"
-verify_file_sha "Try Omarchy Cocoa product-identity patch" \
+verify_file_sha "My Omarchy texture-borrowing patch" "$texture_patch" "$texture_patch_sha256"
+verify_file_sha "My Omarchy GPU-resolution patch" "$gpu_fix_patch" "$gpu_fix_patch_sha256"
+verify_file_sha "My Omarchy Cocoa product-identity patch" \
   "$identity_patch" "$identity_patch_sha256"
-verify_file_sha "Try Omarchy dynamic-display patch" "$display_patch" "$display_patch_sha256"
-verify_file_sha "Try Omarchy Cocoa immersive-mode patch" \
+verify_file_sha "My Omarchy dynamic-display patch" "$display_patch" "$display_patch_sha256"
+verify_file_sha "My Omarchy Cocoa immersive-mode patch" \
   "$immersive_patch" "$immersive_patch_sha256"
-verify_file_sha "Try Omarchy Cocoa full-grab patch" \
+verify_file_sha "My Omarchy Cocoa full-grab patch" \
   "$full_grab_patch" "$full_grab_patch_sha256"
-verify_file_sha "Try Omarchy Cocoa pause-ownership patch" \
+verify_file_sha "My Omarchy Cocoa pause-ownership patch" \
   "$pause_ownership_patch" "$pause_ownership_patch_sha256"
-verify_file_sha "Try Omarchy SDL audio-device patch" \
+verify_file_sha "My Omarchy SDL audio-device patch" \
   "$audio_device_patch" "$audio_device_patch_sha256"
-verify_file_sha "Try Omarchy 9p shared-folder patch" \
+verify_file_sha "My Omarchy 9p shared-folder patch" \
   "$shared_folder_patch" "$shared_folder_patch_sha256"
-verify_file_sha "Try Omarchy Darwin strchrnul compatibility patch" \
+verify_file_sha "My Omarchy Darwin strchrnul compatibility patch" \
   "$strchrnul_patch" "$strchrnul_patch_sha256"
 
 log "Applying the exact render, identity, display, immersive, pause-ownership, audio, folder, and Darwin compatibility patches"

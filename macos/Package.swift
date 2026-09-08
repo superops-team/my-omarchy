@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "OmarchyVMHelper",
+    name: "MyOmarchy",
     platforms: [.macOS(.v15)],
     products: [
-        .executable(name: "omarchy-vm-helper", targets: ["OmarchyVMHelper"]),
+        .executable(name: "my-omarchy", targets: ["MyOmarchy"]),
     ],
     targets: [
-        .executableTarget(name: "OmarchyVMHelper"),
-        .testTarget(name: "OmarchyVMHelperTests", dependencies: ["OmarchyVMHelper"]),
+        .executableTarget(name: "MyOmarchy"),
+        .testTarget(name: "MyOmarchyTests", dependencies: ["MyOmarchy"]),
     ],
     swiftLanguageModes: [.v5]
 )

@@ -27,14 +27,14 @@ assert_line_pair() {
     "$file" || fail "expected adjacent lines [$first] and [$second] in $file"
 }
 
-test_root=$(mktemp -d '/private/tmp/omarchy-qemu-ssh-contract.XXXXXX')
+test_root=$(mktemp -d '/private/tmp/my-omarchy-qemu-ssh-contract.XXXXXX')
 case "$test_root" in
-  /private/tmp/omarchy-qemu-ssh-contract.??????) ;;
+  /private/tmp/my-omarchy-qemu-ssh-contract.??????) ;;
   *) fail "unexpected test root: $test_root" ;;
 esac
 trap '/bin/rm -rf "$test_root"' EXIT HUP INT TERM
 
-app="$test_root/Try Omarchy.app"
+app="$test_root/My Omarchy.app"
 contents="$app/Contents"
 resources="$contents/Resources"
 shim_dir="$test_root/bin"
@@ -50,7 +50,7 @@ mkdir -p \
 chmod 755 "$resources/scripts/run-qemu-gpu.sh"
 chmod 644 "$resources/scripts/qemu-port-forwarding.sh"
 
-cat >"$contents/MacOS/omarchy-vm-helper" <<'SH'
+cat >"$contents/MacOS/my-omarchy" <<'SH'
 #!/bin/bash
 set -euo pipefail
 if [[ ${1:-} == --bridge-native-audio \
@@ -63,12 +63,12 @@ if [[ ${1:-} == --bridge-native-audio \
 fi
 exit 0
 SH
-chmod 755 "$contents/MacOS/omarchy-vm-helper"
+chmod 755 "$contents/MacOS/my-omarchy"
 
-cat >"$resources/runtime/bin/Try Omarchy" <<'SH'
+cat >"$resources/runtime/bin/My Omarchy" <<'SH'
 #!/bin/bash
 # Identity markers validated by the production launcher:
-# TryOmarchy.icns
+# MyOmarchy.icns
 # OMARCHY_SDL_AUDIO_CONTROL_DIRECTORY
 # OMARCHY_SDL_INPUT_DEVICE_NAME
 # OMARCHY_SDL_OUTPUT_DEVICE_NAME
@@ -110,7 +110,7 @@ import sys
 import time
 
 arguments = sys.argv[1:]
-is_recovery = "Try Omarchy Boot Recovery" in arguments
+is_recovery = "My Omarchy Boot Recovery" in arguments
 log_variable = "FAKE_QEMU_RECOVERY_LOG" if is_recovery else "FAKE_QEMU_LOG"
 Path(os.environ[log_variable]).write_text("\n".join(arguments) + "\n")
 
@@ -129,7 +129,7 @@ if is_recovery:
         '{"runtime":{"kernelCommandLine":"root=/dev/vda rw rootwait '
         'console=tty0 console=hvc0 loglevel=3"}}\n'
     )
-    export_path.joinpath("complete").write_text("try-omarchy-boot-export-v1\n")
+    export_path.joinpath("complete").write_text("my-omarchy-boot-export-v1\n")
 socket_paths = []
 for argument in arguments:
     if argument.startswith("unix:"):
@@ -159,7 +159,7 @@ PY
     ;;
 esac
 SH
-chmod 755 "$resources/runtime/bin/Try Omarchy"
+chmod 755 "$resources/runtime/bin/My Omarchy"
 
 cat >"$resources/scripts/qemu-persistent-storage.sh" <<'SH'
 #!/bin/bash
@@ -368,7 +368,7 @@ manifest = {
         "profile": "factory",
         "username": None,
     },
-    "kind": "try-omarchy-guest-artifacts",
+    "kind": "my-omarchy-guest-artifacts",
     "normalizedUpstreamTree": {},
     "schemaVersion": 1,
     "upstream": {},
@@ -430,13 +430,13 @@ assert_line_pair "$test_root/disabled/qemu.log" -netdev 'user,id=omarchy-net'
 assert_line_pair "$test_root/disabled/qemu.log" -kernel "$persistent_root/boot/kernel"
 assert_line_pair "$test_root/disabled/qemu.log" -initrd "$persistent_root/boot/initramfs"
 assert_not_contains "$disabled_qemu" hostfwd
-assert_not_contains "$disabled_qemu" tryomarchy.ssh_access
+assert_not_contains "$disabled_qemu" myomarchy.ssh_access
 assert_contains "$disabled_qemu" \
   'cocoa,gl=es,show-cursor=on,zoom-to-fit=on,full-screen=on,full-grab=on,immersive=on,swap-opt-cmd=off'
 assert_contains "$disabled_qemu" \
   'socket,id=omarchy-authentication-bridge,path='
 assert_contains "$disabled_qemu" \
-  'virtserialport,bus=omarchy-serial.0,nr=3,chardev=omarchy-authentication-bridge,name=dev.tryomarchy.authentication'
+  'virtserialport,bus=omarchy-serial.0,nr=3,chardev=omarchy-authentication-bridge,name=team.superops.myomarchy.authentication'
 assert_contains "$(<"$test_root/disabled/storage.log")" select-existing
 assert_contains "$(<"$test_root/disabled/storage.log")" create
 
@@ -468,7 +468,7 @@ assert_line_pair "$test_root/enabled/qemu.log" -netdev \
   'user,id=omarchy-net,hostfwd=tcp:127.0.0.1:2223-:22'
 assert_line_pair "$test_root/enabled/qemu.log" -kernel "$persistent_root/boot/kernel"
 assert_line_pair "$test_root/enabled/qemu.log" -initrd "$persistent_root/boot/initramfs"
-assert_contains "$enabled_qemu" tryomarchy.ssh_access=1
+assert_contains "$enabled_qemu" myomarchy.ssh_access=1
 assert_contains "$enabled_qemu" loglevel=4
 assert_not_contains "$enabled_qemu" loglevel=5
 assert_not_contains "$enabled_qemu" 0.0.0.0
@@ -533,14 +533,14 @@ assert_not_contains "$recovery_qemu" gic-version=2
 assert_line_pair "$test_root/recovery-allowed/recovery.log" -drive \
   "if=none,id=omarchy-recovery-root,file=$recovery_root/rootfs.ext4,format=raw,media=disk,cache=none,readonly=on"
 assert_line_pair "$test_root/recovery-allowed/recovery.log" -device \
-  'virtio-9p-pci,fsdev=omarchy-boot-export,mount_tag=try-omarchy-boot-export,romfile='
+  'virtio-9p-pci,fsdev=omarchy-boot-export,mount_tag=my-omarchy-boot-export,romfile='
 assert_contains "$recovery_qemu" 'root=/dev/vda ro rootwait'
-assert_contains "$recovery_qemu" 'rootflags=noload fsck.mode=skip tryomarchy.export_boot=1'
+assert_contains "$recovery_qemu" 'rootflags=noload fsck.mode=skip myomarchy.export_boot=1'
 assert_not_contains "$recovery_qemu" 'root=/dev/vda rw rootwait'
 [[ $(grep -o 'rootflags=noload' \
   "$test_root/recovery-allowed/recovery.log" | wc -l | tr -d ' ') == 1 ]] || \
   fail 'recovery must force exactly one read-only no-journal mount option'
-[[ $(grep -o 'tryomarchy.export_boot=1' \
+[[ $(grep -o 'myomarchy.export_boot=1' \
   "$test_root/recovery-allowed/recovery.log" | wc -l | tr -d ' ') == 1 ]] || \
   fail 'recovery must append exactly one boot-export activation token'
 assert_contains "$(<"$test_root/recovery-allowed/storage.log")" stage-recovered-boot
@@ -571,31 +571,31 @@ assert_contains "$(<"$recovery_root/rootfs.ext4")" legacy-user-disk
 run_scenario preset 0 '' OMARCHY_QEMU_GPU_PORT_FORWARDS=tcp:2222:22
 assert_line_pair "$test_root/preset/qemu.log" -netdev \
   'user,id=omarchy-net,hostfwd=tcp:127.0.0.1:2222-:22'
-[[ $(grep -o 'tryomarchy.ssh_access=1' "$test_root/preset/qemu.log" | wc -l | tr -d ' ') == 1 ]] || \
+[[ $(grep -o 'myomarchy.ssh_access=1' "$test_root/preset/qemu.log" | wc -l | tr -d ' ') == 1 ]] || \
   fail 'preset must append exactly one SSH activation token'
 
 run_scenario udp-22 0 '' OMARCHY_QEMU_GPU_PORT_FORWARDS=udp:2224:22
 udp_qemu=$(<"$test_root/udp-22/qemu.log")
 assert_contains "$udp_qemu" 'hostfwd=udp:127.0.0.1:2224-:22'
-assert_not_contains "$udp_qemu" tryomarchy.ssh_access
+assert_not_contains "$udp_qemu" myomarchy.ssh_access
 
 run_scenario unrelated 0 '' OMARCHY_QEMU_GPU_PORT_FORWARDS=tcp:8080:3000
 unrelated_qemu=$(<"$test_root/unrelated/qemu.log")
 assert_contains "$unrelated_qemu" 'hostfwd=tcp:127.0.0.1:8080-:3000'
-assert_not_contains "$unrelated_qemu" tryomarchy.ssh_access
+assert_not_contains "$unrelated_qemu" myomarchy.ssh_access
 
 run_scenario mixed 0 '' \
   'OMARCHY_QEMU_GPU_PORT_FORWARDS=udp:5353:5353;tcp:22022:22;udp:2222:22'
 mixed_qemu=$(<"$test_root/mixed/qemu.log")
 assert_contains "$mixed_qemu" 'hostfwd=tcp:127.0.0.1:22022-:22'
 assert_contains "$mixed_qemu" 'hostfwd=udp:127.0.0.1:2222-:22'
-[[ $(grep -o 'tryomarchy.ssh_access=1' "$test_root/mixed/qemu.log" | wc -l | tr -d ' ') == 1 ]] || \
+[[ $(grep -o 'myomarchy.ssh_access=1' "$test_root/mixed/qemu.log" | wc -l | tr -d ' ') == 1 ]] || \
   fail 'mixed forwarding must append exactly one SSH activation token'
 
 run_scenario ephemeral 0 --ephemeral OMARCHY_QEMU_GPU_PORT_FORWARDS=tcp:2224:22
 assert_contains "$(<"$test_root/ephemeral/qemu.log")" \
   'user,id=omarchy-net,hostfwd=tcp:127.0.0.1:2224-:22'
-assert_contains "$(<"$test_root/ephemeral/qemu.log")" tryomarchy.ssh_access=1
+assert_contains "$(<"$test_root/ephemeral/qemu.log")" myomarchy.ssh_access=1
 assert_contains "$(<"$test_root/ephemeral/storage.log")" 'select ephemeral'
 assert_line_pair "$test_root/ephemeral/qemu.log" -kernel "$guest/vmlinuz-linux"
 assert_line_pair "$test_root/ephemeral/qemu.log" -initrd "$guest/initramfs-linux.img"
@@ -609,13 +609,13 @@ run_scenario reset-only 0 --reset-storage-only \
   OMARCHY_QEMU_GPU_PORT_FORWARDS=tcp:2225:22
 assert_contains "$(<"$test_root/reset-only/storage.log")" 'select reset'
 [[ ! -e $test_root/reset-only/qemu.log ]] || fail 'reset-only launch started QEMU'
-assert_not_contains "$(<"$test_root/reset-only/stderr")" tryomarchy.ssh_access
+assert_not_contains "$(<"$test_root/reset-only/stderr")" myomarchy.ssh_access
 assert_contains "$(<"$persistent_root/boot/kernel")" new-kernel
 assert_contains "$(<"$persistent_root/boot/initramfs")" new-initramfs
 assert_contains "$(<"$persistent_root/boot/command-line")" loglevel=5
 
 /usr/bin/plutil -replace kernelCommandLine -string \
-  'root=/dev/vda rw rootwait console=tty0 console=hvc0 tryomarchy.ssh_access=0' \
+  'root=/dev/vda rw rootwait console=tty0 console=hvc0 myomarchy.ssh_access=0' \
   "$guest/launch.plist"
 run_scenario prebaked-token 1 '' OMARCHY_QEMU_GPU_PORT_FORWARDS=tcp:2222:22
 [[ ! -s $test_root/prebaked-token/storage.log ]] || fail 'prebaked token touched storage'

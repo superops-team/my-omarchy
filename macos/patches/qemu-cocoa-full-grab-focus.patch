@@ -1,12 +1,12 @@
-From: Try Omarchy contributors
+From: My Omarchy contributors
 Subject: [PATCH] cocoa: keep the full grab while our window is key
 
-Applies after the Try Omarchy product-identity, dynamic-display and
+Applies after the My Omarchy product-identity, dynamic-display and
 immersive-mode patches.
 
 Full grab installs a global CGEventTap so system and application Command
 chords reach the guest as Super, but upstream only lets that tap
-swallow an event while the mouse is grabbed. Try Omarchy runs an absolute
+swallow an event while the mouse is grabbed. My Omarchy runs an absolute
 pointing device, and notifyMouseModeChange releases the grab the moment the
 guest virtio-tablet driver binds; mouseExited releases it again whenever the
 pointer leaves the view. From then on every host Command chord is handed

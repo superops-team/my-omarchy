@@ -190,6 +190,15 @@ class LegacyIdentityScannerTests(unittest.TestCase):
         self.assertIn("Sources/OmarchyVMHelper/main.swift", result.stdout)
         self.assertIn("legacy-swift-module", result.stdout)
 
+    def test_current_my_omarchy_runtime_names_are_not_legacy_matches(self) -> None:
+        result = self.run_scanner(
+            {"build.sh": "tmp=/private/tmp/my-omarchy-qemu-gpu-runtime.123\n"},
+            [],
+            "release",
+        )
+
+        self.assertEqual(0, result.returncode, result.stdout)
+
     def test_exact_baseline_entry_passes_only_baseline(self) -> None:
         entry = {
             "path": "app.txt",

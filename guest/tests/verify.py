@@ -647,7 +647,7 @@ def main() -> None:
         "camera contract exposes an on-demand 720p NV12 stream over virtio",
     )
     camera_launcher = read(REPO / "macos/run-qemu-gpu.sh")
-    camera_entitlements = read(REPO / "macos/omarchy-vm-helper.entitlements")
+    camera_entitlements = read(REPO / "macos/my-omarchy.entitlements")
     check(
         "virtserialport,bus=omarchy-serial.0,nr=4" in camera_launcher
         and "name=dev.tryomarchy.camera" in camera_launcher

@@ -7,11 +7,12 @@
 > **Product transition:** This repository is being rebuilt as **My Omarchy**,
 > an independent product maintained at
 > [`superops-team/my-omarchy`](https://github.com/superops-team/my-omarchy).
-> Try Omarchy is a separate legacy product and is not maintained by this
-> project. My Omarchy will use its own brand, application identity, VM format,
-> data directories, and release artifacts; it will not import, modify, or
-> remove Try Omarchy data. The current source tree still contains legacy names
-> while the approved product-foundation specification is implemented.
+> The predecessor product is separate and is not maintained by this project.
+> My Omarchy uses its own brand, application identity, VM format, data
+> directories, and release artifacts; it will not import, modify, or remove
+> predecessor product data. The current source tree still contains guest ABI
+> legacy names while the approved product-foundation specification is
+> implemented.
 > See the [product readiness roadmap](prd-spec/refactors/product-readiness-roadmap/2026-09-08-my-omarchy-product-readiness-roadmap.md)
 > and [product foundation specification](prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md)
 > for the implementation order and target identity contract.
@@ -25,8 +26,8 @@ image configured with Omarchy Quattro, a QEMU runtime using Apple Hypervisor
 Framework, and a small Swift/AppKit launcher into one macOS app. The approved
 My Omarchy specifications preserve this architecture while replacing the
 product identity, brand, storage/guest ABI, and release lifecycle. Sections
-below that still name Try Omarchy describe the implementation baseline, not a
-maintained Try Omarchy distribution.
+below that still mention predecessor internals describe the implementation
+baseline, not a maintained predecessor distribution.
 
 <img width="800" src="https://github.com/user-attachments/assets/1368a8f5-5099-43e4-8d3b-3d7d7fba0326" />
 
@@ -92,7 +93,7 @@ and nothing released it. The host resampled silence for the life of the VM.
 Microphone capture is stricter: its initial device open is deferred until an
 Omarchy application actually records, and the device is closed again when the
 guest capture stream stops. The first recording may therefore take one device
-open longer to begin, but merely launching Try Omarchy does not activate the
+open longer to begin, but merely launching My Omarchy does not activate the
 Mac microphone.
 
 **An unconditional re-render every refresh tick.** The vendored
@@ -165,14 +166,14 @@ be published only through
 [My Omarchy Releases](https://github.com/superops-team/my-omarchy/releases).
 The remaining launch description documents the current implementation baseline.
 
-Every launch begins at the start menu. While that menu is open, Try Omarchy behaves like a regular Mac app with standard Quit, Close Window, and Minimize commands; after the VM starts, that native app chrome steps aside for Omarchy. **Immersive** is on by default, so Omarchy opens Full Screen with the Mac menu bar and Dock hidden. Turn it off to open a resizable window; if you later enter Full Screen, the Mac menu bar and Dock remain available at the screen edges. Whenever the Omarchy window is focused, Command belongs to the guest as Super in either mode; Accessibility permission lets system shortcuts such as Command-Space reach it before macOS. Microphone and camera access are optional. The first launch takes longer while the app prepares Linux and starts Omarchy's account provisioning.
+Every launch begins at the start menu. While that menu is open, My Omarchy behaves like a regular Mac app with standard Quit, Close Window, and Minimize commands; after the VM starts, that native app chrome steps aside for Omarchy. **Immersive** is on by default, so Omarchy opens Full Screen with the Mac menu bar and Dock hidden. Turn it off to open a resizable window; if you later enter Full Screen, the Mac menu bar and Dock remain available at the screen edges. Whenever the Omarchy window is focused, Command belongs to the guest as Super in either mode; Accessibility permission lets system shortcuts such as Command-Space reach it before macOS. Microphone and camera access are optional. The first launch takes longer while the app prepares Linux and starts Omarchy's account provisioning.
 
-Restarting from inside Omarchy reboots the guest in the same Try Omarchy app.
+Restarting from inside Omarchy reboots the guest in the same My Omarchy app.
 Shutting down Omarchy closes the app and leaves it closed.
 
 ## 1Password
 
-Install 1Password from the Omarchy menu. On ARM64 guests, Try Omarchy downloads
+Install 1Password from the Omarchy menu. On ARM64 guests, My Omarchy downloads
 the current official 1Password application, verifies its signature against the
 pinned 1Password signing key, and installs the ARM64 CLI package. Its launcher
 uses software rendering to avoid the virtual GPU incompatibility affecting the
@@ -230,7 +231,7 @@ The reverse direction does not need a mapping. From Omarchy, connect to
 
 After completing Omarchy's first-boot account setup, open **Port forwarding**,
 choose **Add SSH**, and save the prefilled TCP mapping from Mac port `2222` to
-Omarchy port `22`. Try Omarchy then requests `sshd` for boots that contain a TCP
+Omarchy port `22`. My Omarchy then requests `sshd` for boots that contain a TCP
 mapping to guest port 22. It does not change guest accounts, `sshd_config`,
 password policy, or authorized keys.
 
@@ -327,16 +328,16 @@ Silicon Macs automatically keep the normal non-nested launch path.
 ## Data and updates
 
 Normal launches keep one persistent VM under
-`~/Library/Application Support/Try Omarchy/VM/v1`. Removing or updating the app
+`~/Library/Application Support/My Omarchy/VM/v1`. Removing or updating the app
 does not remove or replace this data. An existing VM keeps both its writable
 disk and the exact kernel, initramfs, and base command line that were paired
 with that disk. A newer app's bundled factory image is used only to create a
 new VM, after a confirmed **Reset Omarchy**, or for an ephemeral launch.
-Before Reset is enabled, the confirmation sheet requires typing `Try Omarchy`
+Before Reset is enabled, the confirmation sheet requires typing `My Omarchy`
 exactly; cancelling the sheet returns to the start menu without changing the VM.
 
 VMs created before paired boot files were introduced are preserved too. On the
-first launch that needs them, Try Omarchy explains the transition in a
+first launch that needs them, My Omarchy explains the transition in a
 **Continue** / **Cancel** dialog before starting recovery. Continue performs a
 one-time recovery boot: it mounts the saved disk read-only, copies the installed
 kernel and initramfs from `/boot` into private VM storage, validates them, and
@@ -346,10 +347,10 @@ start menu. Reset is still required when the saved storage or boot format
 itself cannot be safely read.
 
 Use Omarchy's built-in updater for the updates it supports inside this ARM
-guest. Ordinary guest packages can advance without replacing the VM, but Try
-Omarchy currently pins its direct-boot kernel and headers, packaged
+guest. Ordinary guest packages can advance without replacing the VM, but the
+current factory still pins its direct-boot kernel and headers, packaged
 `try-omarchy-runtime`, and reviewed compatibility backports in a prioritized
-local repository. Installing a newer Try Omarchy app therefore does not apply
+local repository. Installing a newer My Omarchy app therefore does not apply
 all of that app's factory-image changes to an existing VM, and an in-guest
 update should not be assumed to reproduce them. A confirmed reset is the
 deliberate, destructive way to start again from the newest bundled factory.
@@ -404,7 +405,7 @@ you choose — it never creates a folder inside it on your behalf.
 - The folder must be **empty**, or one Omarchy has already used. A folder with
   other files in it, or a drive's top level, is turned away with an
   explanation instead of being restructured; create or pick an empty folder
-  (for example, one named "Try Omarchy") to use instead.
+  (for example, one named "My Omarchy") to use instead.
 - The drive must be **APFS**. The VM disk grows as you use it, which only APFS
   supports here: on exFAT, FAT, or NTFS the same disk would claim its full size
   the moment it was created. Network volumes are refused because the VM's disk
@@ -489,17 +490,17 @@ make clean
 ```
 
 This removes all repository build output, the native and guest build caches,
-and Try Omarchy's project-scoped Docker builder image and work volumes. It does
+and My Omarchy's project-scoped Docker builder image and work volumes. It does
 not touch a developer's persistent VM.
 
-For a complete local reset, first quit Try Omarchy and then run:
+For a complete local reset, first quit My Omarchy and then run:
 
 ```sh
 make clean-all
 ```
 
-The deep cleanup also permanently deletes the current user's Try Omarchy VM
-disks and app state, plus stale Try Omarchy build and test directories in the
+The deep cleanup also permanently deletes the current user's My Omarchy VM
+disks and app state, plus stale My Omarchy build and test directories in the
 macOS temporary directories. It only selects Docker resources and temporary
 paths owned by this project; it does not run a global Docker or system prune.
 To prevent accidental data loss, the command requires an interactive terminal
@@ -513,8 +514,8 @@ All generated output has one predictable home:
 ```text
 dist/
 ├── app.noindex/
-│   └── Try Omarchy.app
-├── TryOmarchy.dmg        # after make package or make release
+│   └── My Omarchy.app
+├── MyOmarchy.dmg        # after make package or make release
 └── guest/                # verified guest build artifacts
 ```
 
@@ -550,7 +551,7 @@ The architecture and trust boundaries are documented in [`docs/architecture.md`]
 ## Project status and support
 
 My Omarchy is pre-1.0 and under active development. The repository is currently
-transitioning from its Try Omarchy-derived implementation to the independent
+transitioning from its predecessor-derived implementation to the independent
 My Omarchy product contract. Omarchy and bundled dependencies retain their own
 licenses; see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 

@@ -6,7 +6,7 @@ diff --git a/fsdev/file-op-9p.h b/fsdev/file-op-9p.h
      mode_t fmode;
      mode_t dmode;
 +    /*
-+     * Try Omarchy: present the exporting host user's files to the guest as
++     * My Omarchy: present the exporting host user's files to the guest as
 +     * these credentials (security_model=none only). -1 disables the remap.
 +     */
 +    uid_t guest_owner_uid;
@@ -72,7 +72,7 @@ diff --git a/hw/9pfs/9p-local.c b/hw/9pfs/9p-local.c
  }
  
 +/*
-+ * Try Omarchy: with security_model=none every host operation runs as the
++ * My Omarchy: with security_model=none every host operation runs as the
 + * QEMU process user, so files that user owns are the ones the guest can
 + * actually modify. Report them as owned by the configured guest account so
 + * the guest kernel's permission checks agree with the host's.

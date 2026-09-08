@@ -42,8 +42,8 @@ if (($#)); then
 fi
 
 repo_dir=$(cd "$macos_dir/.." && pwd -P)
-app="$repo_dir/dist/app.noindex/Try Omarchy.app"
-helper="$app/Contents/MacOS/omarchy-vm-helper"
+app="$repo_dir/dist/app.noindex/My Omarchy.app"
+helper="$app/Contents/MacOS/my-omarchy"
 info_plist="$app/Contents/Info.plist"
 [[ -d $app && ! -L $app ]] || {
   fail "missing exact built app at $app; run make app first"
@@ -60,13 +60,13 @@ info_plist="$app/Contents/Info.plist"
 bundle_identifier=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$info_plist" 2>/dev/null) || {
   fail "built app has no bundle identifier"
 }
-[[ $bundle_identifier == dev.tryomarchy.native ]] || {
+[[ $bundle_identifier == team.superops.myomarchy ]] || {
   fail "built app has an unexpected bundle identifier: $bundle_identifier"
 }
 bundle_executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$info_plist" 2>/dev/null) || {
   fail "built app has no bundle executable"
 }
-[[ $bundle_executable == omarchy-vm-helper ]] || {
+[[ $bundle_executable == my-omarchy ]] || {
   fail "built app has an unexpected executable: $bundle_executable"
 }
 microphone_usage=$(/usr/libexec/PlistBuddy -c 'Print :NSMicrophoneUsageDescription' "$info_plist" 2>/dev/null) || {

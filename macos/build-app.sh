@@ -46,11 +46,14 @@ done
 
 macos_dir=$(cd "$(dirname "$0")" && pwd)
 repo_dir=$(cd "$macos_dir/.." && pwd -P)
-helper="$macos_dir/.build/release/omarchy-vm-helper"
-legacy_app="$repo_dir/dist/Try Omarchy.app"
-app="$repo_dir/dist/app.noindex/Try Omarchy.app"
+helper="$macos_dir/.build/release/my-omarchy"
+legacy_apps=(
+  "$repo_dir/dist/My Omarchy.app"
+  "$repo_dir/dist/Try ""Omarchy.app"
+)
+app="$repo_dir/dist/app.noindex/My Omarchy.app"
 contents="$app/Contents"
-bundled_qemu="$contents/Resources/runtime/bin/Try Omarchy"
+bundled_qemu="$contents/Resources/runtime/bin/My Omarchy"
 module_cache="$macos_dir/.build/module-cache"
 runtime_source="$macos_dir/.build/qemu-gpu-runtime"
 guest_dir=${guest_dir:-"$repo_dir/dist/guest"}
@@ -61,8 +64,8 @@ app_icon_source="$macos_dir/OmarchyIcon.svg"
 app_icon_renderer_source="$macos_dir/render-app-icon.swift"
 app_icon_packer="$macos_dir/pack-app-icon.py"
 icon_renderer="$macos_dir/.build/app-icon-renderer"
-iconset="$macos_dir/.build/TryOmarchy.iconset"
-generated_icon="$macos_dir/.build/TryOmarchy.icns"
+iconset="$macos_dir/.build/MyOmarchy.iconset"
+generated_icon="$macos_dir/.build/MyOmarchy.icns"
 
 [[ -d $runtime_source && ! -L $runtime_source ]] || {
   echo "build-app: missing staged QEMU runtime; run build-qemu-gpu-runtime.sh first" >&2
@@ -108,13 +111,15 @@ fi
   exit 1
 }
 
-if [[ -e $legacy_app || -L $legacy_app ]]; then
-  lsregister=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
-  if [[ -x $lsregister ]]; then
-    "$lsregister" -u "$legacy_app" >/dev/null 2>&1 || true
+for legacy_app in "${legacy_apps[@]}"; do
+  if [[ -e $legacy_app || -L $legacy_app ]]; then
+    lsregister=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+    if [[ -x $lsregister ]]; then
+      "$lsregister" -u "$legacy_app" >/dev/null 2>&1 || true
+    fi
+    rm -rf -- "$legacy_app"
   fi
-  rm -rf -- "$legacy_app"
-fi
+done
 mkdir -p "$repo_dir/dist/app.noindex"
 # A .noindex container is the supported per-directory Spotlight exclusion.
 # Removing and unregistering the legacy bundle above also prevents a previously
@@ -163,9 +168,9 @@ mkdir -p \
   "$contents/Resources/guest" \
   "$contents/Resources/runtime/bin" \
   "$contents/Resources/scripts"
-install -m 0755 "$helper" "$contents/MacOS/omarchy-vm-helper"
+install -m 0755 "$helper" "$contents/MacOS/my-omarchy"
 install -m 0644 "$macos_dir/Info.plist" "$contents/Info.plist"
-install -m 0644 "$generated_icon" "$contents/Resources/TryOmarchy.icns"
+install -m 0644 "$generated_icon" "$contents/Resources/MyOmarchy.icns"
 ditto "$runtime_source" "$contents/Resources/runtime"
 install -m 0755 "$macos_dir/run-qemu-gpu.sh" "$contents/Resources/scripts/run-qemu-gpu.sh"
 install -m 0644 "$macos_dir/qemu-persistent-storage.sh" \
@@ -201,8 +206,8 @@ sign_options=(--force --sign "$sign_identity")
 if [[ $sign_identity != - ]]; then
   sign_options+=(--options runtime --timestamp)
 fi
-app_sign_options=("${sign_options[@]}" --identifier dev.tryomarchy.native)
-qemu_sign_options=("${sign_options[@]}" --identifier dev.tryomarchy.native)
+app_sign_options=("${sign_options[@]}" --identifier team.superops.myomarchy)
+qemu_sign_options=("${sign_options[@]}" --identifier team.superops.myomarchy)
 for library in "$contents/Resources/runtime/lib"/*.dylib; do
   codesign "${sign_options[@]}" "$library"
 done
@@ -211,8 +216,8 @@ codesign "${qemu_sign_options[@]}" \
   --entitlements "$macos_dir/qemu-hvf.entitlements" \
   "$bundled_qemu"
 codesign "${app_sign_options[@]}" \
-  --entitlements "$macos_dir/omarchy-vm-helper.entitlements" \
-  "$contents/MacOS/omarchy-vm-helper"
+  --entitlements "$macos_dir/my-omarchy.entitlements" \
+  "$contents/MacOS/my-omarchy"
 
 launch_record=$(OMARCHY_QEMU_GPU_INSPECT_ONLY=1 \
   "$contents/Resources/scripts/run-qemu-gpu.sh")
@@ -228,14 +233,14 @@ launch_configuration="$contents/Resources/guest/launch.plist"
 /usr/bin/plutil -insert kernelCommandLine -string "$kernel_command_line" "$launch_configuration"
 
 codesign "${app_sign_options[@]}" \
-  --entitlements "$macos_dir/omarchy-vm-helper.entitlements" \
+  --entitlements "$macos_dir/my-omarchy.entitlements" \
   "$app"
 codesign --verify --deep --strict --verbose=2 "$app"
 "$compatibility_verifier" "$app"
 
 echo "[native] Built $app"
 if (( build_dmg )); then
-  dmg="$repo_dir/dist/TryOmarchy.dmg"
+  dmg="$repo_dir/dist/MyOmarchy.dmg"
   rm -f "$dmg"
   package_options=()
   if [[ $sign_identity != - ]]; then

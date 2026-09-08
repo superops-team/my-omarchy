@@ -52,7 +52,7 @@ qmp_assignment_count=$(grep -Fxc -- \
 }
 
 mktemp_template_count=$(grep -Fxc -- \
-  "work_dir=\$(mktemp -d '/private/tmp/omarchy-qemu-gpu.XXXXXX') || {" \
+  "work_dir=\$(mktemp -d '/private/tmp/my-omarchy-qemu-gpu.XXXXXX') || {" \
   "$launcher" || true)
 [[ $mktemp_template_count == 1 ]] || {
   fail 'the private runtime directory must retain its six-character token'

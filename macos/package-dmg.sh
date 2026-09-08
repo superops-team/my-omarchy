@@ -59,7 +59,7 @@ layout_source="$native_dir/dmg-layout.applescript"
   fail "DMG Finder layout is missing or unsafe"
 }
 
-work_dir=$(mktemp -d /private/tmp/omarchy-dmg.XXXXXX)
+work_dir=$(mktemp -d /private/tmp/my-omarchy-dmg.XXXXXX)
 mounted=0
 mount_dir="$work_dir/mount"
 cleanup() {
@@ -84,7 +84,7 @@ ln -s /Applications "$staging/Applications"
 
 read_write_dmg="$work_dir/Omarchy-rw.dmg"
 hdiutil create \
-  -volname "Try Omarchy" \
+  -volname "My Omarchy" \
   -srcfolder "$staging" \
   -fs APFS \
   -format UDRW \
@@ -113,7 +113,7 @@ hdiutil convert \
 if [[ -n $sign_identity ]]; then
   codesign \
     --sign "$sign_identity" \
-    --identifier dev.tryomarchy.native.disk-image \
+    --identifier team.superops.myomarchy.disk-image \
     --timestamp \
     "$output"
   codesign --verify --strict --verbose=2 "$output"

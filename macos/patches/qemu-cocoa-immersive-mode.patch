@@ -1,7 +1,7 @@
-From: Try Omarchy contributors
+From: My Omarchy contributors
 Subject: [PATCH] cocoa: separate immersive fullscreen from keyboard capture
 
-Applies after the Try Omarchy product-identity and dynamic-display patches.
+Applies after the My Omarchy product-identity and dynamic-display patches.
 
 QEMU's Cocoa fullscreen always replaces AppKit's auto-hidden menu bar and Dock
 with hard-hidden variants. Add an independent immersive display option so the

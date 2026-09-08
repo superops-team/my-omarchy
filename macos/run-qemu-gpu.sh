@@ -48,8 +48,8 @@ resources_dir=$(cd "$script_dir/.." && pwd -P)
 contents_dir=$(cd "$resources_dir/.." && pwd -P)
 app_bundle=$(cd "$contents_dir/.." && pwd -P)
 guest_input=${1:-"$resources_dir/guest"}
-qemu_bin="$resources_dir/runtime/bin/Try Omarchy"
-native_bridge="$contents_dir/MacOS/omarchy-vm-helper"
+qemu_bin="$resources_dir/runtime/bin/My Omarchy"
+native_bridge="$contents_dir/MacOS/my-omarchy"
 storage_library="$script_dir/qemu-persistent-storage.sh"
 port_forwarding_library="$script_dir/qemu-port-forwarding.sh"
 
@@ -79,8 +79,8 @@ esac
   fail "missing bundled native bridge at $native_bridge"
 }
 file "$qemu_bin" | grep -q 'arm64' || fail "staged QEMU is not an ARM64 executable"
-LC_ALL=C grep -aFq 'TryOmarchy.icns' "$qemu_bin" || {
-  fail "staged QEMU lacks the Try Omarchy macOS identity; run make runtime"
+LC_ALL=C grep -aFq 'MyOmarchy.icns' "$qemu_bin" || {
+  fail "staged QEMU lacks the My Omarchy macOS identity; run make runtime"
 }
 for marker in \
   OMARCHY_SDL_AUDIO_CONTROL_DIRECTORY \
@@ -281,7 +281,7 @@ exact_keys(
     {"artifacts", "build", "guest", "kind", "normalizedUpstreamTree", "schemaVersion", "upstream"},
     "guest-manifest.json",
 )
-if manifest.get("schemaVersion") != 1 or manifest.get("kind") != "try-omarchy-guest-artifacts":
+if manifest.get("schemaVersion") != 1 or manifest.get("kind") != "my-omarchy-guest-artifacts":
     fail("guest manifest identity is invalid")
 manifest_guest_raw = manifest.get("guest")
 if not isinstance(manifest_guest_raw, dict):
@@ -406,7 +406,7 @@ expected_devices = [
 ]
 clipboard = {
     "device": "virtserialport",
-    "port": "dev.tryomarchy.clipboard",
+    "port": "team.superops.myomarchy.clipboard",
     "formats": ["text/plain;charset=utf-8", "image/png"],
 }
 authentication = {
@@ -418,7 +418,7 @@ authentication = {
     "guestIdentity": "root-private-random-256-bit",
     "hostKey": "per-guest-secure-enclave-p256",
     "pamService": "sudo",
-    "port": "dev.tryomarchy.authentication",
+    "port": "team.superops.myomarchy.authentication",
     "protocolVersion": 3,
     "requiresEnrollment": True,
     "signature": "ecdsa-p256-sha256",
@@ -446,7 +446,7 @@ network = {
     "sshAccess": {
         "activation": {
             "guestPort": 22,
-            "kernelToken": "tryomarchy.ssh_access=1",
+            "kernelToken": "myomarchy.ssh_access=1",
             "protocol": "tcp",
             "scope": "boot",
             "service": "sshd.service",
@@ -472,7 +472,7 @@ camera = {
     "guestDevice": "/dev/video42",
     "height": 720,
     "pixelFormat": "NV12",
-    "port": "dev.tryomarchy.camera",
+    "port": "team.superops.myomarchy.camera",
     "protocolVersion": 1,
     "width": 1280,
 }
@@ -758,7 +758,7 @@ if any(argument.startswith("omarchy.qemu_virgl=") for argument in arguments):
     fail("kernel command line already contains a QEMU VirGL role")
 if any(argument.startswith("omarchy.shared_folder_name=") for argument in arguments):
     fail("kernel command line already contains a shared folder name")
-if any(argument.startswith("tryomarchy.ssh_access=") for argument in arguments):
+if any(argument.startswith("myomarchy.ssh_access=") for argument in arguments):
     fail("kernel command line contains a launcher-owned SSH activation argument")
 
 records = manifest.get("artifacts")
@@ -863,7 +863,7 @@ IFS=$'\t' read -r bundle_identity source_disk_sha source_disk_bytes compressed_d
 (( expanded_disk_bytes >= source_disk_bytes )) || fail "working disk cannot be smaller than its source"
 [[ -n $kernel_command_line ]] || fail "validated kernel command line is empty"
 case " $kernel_command_line " in
-  *' tryomarchy.ssh_access='*)
+  *' myomarchy.ssh_access='*)
     fail "validated kernel command line contains a launcher-owned SSH activation argument"
     ;;
 esac
@@ -894,7 +894,7 @@ qemu_netdev=$QEMU_PORT_FORWARDING_NETDEV
 port_forwarding_summary=$QEMU_PORT_FORWARDING_SUMMARY
 ssh_kernel_argument=''
 if ((QEMU_PORT_FORWARDING_ENABLES_SSH)); then
-  ssh_kernel_argument=' tryomarchy.ssh_access=1'
+  ssh_kernel_argument=' myomarchy.ssh_access=1'
 fi
 
 host_cpu_count=$(
@@ -1014,7 +1014,7 @@ cleanup() {
   qemu_persistent_storage_release_lock
   if [[ -n $work_dir && -n $owner_marker && -n $owner_token ]]; then
     case "$work_dir" in
-      /private/tmp/omarchy-qemu-gpu.??????)
+      /private/tmp/my-omarchy-qemu-gpu.??????)
         if [[ -d $work_dir && ! -L $work_dir && -f $owner_marker && ! -L $owner_marker ]] &&
            [[ $(_qps_owner "$work_dir") == $(id -u) ]] &&
            [[ $(<"$owner_marker") == "$owner_token" ]]; then
@@ -1048,7 +1048,7 @@ reap_stale_work_dirs() {
   local stale_qemu_pid=""
   local qemu_command=""
 
-  for candidate in /private/tmp/omarchy-qemu-gpu.??????; do
+  for candidate in /private/tmp/my-omarchy-qemu-gpu.??????; do
     [[ -d $candidate && ! -L $candidate ]] || continue
     [[ $(_qps_owner "$candidate") == $(id -u) ]] || continue
     [[ $(_qps_permissions "$candidate") == 700 ]] || continue
@@ -1145,11 +1145,11 @@ recover_persistent_boot_kit() {
     recovery_command_line+=" $recovery_argument"
   done
   recovery_command_line=${recovery_command_line# }
-  recovery_command_line+=' rootflags=noload fsck.mode=skip tryomarchy.export_boot=1'
+  recovery_command_line+=' rootflags=noload fsck.mode=skip myomarchy.export_boot=1'
 
   echo '[qemu-gpu] Pairing the saved VM with its original boot files (one time).' >&2
   "$qemu_bin" \
-    -name 'Try Omarchy Boot Recovery' \
+    -name 'My Omarchy Boot Recovery' \
     -machine "$qemu_machine" \
     -cpu 'host,pmu=off' \
     -smp '2,sockets=1,cores=2,threads=1' \
@@ -1169,7 +1169,7 @@ recover_persistent_boot_kit() {
     -chardev 'stdio,id=omarchy-recovery-hvc0,signal=off' \
     -device 'virtconsole,bus=omarchy-recovery-serial.0,nr=0,chardev=omarchy-recovery-hvc0' \
     -fsdev "local,id=omarchy-boot-export,path=$boot_export_dir,security_model=none,multidevs=remap" \
-    -device 'virtio-9p-pci,fsdev=omarchy-boot-export,mount_tag=try-omarchy-boot-export,romfile=' \
+    -device 'virtio-9p-pci,fsdev=omarchy-boot-export,mount_tag=my-omarchy-boot-export,romfile=' \
     -add-fd "$QEMU_PERSISTENT_STORAGE_QEMU_ADD_FD" &
   qemu_pid=$!
   printf '%s\n' "$qemu_pid" >"$work_dir/.qemu.pid" || \
@@ -1212,7 +1212,7 @@ recover_persistent_boot_kit() {
   assert_direct_owned_export_file "$boot_export_dir/initramfs" 'recovered initramfs'
   assert_direct_owned_export_file "$boot_export_dir/build-spec.json" 'recovered build specification'
   [[ $(_qps_size "$boot_export_dir/complete") == 27 && \
-     $(<"$boot_export_dir/complete") == try-omarchy-boot-export-v1 ]] || {
+     $(<"$boot_export_dir/complete") == my-omarchy-boot-export-v1 ]] || {
     boot_recovery_fail 'the one-time boot recovery completion marker is invalid'
   }
   [[ $(_qps_size "$boot_export_dir/build-spec.json") =~ ^[1-9][0-9]*$ && \
@@ -1240,11 +1240,11 @@ recover_persistent_boot_kit() {
 }
 
 umask 077
-work_dir=$(mktemp -d '/private/tmp/omarchy-qemu-gpu.XXXXXX') || {
+work_dir=$(mktemp -d '/private/tmp/my-omarchy-qemu-gpu.XXXXXX') || {
   fail "could not create a private temporary directory"
 }
 case "$work_dir" in
-  /private/tmp/omarchy-qemu-gpu.??????) ;;
+  /private/tmp/my-omarchy-qemu-gpu.??????) ;;
   *) fail "mktemp returned an unexpected path: $work_dir" ;;
 esac
 [[ -d $work_dir && ! -L $work_dir ]] || fail "temporary directory is unsafe: $work_dir"
@@ -1385,7 +1385,7 @@ else
 fi
 
 qemu_args=(
-  -name 'Try Omarchy'
+  -name 'My Omarchy'
   "${qemu_virtualization_args[@]}"
   # HVF does not provide a usable guest PMU on Apple Silicon. Do not advertise
   # one: Linux otherwise probes the dead device and prints a misleading failure.
@@ -1424,13 +1424,13 @@ qemu_args=(
   -chardev 'stdio,id=omarchy-hvc0,signal=off'
   -device 'virtconsole,bus=omarchy-serial.0,nr=0,chardev=omarchy-hvc0'
   -chardev "socket,id=omarchy-audio-bridge,path=$audio_bridge_socket,server=on,wait=off"
-  -device 'virtserialport,bus=omarchy-serial.0,nr=1,chardev=omarchy-audio-bridge,name=dev.tryomarchy.audio'
+  -device 'virtserialport,bus=omarchy-serial.0,nr=1,chardev=omarchy-audio-bridge,name=team.superops.myomarchy.audio'
   -chardev "socket,id=omarchy-clipboard-bridge,path=$clipboard_bridge_socket,server=on,wait=off"
-  -device 'virtserialport,bus=omarchy-serial.0,nr=2,chardev=omarchy-clipboard-bridge,name=dev.tryomarchy.clipboard'
+  -device 'virtserialport,bus=omarchy-serial.0,nr=2,chardev=omarchy-clipboard-bridge,name=team.superops.myomarchy.clipboard'
   -chardev "socket,id=omarchy-authentication-bridge,path=$authentication_bridge_socket,server=on,wait=off"
-  -device 'virtserialport,bus=omarchy-serial.0,nr=3,chardev=omarchy-authentication-bridge,name=dev.tryomarchy.authentication'
+  -device 'virtserialport,bus=omarchy-serial.0,nr=3,chardev=omarchy-authentication-bridge,name=team.superops.myomarchy.authentication'
   -chardev "socket,id=omarchy-camera-bridge,path=$camera_bridge_socket,server=on,wait=off"
-  -device 'virtserialport,bus=omarchy-serial.0,nr=4,chardev=omarchy-camera-bridge,name=dev.tryomarchy.camera'
+  -device 'virtserialport,bus=omarchy-serial.0,nr=4,chardev=omarchy-camera-bridge,name=team.superops.myomarchy.camera'
 )
 
 if [[ -n $shared_folder ]]; then

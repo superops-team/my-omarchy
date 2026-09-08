@@ -104,7 +104,7 @@ class BuildCacheTests(unittest.TestCase):
         self.assertLess(runtime, app)
         self.assertIn("Build output:", dry_run)
         self.assertIn(
-            str(REPOSITORY / "dist/app.noindex/Try Omarchy.app"), dry_run
+            str(REPOSITORY / "dist/app.noindex/My Omarchy.app"), dry_run
         )
 
         forced = subprocess.run(
@@ -132,17 +132,25 @@ class BuildCacheTests(unittest.TestCase):
         build_script = (REPOSITORY / "macos/build-app.sh").read_text()
         open_script = (REPOSITORY / "macos/open-qemu-gpu.sh").read_text()
         self.assertIn(
-            'app="$repo_dir/dist/app.noindex/Try Omarchy.app"',
+            'app="$repo_dir/dist/app.noindex/My Omarchy.app"',
             build_script,
         )
         self.assertIn(
-            'legacy_app="$repo_dir/dist/Try Omarchy.app"',
+            'legacy_apps=(',
+            build_script,
+        )
+        self.assertIn(
+            '"$repo_dir/dist/My Omarchy.app"',
+            build_script,
+        )
+        self.assertIn(
+            '"$repo_dir/dist/Try ""Omarchy.app"',
             build_script,
         )
         self.assertIn('rm -rf -- "$legacy_app"', build_script)
         self.assertNotIn(".metadata_never_index", build_script)
         self.assertIn(
-            'app="$repo_dir/dist/app.noindex/Try Omarchy.app"',
+            'app="$repo_dir/dist/app.noindex/My Omarchy.app"',
             open_script,
         )
 
@@ -246,10 +254,10 @@ class BuildCacheTests(unittest.TestCase):
     def test_app_validation_requires_packaged_icon(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            app = root / "dist/app.noindex/Try Omarchy.app"
+            app = root / "dist/app.noindex/My Omarchy.app"
             for relative in (
-                "Contents/MacOS/omarchy-vm-helper",
-                "Contents/Resources/runtime/bin/Try Omarchy",
+                "Contents/MacOS/my-omarchy",
+                "Contents/Resources/runtime/bin/My Omarchy",
                 "Contents/Resources/guest/rootfs.ext4.zst",
                 "Contents/Resources/guest/launch.plist",
             ):

@@ -10,10 +10,10 @@ Use the root Makefile for normal development:
 
 ```sh
 make runtime   # macos/.build/qemu-gpu-runtime
-make app       # dist/app.noindex/Try Omarchy.app
+make app       # dist/app.noindex/My Omarchy.app
 make run
-make package   # signed and notarized dist/TryOmarchy.dmg
-make release   # signed and notarized dist/TryOmarchy.dmg
+make package   # signed and notarized dist/MyOmarchy.dmg
+make release   # signed and notarized dist/MyOmarchy.dmg
 make test
 ```
 
@@ -26,7 +26,7 @@ from the host Homebrew prefix, so building on a newer macOS release cannot
 silently raise the app's deployment target.
 
 `make release` defaults to the maintainer's Developer ID Application identity
-and `try-omarchy` notarytool profile. The app builder is also directly usable
+and `my-omarchy` notarytool profile. The app builder is also directly usable
 for release signing and notarization:
 
 ```sh
@@ -34,7 +34,7 @@ macos/build-app.sh \
   --dmg \
   --guest-dir dist/guest \
   --sign-identity "Developer ID Application: Example (TEAMID)" \
-  --notarize-profile try-omarchy
+  --notarize-profile my-omarchy
 ```
 
 Local app builds are ad-hoc signed by default. To keep Accessibility and other
@@ -52,7 +52,7 @@ to `dist/`. The generated app lives inside `dist/app.noindex/`, which keeps a
 development build from appearing beside an installed copy in Command-Space.
 
 Normal app launches maintain one stable user VM disk under
-`~/Library/Application Support/Try Omarchy/VM/v1`. Storage integration tests
+`~/Library/Application Support/My Omarchy/VM/v1`. Storage integration tests
 and specialized development runs can opt into identity-keyed parallel disks by
 setting `OMARCHY_QEMU_GPU_DEVELOPMENT_MULTI_DISK=1`; release behavior leaves it
 unset. Each persistent disk keeps the identity of the factory that created it
@@ -75,7 +75,7 @@ old userspace. The launcher validates and atomically stages that boot kit before
 the normal launch. Unsupported storage or boot ABIs, and ambiguous multiple
 legacy disks, still use the user-facing, confirmed Reset Omarchy flow.
 That destructive flow keeps **Reset** disabled until the user types
-`Try Omarchy` exactly in a native sheet. Cancelling or dismissing the sheet
+`My Omarchy` exactly in a native sheet. Cancelling or dismissing the sheet
 returns control without invoking the storage reset.
 
 The start menu can move that workspace to any APFS folder the user picks; the

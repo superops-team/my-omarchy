@@ -1,7 +1,7 @@
-From: Try Omarchy contributors
+From: My Omarchy contributors
 Subject: [PATCH] cocoa: reserve pause ownership for the host sleep controller
 
-Applies after the Try Omarchy Cocoa identity, dynamic-display, immersive-mode,
+Applies after the My Omarchy Cocoa identity, dynamic-display, immersive-mode,
 and full-grab patches.
 
 The macOS helper attributes a QMP STOP transition to host sleep and resumes

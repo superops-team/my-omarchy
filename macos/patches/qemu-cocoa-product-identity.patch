@@ -1,5 +1,5 @@
-From: Try Omarchy contributors
-Subject: [PATCH] cocoa: present the VM as Try Omarchy on macOS
+From: My Omarchy contributors
+Subject: [PATCH] cocoa: present the VM as My Omarchy on macOS
 
 Applies after startergo/homebrew-qemu-virgl-kosmickrisp v1.0.27.
 
@@ -45,7 +45,7 @@ diff --git a/ui/cocoa.m b/ui/cocoa.m
      NSAlert *alert = [NSAlert new];
      [alert autorelease];
 -    [alert setMessageText: @"Are you sure you want to quit QEMU?"];
-+    [alert setMessageText: @"Are you sure you want to quit Try Omarchy?"];
++    [alert setMessageText: @"Are you sure you want to quit My Omarchy?"];
      [alert addButtonWithTitle: @"Cancel"];
      [alert addButtonWithTitle: @"Quit"];
      if([alert runModal] == NSAlertSecondButtonReturn) {
@@ -77,19 +77,19 @@ diff --git a/ui/cocoa.m b/ui/cocoa.m
      // Application menu
      menu = [[NSMenu alloc] initWithTitle:@""];
 -    [menu addItemWithTitle:@"About QEMU" action:@selector(do_about_menu_item:) keyEquivalent:@""]; // About QEMU
-+    [menu addItemWithTitle:@"About Try Omarchy" action:@selector(do_about_menu_item:) keyEquivalent:@""];
++    [menu addItemWithTitle:@"About My Omarchy" action:@selector(do_about_menu_item:) keyEquivalent:@""];
      [menu addItem:[NSMenuItem separatorItem]]; //Separator
      menuItem = [menu addItemWithTitle:@"Services" action:nil keyEquivalent:@""];
      [menuItem setSubmenu:[NSApp servicesMenu]];
      [menu addItem:[NSMenuItem separatorItem]];
 -    [menu addItemWithTitle:@"Hide QEMU" action:@selector(hide:) keyEquivalent:@"h"]; //Hide QEMU
-+    [menu addItemWithTitle:@"Hide Try Omarchy" action:@selector(hide:) keyEquivalent:@"h"];
++    [menu addItemWithTitle:@"Hide My Omarchy" action:@selector(hide:) keyEquivalent:@"h"];
      menuItem = (NSMenuItem *)[menu addItemWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@"h"]; // Hide Others
      [menuItem setKeyEquivalentModifierMask:(NSEventModifierFlagOption|NSEventModifierFlagCommand)];
      [menu addItemWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""]; // Show All
      [menu addItem:[NSMenuItem separatorItem]]; //Separator
 -    [menu addItemWithTitle:@"Quit QEMU" action:@selector(terminate:) keyEquivalent:@"q"];
-+    [menu addItemWithTitle:@"Quit Try Omarchy" action:@selector(terminate:) keyEquivalent:@"q"];
++    [menu addItemWithTitle:@"Quit My Omarchy" action:@selector(terminate:) keyEquivalent:@"q"];
      menuItem = [[NSMenuItem alloc] initWithTitle:@"Apple" action:nil keyEquivalent:@""];
      [menuItem setSubmenu:menu];
      [[NSApp mainMenu] addItem:menuItem];
@@ -115,7 +115,7 @@ diff --git a/ui/cocoa.m b/ui/cocoa.m
 +          stringByDeletingLastPathComponent]
 +         stringByDeletingLastPathComponent];
 +    NSString *iconPath =
-+        [resourcesPath stringByAppendingPathComponent:@"TryOmarchy.icns"];
++        [resourcesPath stringByAppendingPathComponent:@"MyOmarchy.icns"];
 +    NSImage *icon = [[NSImage alloc] initWithContentsOfFile:iconPath];
 +
 +    if (icon) {
@@ -129,7 +129,7 @@ diff --git a/ui/cocoa.m b/ui/cocoa.m
      ProcessSerialNumber psn = { 0, kCurrentProcess };
      TransformProcessType(&psn, kProcessTransformToForegroundApplication);
  
-+    [[NSProcessInfo processInfo] setProcessName:@"Try Omarchy"];
++    [[NSProcessInfo processInfo] setProcessName:@"My Omarchy"];
      [QemuApplication sharedApplication];
 +    cocoa_set_product_icon();
  

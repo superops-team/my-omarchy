@@ -1,13 +1,13 @@
 # Architecture
 
-Try Omarchy packages three pieces into one macOS app:
+My Omarchy packages three pieces into one macOS app:
 
 1. A small Swift/AppKit launcher for the macOS side.
 2. A patched QEMU runtime that creates and runs the virtual machine.
 3. An ARM64 Arch Linux image containing pinned upstream Omarchy source.
 
 ```text
-Try Omarchy.app
+My Omarchy.app
 └── Swift/AppKit launcher
     └── QEMU + Apple Hypervisor Framework
         └── project-built ARM64 Linux image
@@ -173,7 +173,7 @@ creates the account on first boot.
 
 Nothing is overwritten while the app runs. The app bundle and packaged factory
 disk remain unchanged. Normal user launches use one private writable disk under
-`~/Library/Application Support/Try Omarchy/VM/v1`. The disk metadata retains
+`~/Library/Application Support/My Omarchy/VM/v1`. The disk metadata retains
 the identity of the factory that created it, and `boot/<identity>/` retains a
 validated copy of that VM's kernel, initramfs, and base command line. Normal
 launch selects those saved boot files instead of combining an older root
@@ -246,10 +246,10 @@ App releases and guest updates are deliberately separate channels. Omarchy's
 built-in updater may advance ordinary packages supported by this ARM guest,
 but the direct-boot kernel and matching headers, the packaged
 `try-omarchy-runtime`, and reviewed compatibility backports remain pinned in
-Try Omarchy's prioritized local repository. Reusing a disk therefore does not
+My Omarchy's prioritized local repository. Reusing a disk therefore does not
 silently import a newer app's factory contents, and running the in-guest updater
 must not be described as reproducing every factory-image change. Delivering
-new Try Omarchy runtime or backport revisions to existing disks requires an
+new My Omarchy runtime or backport revisions to existing disks requires an
 explicitly designed in-guest migration channel; today a factory reset is the
 way to opt into the complete new factory.
 

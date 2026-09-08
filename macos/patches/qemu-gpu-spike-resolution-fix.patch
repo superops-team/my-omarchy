@@ -4,7 +4,7 @@ Subject: [PATCH] cocoa: clear the GL dirty flag once the render completes
 Vendored from homebrew-qemu-virgl-kosmickrisp commit
 cbfb7641c933e8364dda0a035830603fd7455a4e, patches/gpu-spike-resolution-fix.patch.
 That tree has been unmaintained since 2026-01-14 and this was the last file
-Try Omarchy still consumed from it, so it is carried here rather than
+My Omarchy still consumed from it, so it is carried here rather than
 downloading the whole archive for one small patch.
 
 Fixed while vendoring: the upstream patch moved the gl_dirty clear out of

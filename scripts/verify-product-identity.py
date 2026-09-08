@@ -21,7 +21,7 @@ PATTERNS = {
     "legacy-slug": re.compile(r"(?<![A-Za-z0-9])try-omarchy(?:-[A-Za-z0-9_.-]+)?"),
     "legacy-swift-module": re.compile(r"OmarchyVMHelper(?:Tests)?"),
     "legacy-host-executable": re.compile(r"omarchy-vm-helper"),
-    "legacy-runtime-name": re.compile(r"omarchy-(?:qemu|dmg)(?:-[A-Za-z0-9_.?*-]+)?"),
+    "legacy-runtime-name": re.compile(r"(?<![A-Za-z0-9-])omarchy-(?:qemu|dmg)(?:-[A-Za-z0-9_.?*-]+)?"),
 }
 
 ENTRY_FIELDS = {"path", "pattern", "expectedCount", "category", "ownerPhase", "reason"}

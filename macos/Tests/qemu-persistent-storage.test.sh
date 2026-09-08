@@ -117,9 +117,9 @@ else:
 PY
 }
 
-test_root=$(mktemp -d '/private/tmp/omarchy-qemu-storage-test.XXXXXX')
+test_root=$(mktemp -d '/private/tmp/my-omarchy-qemu-storage-test.XXXXXX')
 case "$test_root" in
-  /private/tmp/omarchy-qemu-storage-test.??????) ;;
+  /private/tmp/my-omarchy-qemu-storage-test.??????) ;;
   *) fail "unexpected test root: $test_root" ;;
 esac
 holder_pid=''
@@ -435,7 +435,7 @@ schema_one_disk=$QEMU_SELECTED_DISK
 printf 'schema-one-user-data' | dd of="$schema_one_disk" bs=1 seek=896 conv=notrunc >/dev/null 2>&1
 qemu_persistent_storage_release_lock
 printf \
-  '{"bundleIdentity":"%s","kind":"omarchy-qemu-persistent-disk","schemaVersion":1,"sourceRootfs":{"bytes":%s,"sha256":"%s"}}\n' \
+  '{"bundleIdentity":"%s","kind":"my-omarchy-persistent-disk","schemaVersion":1,"sourceRootfs":{"bytes":%s,"sha256":"%s"}}\n' \
   "$identity_b" "$source_bytes_b" "$source_sha_b" \
   >"${schema_one_disk%/*}/metadata.json"
 chmod 600 "${schema_one_disk%/*}/metadata.json"
@@ -463,7 +463,7 @@ chmod 700 "$interrupted_old_reset"
 /bin/cp "$source_disk" "$interrupted_old_reset/rootfs.ext4"
 chmod 600 "$interrupted_old_reset/rootfs.ext4"
 printf \
-  '{"bundleIdentity":"%s","kind":"omarchy-qemu-persistent-disk","schemaVersion":1,"sourceRootfs":{"bytes":%s,"sha256":"%s"}}\n' \
+  '{"bundleIdentity":"%s","kind":"my-omarchy-persistent-disk","schemaVersion":1,"sourceRootfs":{"bytes":%s,"sha256":"%s"}}\n' \
   "$identity_a" "$source_bytes" "$source_sha" \
   >"$interrupted_old_reset/metadata.json"
 chmod 600 "$interrupted_old_reset/metadata.json"
@@ -757,21 +757,22 @@ assert test -d "$newline_stage"
 assert test -f "$newline_stage/$newline_entry"
 qemu_persistent_storage_release_lock
 
-# The production default is branded for Try Omarchy and never recreates the
-# former Omarchy-only Application Support path.
+# The production default is branded for My Omarchy and never recreates the
+# predecessor product's Application Support path.
 saved_state_root=$OMARCHY_QEMU_GPU_STATE_ROOT
 saved_home=$HOME
 saved_multi_disk=$OMARCHY_QEMU_GPU_DEVELOPMENT_MULTI_DISK
 default_home="$test_root/default-home"
 mkdir "$default_home"
 chmod 700 "$default_home"
-old_branded_root="$default_home/Library/Application Support/Try Omarchy/QEMU/v1"
+predecessor_product='Try '"Omarchy"
+old_branded_root="$default_home/Library/Application Support/$predecessor_product/QEMU/v1"
 mkdir -p "$old_branded_root"
 chmod 700 \
   "$default_home/Library" \
   "$default_home/Library/Application Support" \
-  "$default_home/Library/Application Support/Try Omarchy" \
-  "$default_home/Library/Application Support/Try Omarchy/QEMU" \
+  "$default_home/Library/Application Support/$predecessor_product" \
+  "$default_home/Library/Application Support/$predecessor_product/QEMU" \
   "$old_branded_root"
 printf 'leave old storage untouched\n' >"$old_branded_root/sentinel"
 chmod 600 "$old_branded_root/sentinel"
@@ -782,7 +783,7 @@ qemu_persistent_storage_select \
   persistent "$identity_a" "$source_disk" "$source_sha" "$source_bytes" ''
 assert_eq \
   "$QEMU_SELECTED_DISK" \
-  "$default_home/Library/Application Support/Try Omarchy/VM/v1/disks/current/rootfs.ext4"
+  "$default_home/Library/Application Support/My Omarchy/VM/v1/disks/current/rootfs.ext4"
 assert test -f "$old_branded_root/sentinel"
 assert test ! -e "$default_home/Library/Application Support/Omarchy"
 qemu_persistent_storage_release_lock
@@ -847,7 +848,7 @@ export OMARCHY_QEMU_GPU_STATE_ROOT=$saved_state_root
 marker_root="$test_root/marker-state"
 mkdir -p "$marker_root"
 chmod 700 "$marker_root"
-marker_file="$marker_root/.omarchy-qemu-storage"
+marker_file="$marker_root/.my-omarchy-storage"
 
 # A marker this library wrote itself validates.
 _qps_write_root_marker "$marker_file"
@@ -860,7 +861,7 @@ assert_eq "$(<"$marker_file")" "$QEMU_PERSISTENT_STORAGE_ROOT_MARKER"
 chmod 600 "$marker_file"
 assert_fails _qps_validate_root_marker "$marker_file"
 
-printf '%s\n' 'omarchy-qemu-storage-root-v2' >"$marker_file"
+printf '%s\n' 'my-omarchy-storage-root-v2' >"$marker_file"
 chmod 600 "$marker_file"
 assert_fails _qps_validate_root_marker "$marker_file"
 
