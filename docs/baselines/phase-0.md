@@ -20,13 +20,16 @@
 make doctor
 ```
 
-结果：失败，稳定错误为：
+初始结果：失败，稳定错误为：
 
 ```text
 error: Swift toolchain cannot compile the Testing module
 ```
 
-新 doctor 会实际对包含 `import Testing` 和 `@Test` 的最小源码执行 `swiftc -typecheck`，因此不再把“存在 swift 可执行文件”误报为测试工具链可用。单元测试已覆盖 probe 成功和失败两条路径。
+后续修正：macOS Swift package 显式 pin `swift-testing` 0.12.0，`make doctor`
+改为构建仓库的 SwiftPM 测试入口，而不是脱离包依赖直接 `swiftc
+-typecheck import Testing`。这使 Command Line Tools 环境也能使用仓库锁定的
+测试模块，并继续在全量测试前 fail closed。
 
 ## 3. 测试基线
 
@@ -44,11 +47,12 @@ make test
 | guest contract verification | 通过 | `native guest contract verified` |
 | macOS compatibility | 通过 | `macos compatibility tests passed` |
 | runtime relocation | 通过 | `runtime relocation tests passed` |
-| Swift product compilation | 通过 | `omarchy-vm-helper` 完成 link |
-| Swift test target | 阻断 | `no such module 'Testing'` |
-| QEMU port/power/storage shell tests | 未执行 | Make 在 Swift test target 失败后停止 |
+| Swift product compilation | 通过 | `my-omarchy` 完成 link |
+| Swift test target | 已修复 | `swift-testing` 0.12.0；202 tests passed |
+| QEMU port/power/storage shell tests | 待重跑 | Swift 阻断解除后由完整 `make test` 继续覆盖 |
 
-该失败是环境工具链阻断，不是本阶段引入的产品回归。安装并选择包含 Swift Testing 的完整 Xcode 后，必须重新运行完整 `make test`；未重跑前不得把后续测试组标记为通过。
+该失败曾是环境工具链阻断，不是产品回归；当前修复路径是把 Swift Testing
+作为测试依赖随仓库解析并锁定。发布前仍必须重新运行完整 `make test`。
 
 ## 4. 制品与运行基线
 
@@ -67,8 +71,8 @@ make test
 ## 5. Phase 0 结论
 
 1. 非 Swift 测试与 Swift 产品编译链路在本机通过。
-2. 当前唯一已确认的测试阻断是 Command Line Tools 环境缺少 Swift `Testing` module。
-3. 新 doctor 已能在全量测试前准确报告该阻断。
+2. Swift `Testing` module 阻断已通过仓库级 `swift-testing` 依赖修复。
+3. 新 doctor 已能在全量测试前验证 SwiftPM 测试入口可构建。
 4. 当前没有可用于发布、性能比较或真实 VM E2E 的可信制品。
 5. Phase 1A 可以继续建立设计时 identity contract 和扫描门禁；Phase 1 发布退出门禁仍要求在完整 Xcode 环境重跑全部测试。
 

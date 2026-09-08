@@ -35,13 +35,13 @@ class DoctorTests(unittest.TestCase):
                 ).strip(),
                 "sw_vers": "printf '%s\n' \"${DOCTOR_TEST_MACOS:-15.6}\"",
                 "docker": "printf '%s\\n' 'Docker version 28.0.0'",
-                "swift": "exit 0",
-                "swiftc": textwrap.dedent(
+                "swift": textwrap.dedent(
                     """
                     printf '%s\n' "$*" >>"$DOCTOR_TEST_CALLS"
                     exit "${DOCTOR_TEST_SWIFT_STATUS:-0}"
                     """
                 ).strip(),
+                "swiftc": "exit 0",
                 "xcrun": "exit 0",
                 "curl": "exit 0",
                 "pkg-config": "exit 0",
@@ -72,19 +72,21 @@ class DoctorTests(unittest.TestCase):
             result.swift_calls = calls.read_text() if calls.exists() else ""  # type: ignore[attr-defined]
             return result
 
-    def test_reports_missing_swift_testing_module(self) -> None:
+    def test_reports_unbuildable_swift_test_package(self) -> None:
         result = self.run_doctor(swift_status=1)
 
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("Swift toolchain cannot compile the Testing module", result.stdout)
-        self.assertIn("-typecheck", result.swift_calls)  # type: ignore[attr-defined]
+        self.assertIn("Swift package tests cannot build", result.stdout)
+        self.assertIn("--build-tests", result.swift_calls)  # type: ignore[attr-defined]
+        self.assertIn("--disable-sandbox", result.swift_calls)  # type: ignore[attr-defined]
 
-    def test_accepts_toolchain_that_compiles_testing_probe(self) -> None:
+    def test_accepts_toolchain_that_builds_swift_test_package(self) -> None:
         result = self.run_doctor()
 
         self.assertEqual(0, result.returncode, result.stdout)
         self.assertIn("Toolchain ready: 15.6", result.stdout)
-        self.assertIn("-typecheck", result.swift_calls)  # type: ignore[attr-defined]
+        self.assertIn("--package-path", result.swift_calls)  # type: ignore[attr-defined]
+        self.assertIn("--build-tests", result.swift_calls)  # type: ignore[attr-defined]
 
 
 if __name__ == "__main__":

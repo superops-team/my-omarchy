@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+ROOT=$(cd "$(dirname "$0")/.." && pwd -P)
+
 fail() {
   printf 'error: %s\n' "$*" >&2
   exit 1
@@ -19,15 +21,11 @@ for tool in curl docker pkg-config python3 swift swiftc xcrun; do
 done
 docker info >/dev/null 2>&1 || fail 'Docker is installed but not running'
 
-probe_directory=$(mktemp -d "${TMPDIR:-/tmp}/my-omarchy-doctor.XXXXXX")
-trap 'rm -rf -- "$probe_directory"' EXIT
-module_cache="$probe_directory/module-cache"
-mkdir -p "$module_cache"
-printf '%s\n' 'import Testing' '' '@Test func probe() {}' >"$probe_directory/testing-probe.swift"
-if ! MACOSX_DEPLOYMENT_TARGET=15.0 swiftc \
-  -module-cache-path "$module_cache" \
-  -typecheck "$probe_directory/testing-probe.swift" >/dev/null 2>&1; then
-  fail 'Swift toolchain cannot compile the Testing module'
+if ! swift build \
+  --package-path "$ROOT/macos" \
+  --build-tests \
+  --disable-sandbox >/dev/null 2>&1; then
+  fail 'Swift package tests cannot build with the configured toolchain and dependencies'
 fi
 
 printf 'Toolchain ready: %s (%s)\n' "$macos_version" "$(uname -m)"

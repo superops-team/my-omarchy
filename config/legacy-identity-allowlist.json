@@ -18,14 +18,6 @@
       "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
-      "path": "docs/baselines/phase-0.md",
-      "pattern": "legacy-host-executable",
-      "expectedCount": 1,
-      "category": "historical-attribution",
-      "ownerPhase": "permanent",
-      "reason": "Preserves approved migration design context or immutable historical attribution."
-    },
-    {
       "path": "prd-spec/features/diagnostics-and-recovery/2026-09-08-diagnostics-and-recovery-design.md",
       "pattern": "legacy-display-name",
       "expectedCount": 1,

@@ -40,7 +40,8 @@ class HostIdentityTests(unittest.TestCase):
         self.assertIn('name: "MyOmarchy"', package)
         self.assertIn('.executable(name: "my-omarchy", targets: ["MyOmarchy"])', package)
         self.assertIn('.executableTarget(name: "MyOmarchy")', package)
-        self.assertIn('.testTarget(name: "MyOmarchyTests", dependencies: ["MyOmarchy"])', package)
+        self.assertIn('url: "https://github.com/swiftlang/swift-testing.git"', package)
+        self.assertIn('.product(name: "Testing", package: "swift-testing")', package)
         predecessor_module = "OmarchyVM" + "Helper"
         predecessor_executable = "omarchy-vm" + "-helper"
         self.assertNotIn(predecessor_module, package)

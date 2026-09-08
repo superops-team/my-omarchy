@@ -47,6 +47,21 @@ private let metrics = BundledGuestMetrics(
     workingDiskBytes: workingBytes
 )
 
+private func captureStorageLocationPolicyError(
+    _ operation: () throws -> Void
+) throws -> StorageLocationPolicyError {
+    do {
+        try operation()
+    } catch let error as StorageLocationPolicyError {
+        return error
+    } catch {
+        Issue.record("expected a StorageLocationPolicyError, got \(String(describing: error))")
+        throw error
+    }
+    Issue.record("expected a StorageLocationPolicyError, got no error")
+    throw StorageLocationPolicyError.notAbsolute
+}
+
 private func temporaryDirectory() throws -> URL {
     let url = FileManager.default.temporaryDirectory
         .appendingPathComponent("omarchy-storage-\(UUID().uuidString)", isDirectory: true)
@@ -339,11 +354,11 @@ struct StorageLocationPolicyTests {
         let probe = FakeVolumeProbe(
             result: volume(typeName: "exfat", name: "STICK", cloning: false, sparse: false)
         )
-        let error = #expect(throws: StorageLocationPolicyError.self) {
-            try StorageLocationPolicy.validate(container.path, metrics: metrics, probe: probe)
+        let error = try captureStorageLocationPolicyError {
+            _ = try StorageLocationPolicy.validate(container.path, metrics: metrics, probe: probe)
         }
         #expect(error == .unsupportedFilesystem(filesystem: "exfat", volume: "STICK"))
-        #expect(error?.errorDescription?.contains("EXFAT") == true)
+        #expect(error.errorDescription?.contains("EXFAT") == true)
     }
 
     @Test("rejects APFS that cannot clone or store sparse files")
@@ -379,8 +394,8 @@ struct StorageLocationPolicyTests {
         let container = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: container) }
 
-        let error = #expect(throws: StorageLocationPolicyError.self) {
-            try StorageLocationPolicy.validate(
+        let error = try captureStorageLocationPolicyError {
+            _ = try StorageLocationPolicy.validate(
                 container.path,
                 metrics: metrics,
                 probe: FakeVolumeProbe(result: volume(available: 2_000_000_000))
