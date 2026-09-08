@@ -39,6 +39,9 @@ My Omarchy 不读取、不迁移、不修改、不删除 Try Omarchy 的应用�
 | Issues | `https://github.com/superops-team/my-omarchy/issues` |
 | macOS bundle ID | `team.superops.myomarchy` |
 | App 包名 | `My Omarchy.app` |
+| Swift package/module | `MyOmarchy` |
+| host 可执行文件 | `my-omarchy` |
+| App 内 QEMU 可执行文件 | `My Omarchy` |
 | DMG | `MyOmarchy-<semver>-arm64.dmg` |
 | guest factory 发布物 | `my-omarchy-guest-<semver>-arm64` |
 | OCI 命名空间（如未来发布） | `ghcr.io/superops-team/my-omarchy/*` |
