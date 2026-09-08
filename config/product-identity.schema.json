@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/superops-team/my-omarchy/blob/main/config/product-identity.schema.json",
+  "title": "My Omarchy product identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "product", "repository", "macos", "storage", "guest", "runtime", "release"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["displayName", "slug", "compactName"],
+      "properties": {
+        "displayName": {"const": "My Omarchy"},
+        "slug": {"const": "my-omarchy"},
+        "compactName": {"const": "MyOmarchy"}
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "name", "url", "releasesUrl", "issuesUrl"],
+      "properties": {
+        "owner": {"const": "superops-team"},
+        "name": {"const": "my-omarchy"},
+        "url": {"const": "https://github.com/superops-team/my-omarchy"},
+        "releasesUrl": {"const": "https://github.com/superops-team/my-omarchy/releases"},
+        "issuesUrl": {"const": "https://github.com/superops-team/my-omarchy/issues"}
+      }
+    },
+    "macos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bundleIdentifier", "appBundleName", "executableName", "moduleName", "bundledQemuExecutableName", "preferencesName", "cacheDirectory", "savedStateName"],
+      "properties": {
+        "bundleIdentifier": {"const": "team.superops.myomarchy"},
+        "appBundleName": {"const": "My Omarchy.app"},
+        "executableName": {"const": "my-omarchy"},
+        "moduleName": {"const": "MyOmarchy"},
+        "bundledQemuExecutableName": {"const": "My Omarchy"},
+        "preferencesName": {"const": "team.superops.myomarchy.plist"},
+        "cacheDirectory": {"const": "team.superops.myomarchy"},
+        "savedStateName": {"const": "team.superops.myomarchy.savedState"}
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applicationSupportRelativePath", "productIdentity"],
+      "properties": {
+        "applicationSupportRelativePath": {"const": "My Omarchy/VM/v1"},
+        "productIdentity": {"const": "my-omarchy"}
+      }
+    },
+    "guest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kernelParameterPrefix", "packagePrefix", "repositoryName", "shareDirectory", "libraryDirectory", "artifactKind"],
+      "properties": {
+        "kernelParameterPrefix": {"const": "myomarchy."},
+        "packagePrefix": {"const": "my-omarchy-"},
+        "repositoryName": {"const": "my-omarchy"},
+        "shareDirectory": {"const": "/usr/share/my-omarchy"},
+        "libraryDirectory": {"const": "/usr/local/lib/my-omarchy"},
+        "artifactKind": {"const": "my-omarchy-guest-artifacts"}
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["servicePrefix", "virtioPortPrefix", "dockerPrefix"],
+      "properties": {
+        "servicePrefix": {"const": "team.superops.myomarchy."},
+        "virtioPortPrefix": {"const": "team.superops.myomarchy."},
+        "dockerPrefix": {"const": "my-omarchy-"}
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dmgPattern", "guestArtifactPattern", "notaryProfileDefault"],
+      "properties": {
+        "dmgPattern": {"const": "MyOmarchy-<semver>-arm64.dmg"},
+        "guestArtifactPattern": {"const": "my-omarchy-guest-<semver>-arm64"},
+        "notaryProfileDefault": {"const": "my-omarchy"}
+      }
+    }
+  }
+}

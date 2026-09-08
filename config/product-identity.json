@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "product": {
+    "displayName": "My Omarchy",
+    "slug": "my-omarchy",
+    "compactName": "MyOmarchy"
+  },
+  "repository": {
+    "owner": "superops-team",
+    "name": "my-omarchy",
+    "url": "https://github.com/superops-team/my-omarchy",
+    "releasesUrl": "https://github.com/superops-team/my-omarchy/releases",
+    "issuesUrl": "https://github.com/superops-team/my-omarchy/issues"
+  },
+  "macos": {
+    "bundleIdentifier": "team.superops.myomarchy",
+    "appBundleName": "My Omarchy.app",
+    "executableName": "my-omarchy",
+    "moduleName": "MyOmarchy",
+    "bundledQemuExecutableName": "My Omarchy",
+    "preferencesName": "team.superops.myomarchy.plist",
+    "cacheDirectory": "team.superops.myomarchy",
+    "savedStateName": "team.superops.myomarchy.savedState"
+  },
+  "storage": {
+    "applicationSupportRelativePath": "My Omarchy/VM/v1",
+    "productIdentity": "my-omarchy"
+  },
+  "guest": {
+    "kernelParameterPrefix": "myomarchy.",
+    "packagePrefix": "my-omarchy-",
+    "repositoryName": "my-omarchy",
+    "shareDirectory": "/usr/share/my-omarchy",
+    "libraryDirectory": "/usr/local/lib/my-omarchy",
+    "artifactKind": "my-omarchy-guest-artifacts"
+  },
+  "runtime": {
+    "servicePrefix": "team.superops.myomarchy.",
+    "virtioPortPrefix": "team.superops.myomarchy.",
+    "dockerPrefix": "my-omarchy-"
+  },
+  "release": {
+    "dmgPattern": "MyOmarchy-<semver>-arm64.dmg",
+    "guestArtifactPattern": "my-omarchy-guest-<semver>-arm64",
+    "notaryProfileDefault": "my-omarchy"
+  }
+}
