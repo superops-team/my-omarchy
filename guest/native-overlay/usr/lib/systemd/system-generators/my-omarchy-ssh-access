@@ -14,7 +14,7 @@ IFS= read -r command_line </proc/cmdline || exit 1
 enabled=0
 set -f
 for argument in $command_line; do
-  if [ "$argument" = tryomarchy.ssh_access=1 ]; then
+  if [ "$argument" = myomarchy.ssh_access=1 ]; then
     enabled=1
   fi
 done

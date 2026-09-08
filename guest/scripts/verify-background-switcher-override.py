@@ -15,7 +15,7 @@ omarchy-menu-images \\
   "$HOME/.config/omarchy/backgrounds/$theme_name"
 """
 NATIVE_INVOCATION = """\
-# Try Omarchy seeds its wallpaper in the supported user background directory.
+# My Omarchy seeds its wallpaper in the supported user background directory.
 # List that directory first so the seeded wallpaper is the picker's first card.
 omarchy-menu-images \\
   --selected "$current_background" \\

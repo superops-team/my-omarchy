@@ -14,14 +14,14 @@ import unittest
 GUEST = Path(__file__).resolve().parents[1]
 INSTALL_HOOK = (
     GUEST
-    / "native-overlay/usr/lib/initcpio/install/try-omarchy-boot-export"
+    / "native-overlay/usr/lib/initcpio/install/my-omarchy-boot-export"
 )
 RUNTIME_HOOK = (
     GUEST
-    / "native-overlay/usr/lib/initcpio/hooks/try-omarchy-boot-export"
+    / "native-overlay/usr/lib/initcpio/hooks/my-omarchy-boot-export"
 )
 MKINITCPIO_CONFIG = (
-    GUEST / "factory-overlay/etc/mkinitcpio.conf.d/90-try-omarchy.conf"
+    GUEST / "factory-overlay/etc/mkinitcpio.conf.d/90-my-omarchy.conf"
 )
 
 
@@ -37,8 +37,8 @@ class BootExportStaticTests(unittest.TestCase):
 
     def test_runtime_hook_is_enabled_in_the_factory_initramfs(self) -> None:
         config = MKINITCPIO_CONFIG.read_text(encoding="utf-8")
-        self.assertEqual(config.count("try-omarchy-boot-export"), 1)
-        self.assertIn("fsck try-omarchy-boot-export)", config)
+        self.assertEqual(config.count("my-omarchy-boot-export"), 1)
+        self.assertIn("fsck my-omarchy-boot-export)", config)
         self.assertTrue(RUNTIME_HOOK.stat().st_mode & stat.S_IXUSR)
 
     def test_runtime_hook_reads_the_root_mounted_by_mkinitcpio(self) -> None:
@@ -99,12 +99,12 @@ class BootExportRuntimeTests(unittest.TestCase):
         umount_status: int = 0,
     ) -> subprocess.CompletedProcess[str]:
         self.cmdline.write_text(command_line + "\n", encoding="ascii")
-        test_hook = self.root / "try-omarchy-boot-export"
+        test_hook = self.root / "my-omarchy-boot-export"
         source = RUNTIME_HOOK.read_text(encoding="utf-8")
         source = source.replace("/proc/cmdline", str(self.cmdline))
         source = source.replace("/usr/bin/stat", str(self.fake_bin / "stat"))
         source = source.replace("/new_root", str(self.old_root))
-        source = source.replace("/run/try-omarchy-boot-export", str(self.export))
+        source = source.replace("/run/my-omarchy-boot-export", str(self.export))
         test_hook.write_text(source, encoding="utf-8")
 
         environment = os.environ.copy()
@@ -132,7 +132,7 @@ run_latehook
     def _write_boot_files(self) -> None:
         (self.boot / "Image").write_bytes(b"installed kernel\n".ljust(64, b"\0"))
         (self.boot / "initramfs-linux.img").write_bytes(b"installed initramfs\n")
-        build_spec = self.old_root / "usr/share/try-omarchy/build-spec.json"
+        build_spec = self.old_root / "usr/share/my-omarchy/build-spec.json"
         build_spec.parent.mkdir(parents=True)
         build_spec.write_text(
             '{"runtime":{"kernelCommandLine":"root=/dev/vda rw rootwait '
@@ -146,9 +146,9 @@ run_latehook
     def test_absent_and_lookalike_tokens_leave_boot_untouched(self) -> None:
         for command_line in (
             "root=/dev/vda rw",
-            "root=/dev/vda tryomarchy.export_boot=0",
-            "root=/dev/vda xtryomarchy.export_boot=1",
-            "root=/dev/vda tryomarchy.export_boot=1x",
+            "root=/dev/vda myomarchy.export_boot=0",
+            "root=/dev/vda xmyomarchy.export_boot=1",
+            "root=/dev/vda myomarchy.export_boot=1x",
         ):
             with self.subTest(command_line=command_line):
                 result = self._run_hook(command_line)
@@ -160,7 +160,7 @@ run_latehook
         self._write_boot_files()
 
         result = self._run_hook(
-            "root=/dev/vda rw tryomarchy.export_boot=1 console=hvc0"
+            "root=/dev/vda rw myomarchy.export_boot=1 console=hvc0"
         )
 
         # The mocked poweroff returns, so the hook deliberately reports failure
@@ -179,13 +179,13 @@ run_latehook
         )
         self.assertEqual(
             (self.export / "complete").read_text(encoding="ascii"),
-            "try-omarchy-boot-export-v1\n",
+            "my-omarchy-boot-export-v1\n",
         )
         log = self._log_text()
         self.assertIn(
             "mount:-t 9p -o "
             "trans=virtio,version=9p2000.L,msize=1048576,cache=none,nosuid,nodev,noexec "
-            f"try-omarchy-boot-export {self.export}",
+            f"my-omarchy-boot-export {self.export}",
             log,
         )
         self.assertEqual(log.count("sync:"), 4)
@@ -196,7 +196,7 @@ run_latehook
         self._write_boot_files()
 
         result = self._run_hook(
-            "tryomarchy.export_boot=1 root=/dev/vda", mount_status=1
+            "myomarchy.export_boot=1 root=/dev/vda", mount_status=1
         )
 
         self.assertNotEqual(result.returncode, 0)
@@ -208,10 +208,10 @@ run_latehook
 
     def test_oversized_source_is_rejected_before_mount_or_copy(self) -> None:
         self._write_boot_files()
-        build_spec = self.old_root / "usr/share/try-omarchy/build-spec.json"
+        build_spec = self.old_root / "usr/share/my-omarchy/build-spec.json"
         build_spec.write_bytes(b"{" + b"x" * 1_048_576)
 
-        result = self._run_hook("root=/dev/vda tryomarchy.export_boot=1")
+        result = self._run_hook("root=/dev/vda myomarchy.export_boot=1")
 
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(self.export.exists())
@@ -225,7 +225,7 @@ run_latehook
         outside.write_bytes(b"not a direct boot file\n")
         (self.boot / "initramfs-linux.img").symlink_to(outside)
 
-        result = self._run_hook("root=/dev/vda tryomarchy.export_boot=1")
+        result = self._run_hook("root=/dev/vda myomarchy.export_boot=1")
 
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(self.export.exists())
@@ -237,7 +237,7 @@ run_latehook
         self._write_boot_files()
 
         result = self._run_hook(
-            "root=/dev/vda tryomarchy.export_boot=1", sync_fails=True
+            "root=/dev/vda myomarchy.export_boot=1", sync_fails=True
         )
 
         self.assertNotEqual(result.returncode, 0)
@@ -248,7 +248,7 @@ run_latehook
         self._write_boot_files()
 
         result = self._run_hook(
-            "root=/dev/vda tryomarchy.export_boot=1", umount_status=1
+            "root=/dev/vda myomarchy.export_boot=1", umount_status=1
         )
 
         self.assertNotEqual(result.returncode, 0)

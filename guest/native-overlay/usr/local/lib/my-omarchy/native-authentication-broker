@@ -1,5 +1,5 @@
 #!/usr/bin/python3 -I
-"""Root-only broker for signed Try Omarchy Touch ID sudo approvals."""
+"""Root-only broker for signed My Omarchy Touch ID sudo approvals."""
 
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ import time
 import uuid
 
 
-PORT = Path("/dev/virtio-ports/dev.tryomarchy.authentication")
-STATE = Path("/var/lib/try-omarchy/native-authentication.json")
+PORT = Path("/dev/virtio-ports/team.superops.myomarchy.authentication")
+STATE = Path("/var/lib/my-omarchy/native-authentication.json")
 OPENSSL = Path("/usr/bin/openssl")
 PROTOCOL_VERSION = 3
 CURRENT_STATE_VERSIONS = frozenset({PROTOCOL_VERSION})
@@ -220,7 +220,7 @@ def authorization_payload(
     request: dict[str, object], response: dict[str, object]
 ) -> bytes:
     fields = [
-        "try-omarchy-native-authentication-v3",
+        "my-omarchy-native-authentication-v3",
         request["guestId"],
         request["operation"],
         request["requestId"],
@@ -250,7 +250,7 @@ def public_key_pem(public_key: bytes) -> bytes:
 
 def verify_signature(public_key: bytes, signature: bytes, payload: bytes) -> bool:
     temporary_root = "/run" if Path("/run").is_dir() else None
-    with tempfile.TemporaryDirectory(prefix="try-omarchy-auth-", dir=temporary_root) as directory:
+    with tempfile.TemporaryDirectory(prefix="my-omarchy-auth-", dir=temporary_root) as directory:
         key_path = Path(directory) / "host-key.pem"
         signature_path = Path(directory) / "approval.sig"
         key_path.write_bytes(public_key_pem(public_key))

@@ -180,7 +180,7 @@ download_verified() {
 
 download_verified "$url" "$sha256" "$asset_cache"
 
-package_name=try-omarchy-ttfx
+package_name=my-omarchy-ttfx
 package_version="$version-$pkgrel"
 stage=$(mktemp -d "$work/ttfx-package.XXXXXX")
 cleanup() {
@@ -235,7 +235,7 @@ export SOURCE_DATE_EPOCH="$source_date_epoch"
 # Rust embeds source locations used by panic messages. Map the randomized,
 # concurrency-safe build directory to a stable prefix so it cannot perturb the
 # packaged binary or leak a particular builder path.
-export CARGO_ENCODED_RUSTFLAGS="--remap-path-prefix=$stage=/usr/src/try-omarchy-ttfx"
+export CARGO_ENCODED_RUSTFLAGS="--remap-path-prefix=$stage=/usr/src/my-omarchy-ttfx"
 install -d -m 0755 "$CARGO_HOME" "$CARGO_TARGET_DIR"
 (
   cd "$source_root"
@@ -291,7 +291,7 @@ pkgver = $package_version
 pkgdesc = Pinned official ttfx $version source build for the Omarchy ARM64 guest
 url = $repository
 builddate = $source_date_epoch
-packager = Try Omarchy reproducible guest builder
+packager = My Omarchy reproducible guest builder
 size = $installed_size
 arch = aarch64
 license = MIT
@@ -331,7 +331,7 @@ verify_file "$built_binary_sha256" "$root/usr/bin/ttfx" || fail "installed ttfx 
 installed_version=$(arch-chroot "$root" /usr/bin/ttfx --version)
 [[ $installed_version == "$reported_version" ]] || fail "installed ttfx reported an unexpected identity: $installed_version"
 
-repo_dir="$root/usr/share/try-omarchy/repo"
+repo_dir="$root/usr/share/my-omarchy/repo"
 install -d -m 0755 "$repo_dir"
 install -m 0644 "$package_archive" "$repo_dir/$(basename "$package_archive")"
 echo "Registered $query from verified official source $sha256 (binary $built_binary_sha256)"

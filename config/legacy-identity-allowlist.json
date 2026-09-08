@@ -7,31 +7,7 @@
       "expectedCount": 1,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
-    },
-    {
-      "path": "Makefile",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Remaining reference belongs to guest ABI, guest artifact, kernel token, or virtio namespace migration in Phase 1D."
-    },
-    {
-      "path": "Makefile",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "build-resource",
-      "ownerPhase": "1D",
-      "reason": "Removed with guest build resource and ABI naming in Phase 1D."
-    },
-    {
-      "path": "README.md",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Updated when user-facing guest and release naming moves in Phase 1D."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -39,31 +15,7 @@
       "expectedCount": 3,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
-    },
-    {
-      "path": "docs/architecture.md",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Remaining reference belongs to guest ABI, guest artifact, kernel token, or virtio namespace migration in Phase 1D."
-    },
-    {
-      "path": "docs/architecture.md",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Updated when the documented guest ABI moves to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "docs/architecture.md",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Updated when the documented guest ABI moves to My Omarchy in Phase 1D."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "docs/baselines/phase-0.md",
@@ -71,647 +23,7 @@
       "expectedCount": 1,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Records the immutable pre-migration Phase 0 baseline."
-    },
-    {
-      "path": "docs/releasing.md",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Updated when user-facing guest and release naming moves in Phase 1D."
-    },
-    {
-      "path": "guest/README.md",
-      "pattern": "legacy-display-name",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/README.md",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/README.md",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/build-container.sh",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/build-container.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/build.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 4,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/factory-overlay/etc/mkinitcpio.conf.d/90-try-omarchy.conf",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/factory-overlay/etc/systemd/zram-generator.conf.d/99-try-omarchy.conf",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/factory-overlay/usr/lib/environment.d/90-try-omarchy.conf",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/fragments/pre-refresh-pacman-restore-arm.sh",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/fragments/pre-refresh-pacman-restore-arm.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/etc/modprobe.d/90-try-omarchy-camera.conf",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/etc/modules-load.d/90-try-omarchy-camera.conf",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/etc/skel/.config/omarchy/backgrounds/tokyo-night/try-omarchy-wallpaper.jpg",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/etc/systemd/system/omarchy-provision-owner.service.d/10-try-omarchy-native.conf",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/etc/udev/rules.d/91-omarchy-native-audio.rules",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/etc/udev/rules.d/92-omarchy-native-clipboard.rules",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/etc/udev/rules.d/94-omarchy-native-camera.rules",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/bin/omarchy-theme-bg-switcher",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/lib/initcpio/hooks/try-omarchy-boot-export",
-      "pattern": "legacy-display-name",
-      "expectedCount": 7,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/lib/initcpio/hooks/try-omarchy-boot-export",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/lib/initcpio/hooks/try-omarchy-boot-export",
-      "pattern": "legacy-slug",
-      "expectedCount": 5,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/lib/initcpio/install/try-omarchy-boot-export",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/lib/initcpio/install/try-omarchy-boot-export",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/lib/systemd/system-generators/try-omarchy-ssh-access",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/lib/systemd/system-generators/try-omarchy-ssh-access",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/lib/systemd/system/omarchy-native-mac-share.service",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/lib/systemd/user/omarchy-native-clipboard-bridge.service",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/local/bin/omarchy-native-audio-bridge",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/local/bin/omarchy-native-camera-bridge",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/local/bin/omarchy-native-clipboard-bridge",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/local/bin/omarchy-native-mac-share",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/local/lib/try-omarchy/install-vivaldi-arm64",
-      "pattern": "legacy-display-name",
-      "expectedCount": 6,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/local/lib/try-omarchy/install-vivaldi-arm64",
-      "pattern": "legacy-slug",
-      "expectedCount": 7,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/share/pipewire/pipewire.conf.d/90-try-omarchy-quantum.conf",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/native-overlay/usr/share/pipewire/pipewire.conf.d/90-try-omarchy-quantum.conf",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/patches/omarchy/1password-arm64-installer.patch",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/patches/omarchy/update-free-space-message.patch",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/patches/omarchy/vivaldi-browser-integration.patch",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/configure-rootfs.sh",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/configure-rootfs.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 9,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/finalize-rootfs.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 6,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/materialize-omarchy.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 4,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/pack-image.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 4,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-local-repository.sh",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-local-repository.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 14,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-omarchy-runtime.sh",
-      "pattern": "legacy-display-name",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-omarchy-runtime.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 8,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-patched-hyprland.sh",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-patched-hyprland.sh",
-      "pattern": "legacy-repository",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-patched-hyprland.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 7,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-pinned-mise.sh",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-pinned-mise.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-pinned-ttfx.sh",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-pinned-ttfx.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 3,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-pinned-yay.sh",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/register-pinned-yay.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/verify-background-switcher-override.py",
-      "pattern": "legacy-display-name",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/write-guest-manifest.py",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/scripts/write-provenance.py",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/spec.json",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/spec.json",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/spec.json",
-      "pattern": "legacy-repository",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/spec.json",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/tests/test_boot_export.py",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 8,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/tests/test_boot_export.py",
-      "pattern": "legacy-slug",
-      "expectedCount": 11,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/tests/test_ssh_access.py",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 5,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/tests/test_ssh_access.py",
-      "pattern": "legacy-slug",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/tests/verify.py",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 6,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/tests/verify.py",
-      "pattern": "legacy-display-name",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/tests/verify.py",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/tests/verify.py",
-      "pattern": "legacy-repository",
-      "expectedCount": 1,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "guest/tests/verify.py",
-      "pattern": "legacy-slug",
-      "expectedCount": 21,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
-    },
-    {
-      "path": "macos/Tests/run-qemu-ssh-contract.test.sh",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 11,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Remaining reference belongs to guest ABI, guest artifact, kernel token, or virtio namespace migration in Phase 1D."
-    },
-    {
-      "path": "macos/Tests/run-qemu-ssh-contract.test.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Remaining reference belongs to guest ABI, guest artifact, kernel token, or virtio namespace migration in Phase 1D."
-    },
-    {
-      "path": "macos/qemu-persistent-storage.sh",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 2,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Remaining reference belongs to guest ABI, guest artifact, kernel token, or virtio namespace migration in Phase 1D."
-    },
-    {
-      "path": "macos/run-qemu-gpu.sh",
-      "pattern": "legacy-bundle-prefix",
-      "expectedCount": 5,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Remaining reference belongs to guest ABI, guest artifact, kernel token, or virtio namespace migration in Phase 1D."
-    },
-    {
-      "path": "macos/run-qemu-gpu.sh",
-      "pattern": "legacy-kernel-prefix",
-      "expectedCount": 5,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Remaining reference belongs to guest ABI, guest artifact, kernel token, or virtio namespace migration in Phase 1D."
-    },
-    {
-      "path": "macos/run-qemu-gpu.sh",
-      "pattern": "legacy-slug",
-      "expectedCount": 3,
-      "category": "guest-abi",
-      "ownerPhase": "1D",
-      "reason": "Remaining reference belongs to guest ABI, guest artifact, kernel token, or virtio namespace migration in Phase 1D."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/features/diagnostics-and-recovery/2026-09-08-diagnostics-and-recovery-design.md",
@@ -719,7 +31,7 @@
       "expectedCount": 1,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/features/diagnostics-and-recovery/2026-09-08-diagnostics-and-recovery-design.md",
@@ -727,7 +39,7 @@
       "expectedCount": 1,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/features/lightweight-vm-runtime/2026-09-08-lightweight-vm-runtime-design.md",
@@ -735,7 +47,7 @@
       "expectedCount": 1,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md",
@@ -743,7 +55,7 @@
       "expectedCount": 1,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md",
@@ -751,7 +63,7 @@
       "expectedCount": 21,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md",
@@ -759,7 +71,7 @@
       "expectedCount": 2,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md",
@@ -767,7 +79,7 @@
       "expectedCount": 3,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/features/vm-lifecycle-management/2026-09-08-vm-lifecycle-management-design.md",
@@ -775,7 +87,7 @@
       "expectedCount": 5,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-my-omarchy-product-readiness-roadmap.md",
@@ -783,7 +95,7 @@
       "expectedCount": 4,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
@@ -791,7 +103,7 @@
       "expectedCount": 1,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
@@ -799,7 +111,7 @@
       "expectedCount": 1,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
@@ -807,7 +119,7 @@
       "expectedCount": 8,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
@@ -815,7 +127,7 @@
       "expectedCount": 1,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
@@ -823,7 +135,7 @@
       "expectedCount": 2,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves explicit predecessor attribution and approved migration context."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-1b-brand-assets-design.md",
@@ -831,23 +143,23 @@
       "expectedCount": 3,
       "category": "historical-attribution",
       "ownerPhase": "permanent",
-      "reason": "Preserves approved design context for removing predecessor brand assets."
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
-      "path": "scripts/build-cache.py",
-      "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "build-resource",
-      "ownerPhase": "1D",
-      "reason": "Removed with guest build resource and ABI naming in Phase 1D."
+      "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-1d-guest-abi-design.md",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
-      "path": "tests/test-build-cache.py",
+      "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-1d-guest-abi-design.md",
       "pattern": "legacy-slug",
-      "expectedCount": 2,
-      "category": "build-resource",
-      "ownerPhase": "1D",
-      "reason": "Removed with guest build resource and ABI naming in Phase 1D."
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves approved migration design context or immutable historical attribution."
     },
     {
       "path": "tests/test-product-identity.py",

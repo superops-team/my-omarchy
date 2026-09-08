@@ -326,9 +326,9 @@ find "$stage/usr/share/voxtype/quickshell" -type f -exec chmod 0644 {} +
 for pair in "cpu:${asset_paths[cpu]}" "onnx:${asset_paths[onnx]}"; do
   name=${pair%%:*}
   binary=${pair#*:}
-  smoke_path="$root/usr/share/try-omarchy/.voxtype-$name-smoke"
+  smoke_path="$root/usr/share/my-omarchy/.voxtype-$name-smoke"
   install -Dm0755 "$binary" "$smoke_path"
-  reported=$(arch-chroot "$root" "/usr/share/try-omarchy/.voxtype-$name-smoke" --version)
+  reported=$(arch-chroot "$root" "/usr/share/my-omarchy/.voxtype-$name-smoke" --version)
   rm -f "$smoke_path"
   [[ $reported == "$reported_version" ]] || fail "Voxtype $name binary reported an unexpected identity: $reported"
 done
@@ -341,7 +341,7 @@ pkgver = $package_version
 pkgdesc = Signed official Voxtype $version ARM64 binaries for Omarchy dictation
 url = $repository
 builddate = $source_date_epoch
-packager = Try Omarchy reproducible guest builder
+packager = My Omarchy reproducible guest builder
 size = $installed_size
 arch = aarch64
 license = MIT
@@ -389,7 +389,7 @@ verify_file "${asset_digests[cpu]}" "$stage/usr/lib/voxtype/voxtype-native" ||
 verify_file "${asset_digests[onnx]}" "$stage/usr/lib/voxtype/voxtype-onnx" ||
   fail "packaged Voxtype ONNX binary digest mismatch"
 
-repo_dir="$root/usr/share/try-omarchy/repo"
+repo_dir="$root/usr/share/my-omarchy/repo"
 install -d -m 0755 "$repo_dir"
 install -m 0644 "$package_archive" "$repo_dir/$(basename "$package_archive")"
 echo "Registered opt-in $query from six signed official ARM64 assets"

@@ -205,7 +205,7 @@ def normalized_command(root: Path, command: list[str]) -> list[str]:
 
 def fingerprint(root: Path, component: str, command: list[str]) -> str:
     digest = hashlib.sha256()
-    digest.update(f"try-omarchy-build-cache-v{SCHEMA_VERSION}\0{component}\0".encode())
+    digest.update(f"my-omarchy-build-cache-v{SCHEMA_VERSION}\0{component}\0".encode())
     digest.update(
         json.dumps(normalized_command(root, command), separators=(",", ":")).encode()
     )
@@ -279,7 +279,7 @@ def validate_guest(root: Path, previous: dict[str, Any] | None) -> dict[str, Any
         raise CacheError("guest manifest is not an object")
     if (
         manifest.get("schemaVersion") != 1
-        or manifest.get("kind") != "try-omarchy-guest-artifacts"
+        or manifest.get("kind") != "my-omarchy-guest-artifacts"
     ):
         raise CacheError("guest manifest identity is invalid")
     artifacts = manifest.get("artifacts")

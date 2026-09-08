@@ -12,7 +12,7 @@ import unittest
 GUEST = Path(__file__).resolve().parents[1]
 GENERATOR = (
     GUEST
-    / "native-overlay/usr/lib/systemd/system-generators/try-omarchy-ssh-access"
+    / "native-overlay/usr/lib/systemd/system-generators/my-omarchy-ssh-access"
 )
 
 
@@ -52,9 +52,9 @@ class SSHAccessGeneratorTests(unittest.TestCase):
     def test_absent_and_lookalike_tokens_do_nothing(self) -> None:
         for command_line in (
             "root=/dev/vda rw",
-            "root=/dev/vda tryomarchy.ssh_access=0",
-            "root=/dev/vda xtryomarchy.ssh_access=1",
-            "root=/dev/vda tryomarchy.ssh_access=1x",
+            "root=/dev/vda myomarchy.ssh_access=0",
+            "root=/dev/vda xmyomarchy.ssh_access=1",
+            "root=/dev/vda myomarchy.ssh_access=1x",
         ):
             result, output, temporary = self.run_generator(command_line)
             with temporary:
@@ -71,7 +71,7 @@ class SSHAccessGeneratorTests(unittest.TestCase):
 
     def test_exact_token_creates_only_runtime_wants_link(self) -> None:
         result, output, temporary = self.run_generator(
-            "root=/dev/vda rw tryomarchy.ssh_access=1"
+            "root=/dev/vda rw myomarchy.ssh_access=1"
         )
         with temporary:
             link = output / "multi-user.target.wants/sshd.service"
@@ -85,7 +85,7 @@ class SSHAccessGeneratorTests(unittest.TestCase):
 
     def test_exact_token_requires_vendor_unit(self) -> None:
         result, output, temporary = self.run_generator(
-            "root=/dev/vda rw tryomarchy.ssh_access=1", vendor_unit_exists=False
+            "root=/dev/vda rw myomarchy.ssh_access=1", vendor_unit_exists=False
         )
         with temporary:
             self.assertNotEqual(result.returncode, 0)
@@ -102,7 +102,7 @@ class SSHAccessGeneratorTests(unittest.TestCase):
             (output / "multi-user.target.wants").symlink_to(escaped)
             cmdline = root / "cmdline"
             cmdline.write_text(
-                "root=/dev/vda rw tryomarchy.ssh_access=1\n", encoding="ascii"
+                "root=/dev/vda rw myomarchy.ssh_access=1\n", encoding="ascii"
             )
             vendor = root / "sshd.service"
             vendor.write_text("[Service]\n", encoding="ascii")

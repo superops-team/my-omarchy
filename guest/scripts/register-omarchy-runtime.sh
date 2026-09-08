@@ -90,7 +90,7 @@ source_date_epoch=${metadata[4]}
 [[ $source_date_epoch =~ ^[0-9]+$ ]] || fail "invalid source date epoch"
 [[ $(<"$root/usr/share/omarchy/version") == "$source_version" ]] || fail "staged version differs from spec"
 
-package_name=try-omarchy-runtime
+package_name=my-omarchy-runtime
 package_version="$release-1"
 stage=$(mktemp -d "$work/omarchy-runtime-package.XXXXXX")
 cleanup() {
@@ -101,8 +101,8 @@ trap cleanup EXIT
 mkdir -p \
   "$stage/usr/bin" \
   "$stage/usr/local/bin" \
-  "$stage/usr/local/lib/try-omarchy" \
-  "$stage/usr/local/share/try-omarchy/vivaldi" \
+  "$stage/usr/local/lib/my-omarchy" \
+  "$stage/usr/local/share/my-omarchy/vivaldi" \
   "$stage/usr/share" \
   "$stage/usr/share/licenses"
 cp -a "$root/usr/share/omarchy" "$stage/usr/share/omarchy"
@@ -116,13 +116,13 @@ cursor_restore="$root/usr/local/bin/omarchy-native-cursor-restore"
   fail "native screensaver cursor helper is missing or unsafe"
 cp -a "$cursor_restore" "$stage/usr/local/bin/omarchy-native-cursor-restore"
 
-vivaldi_installer="$root/usr/local/lib/try-omarchy/install-vivaldi-arm64"
-vivaldi_key="$root/usr/local/share/try-omarchy/vivaldi/linux_signing_key.pub"
+vivaldi_installer="$root/usr/local/lib/my-omarchy/install-vivaldi-arm64"
+vivaldi_key="$root/usr/local/share/my-omarchy/vivaldi/linux_signing_key.pub"
 [[ -f $vivaldi_installer && -x $vivaldi_installer && ! -L $vivaldi_installer ]] ||
   fail "Vivaldi ARM64 installer is missing or unsafe"
 [[ -f $vivaldi_key && ! -L $vivaldi_key ]] || fail "Vivaldi package key is missing or unsafe"
-cp -a "$vivaldi_installer" "$stage/usr/local/lib/try-omarchy/install-vivaldi-arm64"
-cp -a "$vivaldi_key" "$stage/usr/local/share/try-omarchy/vivaldi/linux_signing_key.pub"
+cp -a "$vivaldi_installer" "$stage/usr/local/lib/my-omarchy/install-vivaldi-arm64"
+cp -a "$vivaldi_key" "$stage/usr/local/share/my-omarchy/vivaldi/linux_signing_key.pub"
 
 shopt -s nullglob
 runtime_commands=("$root/usr/bin/omarchy" "$root/usr/bin"/omarchy-*)
@@ -149,10 +149,10 @@ cat >"$stage/.PKGINFO" <<EOF
 pkgname = $package_name
 pkgbase = $package_name
 pkgver = $package_version
-pkgdesc = Pinned Basecamp Omarchy runtime $commit for the Try Omarchy guest
+pkgdesc = Pinned Basecamp Omarchy runtime $commit for the My Omarchy guest
 url = $repository
 builddate = $source_date_epoch
-packager = Try Omarchy reproducible guest builder
+packager = My Omarchy reproducible guest builder
 size = $installed_size
 arch = any
 license = MIT
@@ -190,7 +190,7 @@ pacman --config "$pacman_config" --root "$root" --dbpath "$root/var/lib/pacman" 
 # Keep an immutable package copy in the guest's local sync repository. Without
 # a matching sync record, pacman classifies this source-pinned runtime as an AUR
 # package and the upstream updater attempts to hand it to yay.
-repo_dir="$root/usr/share/try-omarchy/repo"
+repo_dir="$root/usr/share/my-omarchy/repo"
 install -d -m 0755 "$repo_dir"
 install -m 0644 "$archive" "$repo_dir/$(basename "$archive")"
 

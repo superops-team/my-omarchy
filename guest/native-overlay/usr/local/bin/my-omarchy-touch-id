@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-PAM_LINE=$'auth\t\tsufficient\tpam_exec.so quiet seteuid /usr/local/lib/try-omarchy/native-authentication-broker pam'
-CURRENT_PAM_LINE=$'auth\t\tsufficient\tpam_exec.so quiet seteuid stdout /usr/local/lib/try-omarchy/native-authentication-broker pam'
-CONTROL=/usr/local/sbin/try-omarchy-touch-id-control
+PAM_LINE=$'auth\t\tsufficient\tpam_exec.so quiet seteuid /usr/local/lib/my-omarchy/native-authentication-broker pam'
+CURRENT_PAM_LINE=$'auth\t\tsufficient\tpam_exec.so quiet seteuid stdout /usr/local/lib/my-omarchy/native-authentication-broker pam'
+CONTROL=/usr/local/sbin/my-omarchy-touch-id-control
 
 enabled() {
   grep -Fxq -e "$PAM_LINE" -e "$CURRENT_PAM_LINE" /etc/pam.d/sudo 2>/dev/null
@@ -24,7 +24,7 @@ enable_touch_id() {
     return
   fi
   printf '%s\n' \
-    "Touch ID will approve sudo only while this Try Omarchy window is focused." \
+    "Touch ID will approve sudo only while this My Omarchy window is focused." \
     "Your guest password remains available as fallback." \
     "" \
     "Enabling requires your guest sudo password, followed by Touch ID on this Mac."
@@ -32,7 +32,7 @@ enable_touch_id() {
   sudo -k
   sudo "$CONTROL" enable
   refresh_menu
-  try-omarchy-touch-id-test
+  my-omarchy-touch-id-test
   echo "Touch ID for sudo is enabled; the password-free sudo check passed."
 }
 
@@ -54,7 +54,7 @@ repair_touch_id() {
   sudo -k
   sudo "$CONTROL" repair
   refresh_menu
-  try-omarchy-touch-id-test
+  my-omarchy-touch-id-test
   echo "Touch ID for sudo was re-paired; the password-free sudo check passed."
 }
 
@@ -68,7 +68,7 @@ manage_touch_id() {
     gum choose --header "Touch ID for sudo is enabled") || exit 130
   case "$choice" in
     "Test Touch ID")
-      exec try-omarchy-touch-id-test
+      exec my-omarchy-touch-id-test
       ;;
     "Re-pair Touch ID")
       repair_touch_id
@@ -101,7 +101,7 @@ case "${1:-manage}" in
     exit 1
     ;;
   *)
-    echo "Usage: try-omarchy-touch-id [manage|enable|disable|repair|status [--quiet]]" >&2
+    echo "Usage: my-omarchy-touch-id [manage|enable|disable|repair|status [--quiet]]" >&2
     exit 64
     ;;
 esac

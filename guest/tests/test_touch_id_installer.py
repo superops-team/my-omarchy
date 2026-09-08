@@ -11,7 +11,7 @@ import unittest
 
 GUEST = Path(__file__).resolve().parents[1]
 INSTALLER = GUEST / "scripts/install-touch-id-sudo.sh"
-PAM_LINE = "auth\t\tsufficient\tpam_exec.so quiet seteuid stdout /usr/local/lib/try-omarchy/native-authentication-broker pam"
+PAM_LINE = "auth\t\tsufficient\tpam_exec.so quiet seteuid stdout /usr/local/lib/my-omarchy/native-authentication-broker pam"
 
 
 class TouchIDInstallerTests(unittest.TestCase):
@@ -52,11 +52,11 @@ class TouchIDInstallerTests(unittest.TestCase):
             self.assertEqual(sudo_policy.read_text(encoding="utf-8"), original_policy)
             self.assertNotIn(PAM_LINE, sudo_policy.read_text(encoding="utf-8"))
             for relative in (
-                "usr/local/bin/try-omarchy-touch-id",
-                "usr/local/bin/try-omarchy-touch-id-test",
-                "usr/local/lib/try-omarchy/native-authentication-broker",
-                "usr/local/sbin/try-omarchy-touch-id-control",
-                "usr/local/sbin/try-omarchy-touch-id-enroll",
+                "usr/local/bin/my-omarchy-touch-id",
+                "usr/local/bin/my-omarchy-touch-id-test",
+                "usr/local/lib/my-omarchy/native-authentication-broker",
+                "usr/local/sbin/my-omarchy-touch-id-control",
+                "usr/local/sbin/my-omarchy-touch-id-enroll",
             ):
                 installed = root / relative
                 self.assertTrue(installed.is_file(), relative)

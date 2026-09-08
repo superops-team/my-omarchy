@@ -137,6 +137,19 @@ class ProductIdentityContractTests(unittest.TestCase):
             ],
         )
 
+    def test_release_identity_gate_has_no_migration_owned_entries(self) -> None:
+        result = subprocess.run(
+            ["make", "--no-print-directory", "verify-release-identity"],
+            cwd=REPOSITORY,
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+
+        self.assertEqual(0, result.returncode, result.stdout)
+
 
 class LegacyIdentityScannerTests(unittest.TestCase):
     def run_scanner(

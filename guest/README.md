@@ -1,6 +1,6 @@
 # ARM64 guest image
 
-This directory builds the single guest supported by Try Omarchy: our own
+This directory builds the single guest supported by My Omarchy: our own
 unprovisioned ARM64 Arch Linux factory image containing pinned upstream Omarchy
 source. It is not a prebuilt image published by Basecamp.
 
@@ -56,14 +56,14 @@ from before paired boot kits are migrated once by a recovery initramfs that
 reads their `/boot` directory with the root disk mounted read-only.
 
 Omarchy's built-in updater remains available for updates supported by this ARM
-guest, but it is not equivalent to installing a new Try Omarchy factory. The
+guest, but it is not equivalent to installing a new My Omarchy factory. The
 direct-boot kernel and matching headers are held, while the packaged
-`try-omarchy-runtime` and reviewed backports resolve from the immutable local
+`my-omarchy-runtime` and reviewed backports resolve from the immutable local
 repository. A separate migration channel is required before those
 Try-Omarchy-specific revisions can advance on an existing disk without reset.
 
 The default Tokyo Night wallpaper is seeded as a per-user background at
-`native-overlay/etc/skel/.config/omarchy/backgrounds/tokyo-night/try-omarchy-wallpaper.jpg`.
+`native-overlay/etc/skel/.config/omarchy/backgrounds/tokyo-night/my-omarchy-wallpaper.jpg`.
 Omarchy checks that directory before the packaged theme backgrounds during
 first-time owner provisioning, so the project image becomes the default without
 changing the pinned upstream theme tree. The narrowly audited
@@ -72,7 +72,7 @@ first, making the project wallpaper its first option as well.
 
 OpenSSH is an explicit factory package. A systemd generator requests the vendor
 `sshd.service` only for a boot carrying the exact
-`tryomarchy.ssh_access=1` kernel token, which the Mac launcher derives from a
+`myomarchy.ssh_access=1` kernel token, which the Mac launcher derives from a
 validated generic TCP mapping to guest port 22. The generator writes only to
 systemd's runtime generator directory; it does not enable sshd persistently or
 change authentication policy under `/etc`.

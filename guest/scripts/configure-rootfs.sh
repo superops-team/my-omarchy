@@ -56,7 +56,7 @@ profile=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["guest
 [[ $architecture == aarch64 ]] || fail "native guest architecture must be aarch64"
 [[ $profile == factory ]] || fail "native guest profile must be factory"
 
-mkdir -p "$root/etc" "$root/etc/skel" "$root/usr/share/try-omarchy"
+mkdir -p "$root/etc" "$root/etc/skel" "$root/usr/share/my-omarchy"
 cp -a "$guest_dir/factory-overlay/." "$root/"
 
 # Session-config customizations are additive, so each fragment remains
@@ -83,20 +83,20 @@ chmod 0755 \
   "$root/usr/local/bin/omarchy-native-cursor-restore" \
   "$root/usr/local/bin/omarchy-native-display-sync" \
   "$root/usr/local/bin/omarchy-native-mac-share" \
-  "$root/usr/local/bin/try-omarchy-touch-id" \
-  "$root/usr/local/bin/try-omarchy-touch-id-test" \
-  "$root/usr/local/lib/try-omarchy/native-authentication-broker" \
-  "$root/usr/local/sbin/try-omarchy-touch-id-control" \
-  "$root/usr/local/sbin/try-omarchy-touch-id-enroll" \
-  "$root/usr/local/lib/try-omarchy/install-vivaldi-arm64" \
-  "$root/usr/lib/systemd/system-generators/try-omarchy-ssh-access"
+  "$root/usr/local/bin/my-omarchy-touch-id" \
+  "$root/usr/local/bin/my-omarchy-touch-id-test" \
+  "$root/usr/local/lib/my-omarchy/native-authentication-broker" \
+  "$root/usr/local/sbin/my-omarchy-touch-id-control" \
+  "$root/usr/local/sbin/my-omarchy-touch-id-enroll" \
+  "$root/usr/local/lib/my-omarchy/install-vivaldi-arm64" \
+  "$root/usr/lib/systemd/system-generators/my-omarchy-ssh-access"
 
 vivaldi_key=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["supplyChain"]["vivaldi"]["signingKey"])' "$spec")
 [[ $vivaldi_key == keys/vivaldi-package-composer-key11.asc ]] || fail "unexpected Vivaldi key path"
 [[ -f $guest_dir/$vivaldi_key && ! -L $guest_dir/$vivaldi_key ]] || fail "Vivaldi package key is missing or unsafe"
-install -d -m 0755 "$root/usr/local/share/try-omarchy/vivaldi"
+install -d -m 0755 "$root/usr/local/share/my-omarchy/vivaldi"
 install -m 0644 "$guest_dir/$vivaldi_key" \
-  "$root/usr/local/share/try-omarchy/vivaldi/linux_signing_key.pub"
+  "$root/usr/local/share/my-omarchy/vivaldi/linux_signing_key.pub"
 for native_command in \
   omarchy-audio-input-set-default \
   omarchy-screensaver \
@@ -151,7 +151,7 @@ install -m 0644 "$guest_dir/$pacman_input" "$root/etc/pacman.conf"
 install -m 0644 "$arm_mirrorlist" "$root/etc/pacman.d/mirrorlist"
 
 # Omarchy's channel templates stay authentic. Its supported hook restores the
-# final Try Omarchy-owned ARM configuration after a template is copied to /etc
+# final My Omarchy-owned ARM configuration after a template is copied to /etc
 # and before pacman refreshes its databases.
 refresh_hook="$guest_dir/fragments/pre-refresh-pacman-restore-arm.sh"
 [[ -f $refresh_hook ]] || fail "ARM pacman refresh hook not found: $refresh_hook"
@@ -171,9 +171,9 @@ rm -rf "$root/var/log/journal" "$root/var/lib/systemd/random-seed"
 mkdir -p "$root/var/log" "$root/var/cache/pacman/pkg"
 find "$root/var/cache/pacman/pkg" -mindepth 1 -maxdepth 1 -type f -delete 2>/dev/null || true
 
-mkdir -p "$root/usr/local/lib/try-omarchy"
-install -m 0755 "$guest_dir/scripts/finalize-rootfs.sh" "$root/usr/local/lib/try-omarchy/finalize-rootfs"
-install -m 0644 "$spec" "$root/usr/share/try-omarchy/build-spec.json"
+mkdir -p "$root/usr/local/lib/my-omarchy"
+install -m 0755 "$guest_dir/scripts/finalize-rootfs.sh" "$root/usr/local/lib/my-omarchy/finalize-rootfs"
+install -m 0644 "$spec" "$root/usr/share/my-omarchy/build-spec.json"
 
 # Record content digests before the user overlay is copied into $HOME. This is
 # the machine-readable proof that the compositor/shell runtime came from the
@@ -181,6 +181,6 @@ install -m 0644 "$spec" "$root/usr/share/try-omarchy/build-spec.json"
 python3 "$guest_dir/scripts/write-provenance.py" \
   --root "$root" \
   --spec "$spec" \
-  --output "$root/usr/share/try-omarchy/provenance.json"
+  --output "$root/usr/share/my-omarchy/provenance.json"
 
 echo "Configured Omarchy $profile profile in $root"

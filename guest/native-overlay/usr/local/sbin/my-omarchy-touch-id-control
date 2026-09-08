@@ -2,29 +2,29 @@
 
 set -euo pipefail
 
-LEGACY_PAM_LINE=$'auth\t\tsufficient\tpam_exec.so quiet seteuid /usr/local/lib/try-omarchy/native-authentication-broker pam'
-PAM_LINE=$'auth\t\tsufficient\tpam_exec.so quiet seteuid stdout /usr/local/lib/try-omarchy/native-authentication-broker pam'
+LEGACY_PAM_LINE=$'auth\t\tsufficient\tpam_exec.so quiet seteuid /usr/local/lib/my-omarchy/native-authentication-broker pam'
+PAM_LINE=$'auth\t\tsufficient\tpam_exec.so quiet seteuid stdout /usr/local/lib/my-omarchy/native-authentication-broker pam'
 
 fail() {
-  echo "try-omarchy-touch-id-control: $*" >&2
+  echo "my-omarchy-touch-id-control: $*" >&2
   exit 1
 }
 
 usage() {
-  echo "Usage: try-omarchy-touch-id-control enable|disable|repair|migrate" >&2
+  echo "Usage: my-omarchy-touch-id-control enable|disable|repair|migrate" >&2
   exit 64
 }
 
 (( EUID == 0 )) || fail "run as root"
 [[ $# == 1 ]] || usage
 
-broker=/usr/local/lib/try-omarchy/native-authentication-broker
+broker=/usr/local/lib/my-omarchy/native-authentication-broker
 pam_policy=/etc/pam.d/sudo
 [[ -x $broker && ! -L $broker ]] || fail "authentication broker is missing or unsafe"
 [[ -f $pam_policy && ! -L $pam_policy ]] || fail "sudo PAM policy is missing or unsafe"
 [[ $(sed -n '1p' "$pam_policy") == '#%PAM-1.0' ]] || fail "unexpected sudo PAM policy header"
 
-if grep -F '/usr/local/lib/try-omarchy/native-authentication-broker' "$pam_policy" |
+if grep -F '/usr/local/lib/my-omarchy/native-authentication-broker' "$pam_policy" |
   grep -Fvx -e "$PAM_LINE" -e "$LEGACY_PAM_LINE" >/dev/null; then
   fail "sudo PAM policy contains a different authentication broker rule"
 fi

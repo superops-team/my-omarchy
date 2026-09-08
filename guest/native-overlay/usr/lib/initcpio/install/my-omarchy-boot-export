@@ -14,7 +14,7 @@ build() {
 help() {
   cat <<'EOF'
 Export the installed kernel, initramfs, and recorded boot configuration to the
-launcher-owned 9p share when tryomarchy.export_boot=1 is present on the kernel
+launcher-owned 9p share when myomarchy.export_boot=1 is present on the kernel
 command line.
 EOF
 }

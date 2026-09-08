@@ -77,11 +77,11 @@ e2fsck -fn "$raw"
 
 install -m 0644 "$root$kernel_source" "$output/vmlinuz-linux"
 install -m 0644 "$root$initramfs_source" "$output/initramfs-linux.img"
-install -m 0644 "$root/usr/share/try-omarchy/build-spec.json" "$output/build-spec.json"
-install -m 0644 "$root/usr/share/try-omarchy/provenance.json" "$output/provenance.json"
+install -m 0644 "$root/usr/share/my-omarchy/build-spec.json" "$output/build-spec.json"
+install -m 0644 "$root/usr/share/my-omarchy/provenance.json" "$output/provenance.json"
 install -m 0644 "$root/usr/share/licenses/omarchy/LICENSE" "$output/LICENSE.omarchy"
-if [[ -f $root/usr/share/try-omarchy/packages.lock.txt ]]; then
-  install -m 0644 "$root/usr/share/try-omarchy/packages.lock.txt" "$output/packages.lock.txt"
+if [[ -f $root/usr/share/my-omarchy/packages.lock.txt ]]; then
+  install -m 0644 "$root/usr/share/my-omarchy/packages.lock.txt" "$output/packages.lock.txt"
 fi
 
 zstd --force --quiet -12 --threads=0 "$raw" -o "$compressed"

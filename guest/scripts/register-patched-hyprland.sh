@@ -206,7 +206,7 @@ build_packages_json=${metadata[21]}
 [[ $glaze_url == "https://github.com/stephenberry/glaze/archive/refs/tags/v$glaze_version.tar.gz" ]] ||
   fail "Glaze URL does not match the pinned release"
 [[ $license == BSD-3-Clause ]] || fail "unexpected Hyprland license: $license"
-[[ $issue == https://github.com/omacom/try-omarchy/issues/5 ]] || fail "unexpected Hyprland issue URL"
+[[ $issue == https://github.com/superops-team/my-omarchy/issues/5 ]] || fail "unexpected Hyprland issue URL"
 [[ $source_date_epoch =~ ^[0-9]+$ && $source_date_epoch -gt 0 ]] || fail "invalid source date epoch"
 for digest in "$sha256" "$upstream_package_sha256" "$patch_sha256" "$glaze_sha256" "$glaze_license_sha256" "$binary_sha256"; do
   [[ $digest =~ ^[0-9a-f]{64}$ ]] || fail "invalid Hyprland content digest"
@@ -435,7 +435,7 @@ upstream_query=$(pacman --config "$pacman_config" --root "$root" --dbpath "$root
   fail "staged root does not contain the expected upstream Hyprland package: $upstream_query"
 
 export SOURCE_DATE_EPOCH="$source_date_epoch"
-export CFLAGS="-ffile-prefix-map=$stage=/usr/src/try-omarchy-hyprland -fdebug-prefix-map=$stage=/usr/src/try-omarchy-hyprland"
+export CFLAGS="-ffile-prefix-map=$stage=/usr/src/my-omarchy-hyprland -fdebug-prefix-map=$stage=/usr/src/my-omarchy-hyprland"
 export CXXFLAGS="$CFLAGS"
 jobs=$(nproc 2>/dev/null || getconf NPROCESSORS_CONF)
 [[ $jobs =~ ^[1-9][0-9]*$ ]] || fail "could not determine Hyprland build parallelism"
@@ -663,7 +663,7 @@ lines = [
     f"pkgdesc = {one('pkgdesc')}",
     f"url = {repository}",
     f"builddate = {build_date}",
-    "packager = Try Omarchy reproducible guest builder",
+    "packager = My Omarchy reproducible guest builder",
     f"size = {installed_size}",
     "arch = aarch64",
     f"license = {expected_license}",
@@ -727,12 +727,12 @@ for header in "${header_paths[@]}"; do
     fail "installed Hyprland header differs from the patched source: $header"
 done
 cmp -s "$glaze_license" "$root/usr/share/licenses/hyprland/LICENSE.glaze" || fail "installed Glaze license differs from the verified source"
-install -d -m 0700 "$root/run/try-omarchy-hyprland-check"
-installed_version=$(arch-chroot "$root" env XDG_RUNTIME_DIR=/run/try-omarchy-hyprland-check /usr/bin/Hyprland --version)
-rm -rf -- "$root/run/try-omarchy-hyprland-check"
+install -d -m 0700 "$root/run/my-omarchy-hyprland-check"
+installed_version=$(arch-chroot "$root" env XDG_RUNTIME_DIR=/run/my-omarchy-hyprland-check /usr/bin/Hyprland --version)
+rm -rf -- "$root/run/my-omarchy-hyprland-check"
 [[ $installed_version == "Hyprland $version "* ]] || fail "installed Hyprland reported an unexpected identity"
 
-repo_dir="$root/usr/share/try-omarchy/repo"
+repo_dir="$root/usr/share/my-omarchy/repo"
 install -d -m 0755 "$repo_dir"
 repo_archive="$repo_dir/$(basename "$package_archive")"
 [[ ! -L $repo_archive ]] || fail "refusing symlinked immutable repository archive"

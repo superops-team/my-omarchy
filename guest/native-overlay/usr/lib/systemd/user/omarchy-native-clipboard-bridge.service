@@ -2,7 +2,7 @@
 Description=Share the macOS clipboard with Omarchy
 PartOf=graphical-session.target
 After=graphical-session.target
-ConditionPathExists=/dev/virtio-ports/dev.tryomarchy.clipboard
+ConditionPathExists=/dev/virtio-ports/team.superops.myomarchy.clipboard
 # The agent exits non-zero whenever the host bridge disconnects; keep
 # retrying for as long as the launcher keeps restarting that bridge.
 StartLimitIntervalSec=0

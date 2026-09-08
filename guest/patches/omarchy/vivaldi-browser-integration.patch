@@ -59,7 +59,7 @@ index f332ce77..6c2de158 100755
    ;;
 +vivaldi)
 +  echo "Installing Vivaldi..."
-+  /usr/local/lib/try-omarchy/install-vivaldi-arm64 || exit 1
++  /usr/local/lib/my-omarchy/install-vivaldi-arm64 || exit 1
 +
 +  setup_chromium_policy_directory /etc/opt/vivaldi/policies/managed
 +  copy_chromium_flags ~/.config/vivaldi-stable.conf

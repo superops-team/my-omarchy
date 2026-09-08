@@ -11,7 +11,7 @@ Add --apply to retain a verified APFS clone backup and enlarge the disk.
 The root filesystem grows automatically on the next normal guest boot.
 
 DIR is the VM state directory containing .omarchy-qemu-storage and disks/current.
-Default: ~/Library/Application Support/Try Omarchy/VM/v1
+Default: ~/Library/Application Support/My Omarchy/VM/v1
 Custom VM locations require --state-root; saved app preferences are not read.
 EOF
 }
@@ -22,7 +22,7 @@ fail() {
 }
 
 size_gib=''
-state_root="${HOME:?}/Library/Application Support/Try Omarchy/VM/v1"
+state_root="${HOME:?}/Library/Application Support/My Omarchy/VM/v1"
 apply=0
 while (($#)); do
   case "$1" in

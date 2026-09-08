@@ -22,7 +22,7 @@ GUEST = Path(__file__).resolve().parents[1]
 REPO = GUEST.parent
 DEFAULT_WALLPAPER = (
     GUEST
-    / "native-overlay/etc/skel/.config/omarchy/backgrounds/tokyo-night/try-omarchy-wallpaper.jpg"
+    / "native-overlay/etc/skel/.config/omarchy/backgrounds/tokyo-night/my-omarchy-wallpaper.jpg"
 )
 
 
@@ -115,7 +115,7 @@ def main() -> None:
         == {
             "activation": {
                 "guestPort": 22,
-                "kernelToken": "tryomarchy.ssh_access=1",
+                "kernelToken": "myomarchy.ssh_access=1",
                 "protocol": "tcp",
                 "scope": "boot",
                 "service": "sshd.service",
@@ -145,7 +145,7 @@ def main() -> None:
         "default wallpaper is a 5120x2880 JPEG",
     )
     check(
-        DEFAULT_WALLPAPER.name == "try-omarchy-wallpaper.jpg"
+        DEFAULT_WALLPAPER.name == "my-omarchy-wallpaper.jpg"
         and DEFAULT_WALLPAPER.parent.name == "tokyo-night"
         and "tokyo-night" in spec["themes"],
         "default wallpaper is in the dedicated Tokyo Night user background directory",
@@ -183,7 +183,7 @@ def main() -> None:
         )
         check(
             backport.get("reference", "").startswith(
-                ("https://github.com/basecamp/omarchy/", "https://github.com/omacom/try-omarchy/")
+                ("https://github.com/basecamp/omarchy/", "https://github.com/omacom/my-omarchy/")
             ),
             f"backport has a public review reference: {backport['id']}",
         )
@@ -196,7 +196,7 @@ def main() -> None:
     update_free_space_patch = read(GUEST / "patches/omarchy/update-free-space-message.patch")
     check(
         "Omarchy VM disk, not on your Mac" in update_free_space_patch
-        and "/usr/share/try-omarchy/build-spec.json" in update_free_space_patch
+        and "/usr/share/my-omarchy/build-spec.json" in update_free_space_patch
         and "df -h /" in update_free_space_patch,
         "update free-space backport clarifies the guest VM disk requirement",
     )
@@ -445,7 +445,7 @@ def main() -> None:
             "glazeLicenseSha256": "5d49e66411a0807a7c8d6b911b9a26b59e940c71aebe561a3ad8b0b80ac4b7b6",
             "binarySha256": "c668b05275f2d5cbff66fdb8f4ea4cbbfb7d5a7f9e682f358f3fbcff8494c68a",
             "license": "BSD-3-Clause",
-            "issue": "https://github.com/omacom/try-omarchy/issues/5",
+            "issue": "https://github.com/superops-team/my-omarchy/issues/5",
             "buildPackages": {
                 "base-devel": "1-2",
                 "binutils": "2.46+r70+g155188ea10a7-1",
@@ -548,7 +548,7 @@ def main() -> None:
     container = read(GUEST / "build-container.sh")
     check("linux/arm64" in container and '"$guest_dir/Containerfile"' in container, "container builder targets ARM64")
     check('output="$repo_dir/dist/guest"' in container, "guest output defaults to dist/guest")
-    check("try-omarchy-guest-work" in container, "guest cache has a project-scoped Docker volume")
+    check("my-omarchy-guest-work" in container, "guest cache has a project-scoped Docker volume")
     containerfile = read(GUEST / "Containerfile")
     check(
         "arch-install-scripts e2fsprogs git python rust=1:1.98.0-1 zstd" in containerfile,
@@ -572,7 +572,7 @@ def main() -> None:
     check("omarchy-provision-owner.service" in configure, "first boot uses upstream owner provisioning")
     native_autologin = read(
         GUEST
-        / "native-overlay/etc/systemd/system/omarchy-provision-owner.service.d/10-try-omarchy-native.conf"
+        / "native-overlay/etc/systemd/system/omarchy-provision-owner.service.d/10-my-omarchy-native.conf"
     )
     check(
         "ExecStartPost=" in native_autologin
@@ -603,7 +603,7 @@ def main() -> None:
         "guest starts clipboard sharing with the graphical session",
     )
     check(
-        spec["runtime"]["clipboard"]["port"] == "dev.tryomarchy.clipboard",
+        spec["runtime"]["clipboard"]["port"] == "team.superops.myomarchy.clipboard",
         "clipboard contract names the virtio port",
     )
     authentication = spec["runtime"]["authentication"]
@@ -619,13 +619,13 @@ def main() -> None:
             "guestIdentity": "root-private-random-256-bit",
             "hostKey": "per-guest-secure-enclave-p256",
             "pamService": "sudo",
-            "port": "dev.tryomarchy.authentication",
+            "port": "team.superops.myomarchy.authentication",
             "protocolVersion": 3,
             "requiresEnrollment": True,
             "signature": "ecdsa-p256-sha256",
         }
         and "virtserialport,bus=omarchy-serial.0,nr=3" in authentication_launcher
-        and "name=dev.tryomarchy.authentication" in authentication_launcher
+        and "name=team.superops.myomarchy.authentication" in authentication_launcher
         and "--bridge-native-authentication" in authentication_launcher
         and "authentication_bridge_restarts < 5" in authentication_launcher,
         "Touch ID sudo has a signed, supervised virtio contract",
@@ -640,7 +640,7 @@ def main() -> None:
             "guestDevice": "/dev/video42",
             "height": 720,
             "pixelFormat": "NV12",
-            "port": "dev.tryomarchy.camera",
+            "port": "team.superops.myomarchy.camera",
             "protocolVersion": 1,
             "width": 1280,
         },
@@ -650,7 +650,7 @@ def main() -> None:
     camera_entitlements = read(REPO / "macos/my-omarchy.entitlements")
     check(
         "virtserialport,bus=omarchy-serial.0,nr=4" in camera_launcher
-        and "name=dev.tryomarchy.camera" in camera_launcher
+        and "name=team.superops.myomarchy.camera" in camera_launcher
         and "--bridge-native-camera" in camera_launcher
         and "camera_bridge_restarts < 5" in camera_launcher
         and "com.apple.security.device.camera" in camera_entitlements,
@@ -670,23 +670,23 @@ def main() -> None:
     )
     check(
         "vivaldi-package-composer-key11.asc" in configure
-        and "usr/local/share/try-omarchy/vivaldi/linux_signing_key.pub" in configure
-        and '"$root/usr/local/lib/try-omarchy/install-vivaldi-arm64"' in configure,
+        and "usr/local/share/my-omarchy/vivaldi/linux_signing_key.pub" in configure
+        and '"$root/usr/local/lib/my-omarchy/install-vivaldi-arm64"' in configure,
         "rootfs configuration stages the Vivaldi installer and pinned package key",
     )
     restore_hook = read(GUEST / "fragments/pre-refresh-pacman-restore-arm.sh")
     check(
-        "install -m 0644 /usr/share/try-omarchy/pacman.conf /etc/pacman.conf"
+        "install -m 0644 /usr/share/my-omarchy/pacman.conf /etc/pacman.conf"
         in restore_hook
-        and "install -m 0644 /usr/share/try-omarchy/mirrorlist /etc/pacman.d/mirrorlist"
+        and "install -m 0644 /usr/share/my-omarchy/mirrorlist /etc/pacman.d/mirrorlist"
         in restore_hook,
-        "pre-refresh hook restores the complete Try Omarchy pacman files",
+        "pre-refresh hook restores the complete My Omarchy pacman files",
     )
     local_repository = read(GUEST / "scripts/register-local-repository.sh")
     check(
-        'install -m 0644 "$pacman_conf" "$root/usr/share/try-omarchy/pacman.conf"'
+        'install -m 0644 "$pacman_conf" "$root/usr/share/my-omarchy/pacman.conf"'
         in local_repository
-        and 'install -m 0644 "$root/etc/pacman.d/mirrorlist" "$root/usr/share/try-omarchy/mirrorlist"'
+        and 'install -m 0644 "$root/etc/pacman.d/mirrorlist" "$root/usr/share/my-omarchy/mirrorlist"'
         in local_repository,
         "pacman recovery files snapshot the final local-repository configuration",
     )
@@ -715,7 +715,7 @@ def main() -> None:
     )
     zram_override = read(
         GUEST
-        / "factory-overlay/etc/systemd/zram-generator.conf.d/99-try-omarchy.conf"
+        / "factory-overlay/etc/systemd/zram-generator.conf.d/99-my-omarchy.conf"
     )
     check(
         "[zram0]" in zram_override
@@ -765,7 +765,7 @@ def main() -> None:
         "packaged Omarchy runtime owns the screensaver cursor helper",
     )
     vivaldi_installer_path = (
-        GUEST / "native-overlay/usr/local/lib/try-omarchy/install-vivaldi-arm64"
+        GUEST / "native-overlay/usr/local/lib/my-omarchy/install-vivaldi-arm64"
     )
     vivaldi_installer = read(vivaldi_installer_path)
     check(
@@ -800,15 +800,15 @@ def main() -> None:
         and "classified as a foreign/AUR package" in vivaldi_installer
         and "pacman -Qem" in vivaldi_installer
         and "yay -Sua" in vivaldi_installer
-        and "/usr/share/try-omarchy/repo" in vivaldi_installer
+        and "/usr/share/my-omarchy/repo" in vivaldi_installer
         and "/var/lib/pacman/sync/$repo_name.db" in vivaldi_installer
         and "Re-registering installed Vivaldi" in vivaldi_installer,
         "Vivaldi installer publishes into the local sync repository so Omarchy's AUR updater cannot take over",
     )
     check(
-        'vivaldi_installer="$root/usr/local/lib/try-omarchy/install-vivaldi-arm64"'
+        'vivaldi_installer="$root/usr/local/lib/my-omarchy/install-vivaldi-arm64"'
         in register_runtime
-        and 'vivaldi_key="$root/usr/local/share/try-omarchy/vivaldi/linux_signing_key.pub"'
+        and 'vivaldi_key="$root/usr/local/share/my-omarchy/vivaldi/linux_signing_key.pub"'
         in register_runtime
         and 'cp -a "$vivaldi_installer"' in register_runtime
         and 'cp -a "$vivaldi_key"' in register_runtime,
@@ -991,13 +991,13 @@ def main() -> None:
 
     ssh_generator_path = (
         GUEST
-        / "native-overlay/usr/lib/systemd/system-generators/try-omarchy-ssh-access"
+        / "native-overlay/usr/lib/systemd/system-generators/my-omarchy-ssh-access"
     )
     ssh_generator = read(ssh_generator_path)
     check(
         ssh_generator_path.is_file()
         and ssh_generator_path.stat().st_mode & stat.S_IXUSR != 0
-        and "tryomarchy.ssh_access=1" in ssh_generator
+        and "myomarchy.ssh_access=1" in ssh_generator
         and "/proc/cmdline" in ssh_generator
         and "multi-user.target.wants" in ssh_generator
         and '"$wants/sshd.service"' in ssh_generator
@@ -1006,7 +1006,7 @@ def main() -> None:
     )
 
     manifest_writer = read(GUEST / "scripts/write-guest-manifest.py")
-    check('"kind": "try-omarchy-guest-artifacts"' in manifest_writer, "new artifacts use the native manifest identity")
+    check('"kind": "my-omarchy-guest-artifacts"' in manifest_writer, "new artifacts use the native manifest identity")
 
     audio_bridge = GUEST / "native-overlay/usr/local/bin/omarchy-native-audio-bridge"
     check(audio_bridge.stat().st_mode & stat.S_IXUSR != 0, "native audio bridge is executable")
@@ -1021,11 +1021,11 @@ def main() -> None:
     check(True, "native camera bridge compiles")
     camera_unit = read(GUEST / "native-overlay/usr/lib/systemd/user/omarchy-native-camera-bridge.service")
     camera_rule = read(GUEST / "native-overlay/etc/udev/rules.d/94-omarchy-native-camera.rules")
-    camera_module = read(GUEST / "native-overlay/etc/modprobe.d/90-try-omarchy-camera.conf")
+    camera_module = read(GUEST / "native-overlay/etc/modprobe.d/90-my-omarchy-camera.conf")
     check(
         "omarchy-native-camera-bridge" in camera_unit
         and "Restart=always" in camera_unit
-        and 'ATTR{name}=="dev.tryomarchy.camera"' in camera_rule
+        and 'ATTR{name}=="team.superops.myomarchy.camera"' in camera_rule
         and 'KERNEL=="video42"' in camera_rule
         and "exclusive_caps=1" in camera_module,
         "camera service reconnects its virtio port to an exclusive-capability V4L2 device",
@@ -1039,29 +1039,29 @@ def main() -> None:
     clipboard_unit = read(GUEST / "native-overlay/usr/lib/systemd/user/omarchy-native-clipboard-bridge.service")
     check(
         "PartOf=graphical-session.target" in clipboard_unit
-        and "ConditionPathExists=/dev/virtio-ports/dev.tryomarchy.clipboard" in clipboard_unit,
+        and "ConditionPathExists=/dev/virtio-ports/team.superops.myomarchy.clipboard" in clipboard_unit,
         "clipboard bridge follows the graphical session and its virtio port",
     )
     clipboard_rule = read(GUEST / "native-overlay/etc/udev/rules.d/92-omarchy-native-clipboard.rules")
     check(
-        'ATTR{name}=="dev.tryomarchy.clipboard"' in clipboard_rule and 'GROUP="users"' in clipboard_rule,
+        'ATTR{name}=="team.superops.myomarchy.clipboard"' in clipboard_rule and 'GROUP="users"' in clipboard_rule,
         "clipboard port is readable by the provisioned users group",
     )
     authentication_command = (
-        GUEST / "native-overlay/usr/local/bin/try-omarchy-touch-id-test"
+        GUEST / "native-overlay/usr/local/bin/my-omarchy-touch-id-test"
     )
     check(
         authentication_command.stat().st_mode & stat.S_IXUSR != 0
         and "sudo -k" in read(authentication_command)
-        and "/var/lib/try-omarchy/native-authentication.json" not in read(authentication_command),
+        and "/var/lib/my-omarchy/native-authentication.json" not in read(authentication_command),
         "Touch ID sudo test command is executable",
     )
     enrollment_command = (
-        GUEST / "native-overlay/usr/local/sbin/try-omarchy-touch-id-enroll"
+        GUEST / "native-overlay/usr/local/sbin/my-omarchy-touch-id-enroll"
     )
-    menu_command = GUEST / "native-overlay/usr/local/bin/try-omarchy-touch-id"
+    menu_command = GUEST / "native-overlay/usr/local/bin/my-omarchy-touch-id"
     control_command = (
-        GUEST / "native-overlay/usr/local/sbin/try-omarchy-touch-id-control"
+        GUEST / "native-overlay/usr/local/sbin/my-omarchy-touch-id-control"
     )
     check(
         enrollment_command.stat().st_mode & stat.S_IXUSR != 0
@@ -1071,7 +1071,7 @@ def main() -> None:
     )
     authentication_broker = (
         GUEST
-        / "native-overlay/usr/local/lib/try-omarchy/native-authentication-broker"
+        / "native-overlay/usr/local/lib/my-omarchy/native-authentication-broker"
     )
     with tempfile.TemporaryDirectory() as temporary:
         py_compile.compile(
@@ -1099,8 +1099,8 @@ def main() -> None:
     touch_id_menu_patch = read(GUEST / "patches/omarchy/touch-id-sudo-menu.patch")
     check(
         '"setup.security.touch-id"' in touch_id_menu_patch
-        and '"checked":"/usr/local/bin/try-omarchy-touch-id status --quiet"' in touch_id_menu_patch
-        and "omarchy-launch-floating-terminal-with-presentation /usr/local/bin/try-omarchy-touch-id" in touch_id_menu_patch,
+        and '"checked":"/usr/local/bin/my-omarchy-touch-id status --quiet"' in touch_id_menu_patch
+        and "omarchy-launch-floating-terminal-with-presentation /usr/local/bin/my-omarchy-touch-id" in touch_id_menu_patch,
         "Omarchy Setup > Security exposes one stateful Touch ID sudo control",
     )
     authentication_rule = read(
@@ -1108,7 +1108,7 @@ def main() -> None:
         / "native-overlay/etc/udev/rules.d/93-omarchy-native-authentication.rules"
     )
     check(
-        'ATTR{name}=="dev.tryomarchy.authentication"' in authentication_rule
+        'ATTR{name}=="team.superops.myomarchy.authentication"' in authentication_rule
         and 'OWNER="root"' in authentication_rule
         and 'GROUP="root"' in authentication_rule
         and 'MODE="0600"' in authentication_rule,
@@ -1486,7 +1486,7 @@ HOTPLUG=1
             )
             check(
                 min(candidates) == user_wallpaper,
-                "fresh-user background sorting selects the Try Omarchy wallpaper by default",
+                "fresh-user background sorting selects the My Omarchy wallpaper by default",
             )
 
         with tempfile.TemporaryDirectory() as temporary:
@@ -1674,7 +1674,7 @@ HOTPLUG=1
             browser_policy = read(staged_omarchy / "install/helpers/browser-policy.sh")
             check(
                 '"Vivaldi"' in install_browser
-                and "/usr/local/lib/try-omarchy/install-vivaldi-arm64" in install_browser
+                and "/usr/local/lib/my-omarchy/install-vivaldi-arm64" in install_browser
                 and "/etc/opt/vivaldi/policies/managed" in install_browser
                 and ".config/vivaldi-stable.conf" in install_browser
                 and 'vivaldi) desktop_id="vivaldi-stable.desktop"' in default_browser

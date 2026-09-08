@@ -49,11 +49,11 @@ else
 fi
 [[ -d $guest_dir/native-overlay ]] || fail "guest overlay not found: $guest_dir"
 
-broker_source="$guest_dir/native-overlay/usr/local/lib/try-omarchy/native-authentication-broker"
-enroll_source="$guest_dir/native-overlay/usr/local/sbin/try-omarchy-touch-id-enroll"
-test_source="$guest_dir/native-overlay/usr/local/bin/try-omarchy-touch-id-test"
-menu_source="$guest_dir/native-overlay/usr/local/bin/try-omarchy-touch-id"
-control_source="$guest_dir/native-overlay/usr/local/sbin/try-omarchy-touch-id-control"
+broker_source="$guest_dir/native-overlay/usr/local/lib/my-omarchy/native-authentication-broker"
+enroll_source="$guest_dir/native-overlay/usr/local/sbin/my-omarchy-touch-id-enroll"
+test_source="$guest_dir/native-overlay/usr/local/bin/my-omarchy-touch-id-test"
+menu_source="$guest_dir/native-overlay/usr/local/bin/my-omarchy-touch-id"
+control_source="$guest_dir/native-overlay/usr/local/sbin/my-omarchy-touch-id-control"
 rule_source="$guest_dir/native-overlay/etc/udev/rules.d/93-omarchy-native-authentication.rules"
 menu_installer_source="$guest_dir/scripts/install-touch-id-menu-entry.py"
 for source_file in "$broker_source" "$enroll_source" "$test_source" "$menu_source" "$control_source" "$rule_source" "$menu_installer_source"; do
@@ -67,23 +67,23 @@ done
 [[ -f $root/usr/lib/security/pam_exec.so && ! -L $root/usr/lib/security/pam_exec.so ]] || \
   fail "pam_exec.so is unavailable"
 
-install -d -m 0755 "$root/usr/local/lib/try-omarchy" "$root/usr/local/sbin" "$root/usr/local/bin"
+install -d -m 0755 "$root/usr/local/lib/my-omarchy" "$root/usr/local/sbin" "$root/usr/local/bin"
 install -d -m 0755 "$root/etc/udev/rules.d"
 install -m 0755 "$broker_source" \
-  "$root/usr/local/lib/try-omarchy/native-authentication-broker"
-install -m 0755 "$enroll_source" "$root/usr/local/sbin/try-omarchy-touch-id-enroll"
-install -m 0755 "$test_source" "$root/usr/local/bin/try-omarchy-touch-id-test"
-install -m 0755 "$menu_source" "$root/usr/local/bin/try-omarchy-touch-id"
-install -m 0755 "$control_source" "$root/usr/local/sbin/try-omarchy-touch-id-control"
+  "$root/usr/local/lib/my-omarchy/native-authentication-broker"
+install -m 0755 "$enroll_source" "$root/usr/local/sbin/my-omarchy-touch-id-enroll"
+install -m 0755 "$test_source" "$root/usr/local/bin/my-omarchy-touch-id-test"
+install -m 0755 "$menu_source" "$root/usr/local/bin/my-omarchy-touch-id"
+install -m 0755 "$control_source" "$root/usr/local/sbin/my-omarchy-touch-id-control"
 install -m 0644 "$rule_source" \
   "$root/etc/udev/rules.d/93-omarchy-native-authentication.rules"
 
 if [[ -z $root ]]; then
-  if ! /usr/local/lib/try-omarchy/native-authentication-broker migrate; then
-    /usr/local/sbin/try-omarchy-touch-id-control disable || true
+  if ! /usr/local/lib/my-omarchy/native-authentication-broker migrate; then
+    /usr/local/sbin/my-omarchy-touch-id-control disable || true
     fail "existing Touch ID state could not be migrated; sudo authentication was disabled"
   fi
-  /usr/local/sbin/try-omarchy-touch-id-control migrate
+  /usr/local/sbin/my-omarchy-touch-id-control migrate
   /usr/bin/udevadm control --reload-rules
   /usr/bin/udevadm trigger --subsystem-match=virtio-ports --action=change
   if [[ ${SUDO_USER:-root} != root ]]; then
@@ -100,5 +100,5 @@ if [[ -z $root ]]; then
 fi
 
 echo "Installed the opt-in Touch ID sudo integration."
-echo "Enable with: try-omarchy-touch-id"
-echo "Test with:   try-omarchy-touch-id-test"
+echo "Enable with: my-omarchy-touch-id"
+echo "Test with:   my-omarchy-touch-id-test"

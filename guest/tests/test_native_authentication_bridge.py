@@ -21,7 +21,7 @@ from unittest import mock
 GUEST = Path(__file__).resolve().parents[1]
 BROKER_PATH = (
     GUEST
-    / "native-overlay/usr/local/lib/try-omarchy/native-authentication-broker"
+    / "native-overlay/usr/local/lib/my-omarchy/native-authentication-broker"
 )
 broker = SourceFileLoader("native_authentication_broker", str(BROKER_PATH)).load_module()
 
@@ -33,7 +33,7 @@ class NativeAuthenticationProtocolTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.keys = tempfile.TemporaryDirectory(prefix="try-omarchy-auth-test-")
+        cls.keys = tempfile.TemporaryDirectory(prefix="my-omarchy-auth-test-")
         private_key = Path(cls.keys.name) / "private.pem"
         generated = subprocess.run(
             [
@@ -317,7 +317,7 @@ class NativeAuthenticationProtocolTests(unittest.TestCase):
             dev = Path(directory) / "dev"
             named_ports = dev / "virtio-ports"
             named_ports.mkdir(parents=True)
-            port = named_ports / "dev.tryomarchy.authentication"
+            port = named_ports / "team.superops.myomarchy.authentication"
             port.symlink_to("../vport1p3")
             self.assertEqual(
                 broker.authentication_device_path(port, enforce_root_owner=False),

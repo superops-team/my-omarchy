@@ -106,7 +106,7 @@ def main() -> None:
         "backports": backports,
         "sha256Trees": trees,
     }
-    source_digest = args.root / "usr/share/try-omarchy/upstream-tree.json"
+    source_digest = args.root / "usr/share/my-omarchy/upstream-tree.json"
     if source_digest.exists():
         payload["normalizedUpstreamTree"] = json.loads(source_digest.read_text())
     args.output.parent.mkdir(parents=True, exist_ok=True)

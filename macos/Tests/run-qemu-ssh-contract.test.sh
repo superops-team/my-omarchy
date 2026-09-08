@@ -60,6 +60,9 @@ if [[ ${1:-} == --bridge-native-audio \
   while kill -0 "$2" 2>/dev/null; do
     sleep 0.02
   done
+  # Let the launcher observe the QEMU exit before the bridge fixture exits, so
+  # this test does not depend on a process scheduling race.
+  sleep 0.1
 fi
 exit 0
 SH

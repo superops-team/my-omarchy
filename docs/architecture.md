@@ -54,7 +54,7 @@ preserves in-memory guest state across lid close while leaving safety stops
 untouched.
 
 One small host-integration channel sits beside those devices. A virtio-serial
-port (`dev.tryomarchy.clipboard`) carries newline-delimited JSON between a
+port (`team.superops.myomarchy.clipboard`) carries newline-delimited JSON between a
 Swift bridge on the Mac, which watches the `NSPasteboard` change count, and a
 Python agent in the Omarchy session, which uses wl-clipboard's data-control
 protocol. Text and PNG payloads flow both ways; each side remembers the
@@ -62,7 +62,7 @@ fingerprint of what it last wrote so the immediate echo is dropped. The marker
 is cleared as soon as the other side moves on to new content, and expires after
 a couple of seconds regardless, so a genuine repeat of the same content still flows.
 
-A separate virtio-serial port (`dev.tryomarchy.camera`) carries fixed-size
+A separate virtio-serial port (`team.superops.myomarchy.camera`) carries fixed-size
 1280×720 NV12 frames from an AVFoundation bridge in the signed Mac helper. The
 guest feeds those frames into an exclusive-capabilities `v4l2loopback` device,
 `/dev/video42`, labeled **Mac Camera**. The guest subscribes to the loopback
@@ -72,7 +72,7 @@ non-fatal to the VM; the launcher can restart the optional bridge without
 restarting Omarchy.
 
 A root-only authentication port
-(`dev.tryomarchy.authentication`) lets the guest's `sudo` PAM policy request a
+(`team.superops.myomarchy.authentication`) lets the guest's `sudo` PAM policy request a
 fixed-purpose macOS Touch ID prompt. Enrollment creates a non-exportable P-256
 signing key in the Mac's Secure Enclave for a root-private random guest ID and
 pins its public key inside that guest. The host stores the Secure Enclave's
@@ -120,7 +120,7 @@ separate host-port namespaces, matching QEMU's socket behavior.
 **Add SSH** inserts an ordinary `tcp:2222:22` mapping into that same preference;
 there is no second SSH forwarding store or QEMU argument path. After the shell
 parser accepts the complete mapping list, any TCP rule targeting guest port 22
-also adds the fixed `tryomarchy.ssh_access=1` boot token. UDP port 22 and other
+also adds the fixed `myomarchy.ssh_access=1` boot token. UDP port 22 and other
 guest ports do not. A guest systemd generator consumes only that exact token and
 adds the vendor `sshd.service` to the current boot's runtime wants directory,
 without modifying persistent systemd or SSH configuration.
@@ -166,7 +166,7 @@ creates the account on first boot.
   documented exception: an upstream package is reproducibly rebuilt with a
   guarded rounded-border coverage patch for the VM graphics path, then held in
   the guest's immutable local repository.
-- The final Arch Linux ARM pacman files live under `/usr/share/try-omarchy/`.
+- The final Arch Linux ARM pacman files live under `/usr/share/my-omarchy/`.
   An Omarchy-supported `pre-refresh-pacman` hook restores them after a channel
   refresh writes its x86_64 templates to `/etc`; the upstream templates remain
   unchanged.
@@ -245,7 +245,7 @@ notices, and review evidence together.
 App releases and guest updates are deliberately separate channels. Omarchy's
 built-in updater may advance ordinary packages supported by this ARM guest,
 but the direct-boot kernel and matching headers, the packaged
-`try-omarchy-runtime`, and reviewed compatibility backports remain pinned in
+`my-omarchy-runtime`, and reviewed compatibility backports remain pinned in
 My Omarchy's prioritized local repository. Reusing a disk therefore does not
 silently import a newer app's factory contents, and running the in-guest updater
 must not be described as reproducing every factory-image change. Delivering

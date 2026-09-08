@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install the Try Omarchy Touch ID row into one user's menu extension."""
+"""Install the My Omarchy Touch ID row into one user's menu extension."""
 
 from __future__ import annotations
 
@@ -12,12 +12,12 @@ import stat
 
 ENTRY_ID = '"setup.security.touch-id"'
 ENTRY = (
-    '  // Try Omarchy host integration.\n'
+    '  // My Omarchy host integration.\n'
     '  "setup.security.touch-id": {"icon":"󰈷","label":"Touch ID for sudo",'
-    '"when":"[[ -x /usr/local/bin/try-omarchy-touch-id ]]",'
-    '"checked":"/usr/local/bin/try-omarchy-touch-id status --quiet",'
+    '"when":"[[ -x /usr/local/bin/my-omarchy-touch-id ]]",'
+    '"checked":"/usr/local/bin/my-omarchy-touch-id status --quiet",'
     '"action":"omarchy-launch-floating-terminal-with-presentation '
-    '/usr/local/bin/try-omarchy-touch-id"},\n'
+    '/usr/local/bin/my-omarchy-touch-id"},\n'
 )
 MAXIMUM_BYTES = 256 * 1024
 

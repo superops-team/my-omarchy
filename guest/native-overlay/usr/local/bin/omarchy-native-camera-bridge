@@ -16,7 +16,7 @@ import time
 from typing import Any
 
 
-PORT = Path("/dev/virtio-ports/dev.tryomarchy.camera")
+PORT = Path("/dev/virtio-ports/team.superops.myomarchy.camera")
 CAMERA = Path("/dev/video42")
 MAGIC = b"TOCM"
 VERSION = 1

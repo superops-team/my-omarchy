@@ -68,7 +68,7 @@ make release \
    package lock, and QEMU corresponding-source obligations.
 7. State in release notes that installing the app preserves existing VM
    contents. Do not claim that the built-in updater reproduces factory changes:
-   the direct-boot kernel and headers, `try-omarchy-runtime`, and reviewed
+   the direct-boot kernel and headers, `my-omarchy-runtime`, and reviewed
    backports remain pinned until an explicit in-guest migration channel exists.
 8. Record SHA-256 digests for the final app archive/DMG and publish them with the
    release notes.

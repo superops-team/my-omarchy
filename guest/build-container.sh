@@ -79,7 +79,7 @@ fi
 if [[ -z $work_volume ]]; then
   repo_checksum=$(printf '%s' "$repo_dir" | cksum)
   repo_checksum=${repo_checksum%% *}
-  work_volume="try-omarchy-guest-work-$repo_checksum"
+  work_volume="my-omarchy-guest-work-$repo_checksum"
 fi
 [[ $work_volume =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || fail "invalid Docker volume name: $work_volume"
 
@@ -96,7 +96,7 @@ fi
 
 command -v docker >/dev/null || fail "docker is required"
 
-builder_image=try-omarchy-guest-builder
+builder_image=my-omarchy-guest-builder
 docker build --platform linux/arm64 -f "$guest_dir/Containerfile" -t "$builder_image" "$repo_dir"
 builder_digest=$(docker image inspect --format '{{.Id}}' "$builder_image")
 
@@ -118,7 +118,7 @@ fi
 
 mkdir -p "$output"
 output=$(cd "$output" && pwd)
-docker volume create --label dev.tryomarchy.role=guest-work "$work_volume" >/dev/null
+docker volume create --label team.superops.myomarchy.role=guest-work "$work_volume" >/dev/null
 docker run --rm --platform linux/arm64 --privileged \
   -e OMARCHY_BUILDER_IMAGE_DIGEST="$builder_digest" \
   -e OMARCHY_PACMAN_DISABLE_SANDBOX=1 \

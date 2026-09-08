@@ -6,7 +6,7 @@ index 07523eb..1c31c1e 100755
    [[ $available_bytes =~ ^[0-9]+$ ]] &&
    (( available_bytes < 10 * 1024 * 1024 * 1024 )); then
    echo "You need at least 10 GiB free to safely update Omarchy."
-+  if [[ -f /usr/share/try-omarchy/build-spec.json ]]; then
++  if [[ -f /usr/share/my-omarchy/build-spec.json ]]; then
 +    echo "This is free space inside the Omarchy VM disk, not on your Mac."
 +    echo
 +    df -h / 2>/dev/null || true

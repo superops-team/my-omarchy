@@ -2,7 +2,7 @@
 """Share the Wayland clipboard with the macOS pasteboard over a virtio port.
 
 Both directions travel as one JSON object per line on the
-dev.tryomarchy.clipboard virtserialport:
+team.superops.myomarchy.clipboard virtserialport:
 
     {"type": "clipboard", "format": "<mime>", "data": "<base64>"}
 
@@ -26,7 +26,7 @@ import time
 from typing import Any
 
 
-PORT = Path("/dev/virtio-ports/dev.tryomarchy.clipboard")
+PORT = Path("/dev/virtio-ports/team.superops.myomarchy.clipboard")
 TEXT_FORMAT = "text/plain;charset=utf-8"
 PNG_FORMAT = "image/png"
 FORMATS = (TEXT_FORMAT, PNG_FORMAT)

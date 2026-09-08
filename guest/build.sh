@@ -158,7 +158,7 @@ if ((${#pinned_records[@]})); then
     [[ -f $archive.sig ]] || fail "cached package signature not found: $archive.sig"
     ln "$archive" "$archive.sig" "$pinned_repo/"
   done
-  repo-add "$pinned_repo/try-omarchy-pinned-cache.db.tar.gz" \
+  repo-add "$pinned_repo/my-omarchy-pinned-cache.db.tar.gz" \
     "$pinned_repo/"*.pkg.tar.zst >/dev/null
 fi
 
@@ -169,7 +169,7 @@ options_sections=0
 pinned_repo_inserted=0
 while IFS= read -r line || [[ -n $line ]]; do
   if [[ -n $pinned_repo && $line =~ ^\[[^]]+\]$ && $line != "[options]" && $pinned_repo_inserted == 0 ]]; then
-    printf '[try-omarchy-pinned-cache]\n'
+    printf '[my-omarchy-pinned-cache]\n'
     printf 'SigLevel = Required DatabaseOptional\n'
     printf 'Server = file://%s\n\n' "$pinned_repo"
     pinned_repo_inserted=1
@@ -259,8 +259,8 @@ python3 "$guest_dir/scripts/apply-omarchy-backports.py" --root "$root" --spec "$
   --spec "$spec" \
   --pacman-config "$pacman_config"
 "$guest_dir/scripts/register-local-repository.sh" --root "$root" --spec "$spec"
-arch-chroot "$root" /usr/local/lib/try-omarchy/finalize-rootfs
-arch-chroot "$root" pacman -Q | LC_ALL=C sort >"$root/usr/share/try-omarchy/packages.lock.txt"
+arch-chroot "$root" /usr/local/lib/my-omarchy/finalize-rootfs
+arch-chroot "$root" pacman -Q | LC_ALL=C sort >"$root/usr/share/my-omarchy/packages.lock.txt"
 
 # arch-chroot bind-mounts the host resolver file at this path. Replace it only
 # after every chroot invocation has returned and the temporary mount is gone.

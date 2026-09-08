@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 
-COMMAND = Path(__file__).resolve().parents[1] / "native-overlay/usr/local/bin/try-omarchy-touch-id-test"
+COMMAND = Path(__file__).resolve().parents[1] / "native-overlay/usr/local/bin/my-omarchy-touch-id-test"
 
 
 class TouchIDCommandTests(unittest.TestCase):

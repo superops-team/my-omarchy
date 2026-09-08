@@ -54,7 +54,7 @@
       "glazeLicenseSha256": "5d49e66411a0807a7c8d6b911b9a26b59e940c71aebe561a3ad8b0b80ac4b7b6",
       "binarySha256": "c668b05275f2d5cbff66fdb8f4ea4cbbfb7d5a7f9e682f358f3fbcff8494c68a",
       "license": "BSD-3-Clause",
-      "issue": "https://github.com/omacom/try-omarchy/issues/5",
+      "issue": "https://github.com/superops-team/my-omarchy/issues/5",
       "buildPackages": {
         "base-devel": "1-2",
         "binutils": "2.46+r70+g155188ea10a7-1",
@@ -203,8 +203,8 @@
     "backports": [
       {
         "id": "touch-id-sudo-menu",
-        "description": "Add an explicit opt-in control for Try Omarchy Touch ID sudo authentication under Setup > Security.",
-        "reference": "https://github.com/omacom/try-omarchy/issues/133",
+        "description": "Add an explicit opt-in control for My Omarchy Touch ID sudo authentication under Setup > Security.",
+        "reference": "https://github.com/omacom/my-omarchy/issues/133",
         "patch": "patches/omarchy/touch-id-sudo-menu.patch",
         "patchSha256": "9a415cd0fe2377b49b5ad78668158e167419bb88a537516e46fe4a3321689b6a",
         "targets": [
@@ -220,7 +220,7 @@
         "description": "Install 1Password from its signed ARM64 release with VM-compatible launchers and Quick Access.",
         "reference": "https://github.com/basecamp/omarchy/issues/87",
         "patch": "patches/omarchy/1password-arm64-installer.patch",
-        "patchSha256": "8696ada095cd8c4a5b42ed0466417e423cb4cbce122ddb52870c565d2bf40bca",
+        "patchSha256": "1e326a1f7fa1f4d12123e5a8590e9eb934687d00dbf9c05114d9e219574c23b5",
         "targets": [
           {
             "path": "bin/omarchy-install-service-1password",
@@ -239,7 +239,7 @@
         "description": "Add Vivaldi to Omarchy's browser workflows and install its signed official ARM64 RPM as a Pacman-owned package.",
         "reference": "https://github.com/basecamp/omarchy/commit/346e69e1cec6c4e8924531874af6ba010a1bc99e",
         "patch": "patches/omarchy/vivaldi-browser-integration.patch",
-        "patchSha256": "555f83e6ca8e28eb4c836076c3f7206af298c3b5b5f97b25c5effa6ba2a05f87",
+        "patchSha256": "c99a86773c79e1fbd736f489b86ee95719f5a467417d69df266d5344b490befb",
         "targets": [
           {
             "path": "bin/omarchy-install-browser",
@@ -275,7 +275,7 @@
       },
       {
         "id": "vivaldi-menu-entries",
-        "description": "Expose Vivaldi in Install/Remove/Default Browser menus for the Try Omarchy ARM64 installer.",
+        "description": "Expose Vivaldi in Install/Remove/Default Browser menus for the My Omarchy ARM64 installer.",
         "reference": "https://github.com/basecamp/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/omarchy/omarchy-menu.jsonc",
         "patch": "patches/omarchy/vivaldi-menu-entries.patch",
         "patchSha256": "29fe08729d6285b07682fadd8cecc4687ba2f93aa8bda4d8eb13ff75001d5852",
@@ -325,7 +325,7 @@
         "description": "Clarify that Omarchy's 10 GiB update free-space check measures the guest VM disk, not the Mac host.",
         "reference": "https://github.com/basecamp/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/bin/omarchy-update-requires-free-space",
         "patch": "patches/omarchy/update-free-space-message.patch",
-        "patchSha256": "f5e24901e1b69b1ebb2ac1827654c293a72288ef91b8def6c47903714310078f",
+        "patchSha256": "f3ef58d15ca9228e3fd09531510bcee66f9a788a7e120c3d072b9448055d6edc",
         "targets": [
           {
             "path": "bin/omarchy-update-requires-free-space",
@@ -419,7 +419,7 @@
       "sshAccess": {
         "activation": {
           "guestPort": 22,
-          "kernelToken": "tryomarchy.ssh_access=1",
+          "kernelToken": "myomarchy.ssh_access=1",
           "protocol": "tcp",
           "scope": "boot",
           "service": "sshd.service"
@@ -445,7 +445,7 @@
       "guestDevice": "/dev/video42",
       "height": 720,
       "pixelFormat": "NV12",
-      "port": "dev.tryomarchy.camera",
+      "port": "team.superops.myomarchy.camera",
       "protocolVersion": 1,
       "width": 1280
     },
@@ -459,7 +459,7 @@
     },
     "clipboard": {
       "device": "virtserialport",
-      "port": "dev.tryomarchy.clipboard",
+      "port": "team.superops.myomarchy.clipboard",
       "formats": [
         "text/plain;charset=utf-8",
         "image/png"
@@ -474,7 +474,7 @@
       "guestIdentity": "root-private-random-256-bit",
       "hostKey": "per-guest-secure-enclave-p256",
       "pamService": "sudo",
-      "port": "dev.tryomarchy.authentication",
+      "port": "team.superops.myomarchy.authentication",
       "protocolVersion": 3,
       "requiresEnrollment": true,
       "signature": "ecdsa-p256-sha256"

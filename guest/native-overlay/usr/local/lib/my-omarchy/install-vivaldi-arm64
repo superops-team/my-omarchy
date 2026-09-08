@@ -9,9 +9,9 @@ fail() {
 
 [[ $(uname -m) == aarch64 ]] || fail "the pinned Vivaldi package supports only aarch64"
 
-spec=/usr/share/try-omarchy/build-spec.json
-key=/usr/local/share/try-omarchy/vivaldi/linux_signing_key.pub
-[[ -f $spec && ! -L $spec ]] || fail "the Try Omarchy build spec is missing or unsafe"
+spec=/usr/share/my-omarchy/build-spec.json
+key=/usr/local/share/my-omarchy/vivaldi/linux_signing_key.pub
+[[ -f $spec && ! -L $spec ]] || fail "the My Omarchy build spec is missing or unsafe"
 [[ -f $key && ! -L $key ]] || fail "the Vivaldi package key is missing or unsafe"
 
 for command in bsdtar curl gpg gzip pacman python3 repo-add sha256sum tar vercmp zstd; do
@@ -69,10 +69,10 @@ expected_url="https://downloads.vivaldi.com/stable/vivaldi-stable-$version-$rpm_
 [[ $source_date_epoch =~ ^[0-9]+$ ]] || fail "invalid source date epoch"
 
 package_version="$version-$pkgrel"
-repo_dir=/usr/share/try-omarchy/repo
-repo_name=try-omarchy
-[[ -d $repo_dir && ! -L $repo_dir ]] || fail "the local Try Omarchy repository is missing or unsafe"
-grep -Fq $'[try-omarchy]\n' /etc/pacman.conf || fail "the local Try Omarchy repository is not configured"
+repo_dir=/usr/share/my-omarchy/repo
+repo_name=my-omarchy
+[[ -d $repo_dir && ! -L $repo_dir ]] || fail "the local My Omarchy repository is missing or unsafe"
+grep -Fq $'[my-omarchy]\n' /etc/pacman.conf || fail "the local My Omarchy repository is not configured"
 if installed=$(pacman -Q vivaldi 2>/dev/null); then
   installed_version=${installed#vivaldi }
   if (( $(vercmp "$installed_version" "$package_version") >= 0 )); then
@@ -81,7 +81,7 @@ if installed=$(pacman -Q vivaldi 2>/dev/null); then
       echo "Vivaldi $installed_version is already installed"
       exit 0
     fi
-    echo "Re-registering installed Vivaldi in the local Try Omarchy repository"
+    echo "Re-registering installed Vivaldi in the local My Omarchy repository"
   fi
 fi
 
@@ -89,7 +89,7 @@ if ! command -v rpmkeys >/dev/null || ! command -v rpm >/dev/null; then
   omarchy-pkg-add rpm-tools || fail "could not install the RPM signature verifier"
 fi
 
-work=$(mktemp -d /tmp/try-omarchy-vivaldi.XXXXXX)
+work=$(mktemp -d /tmp/my-omarchy-vivaldi.XXXXXX)
 cleanup() {
   rm -rf "$work"
 }
@@ -230,7 +230,7 @@ pkgver = $package_version
 pkgdesc = An advanced browser made with the power user in mind
 url = https://vivaldi.com
 builddate = $source_date_epoch
-packager = Try Omarchy signed ARM64 installer
+packager = My Omarchy signed ARM64 installer
 size = $installed_size
 arch = aarch64
 license = custom
@@ -310,7 +310,7 @@ done
 sudo install -m 0644 "$package_archive" "$repo_dir/$(basename "$package_archive")"
 sudo repo-add --remove --quiet "$repo_dir/$repo_name.db.tar.gz" \
   "$repo_dir/$(basename "$package_archive")" ||
-  fail "could not register Vivaldi in the local Try Omarchy repository"
+  fail "could not register Vivaldi in the local My Omarchy repository"
 sudo ln -sfn "$repo_name.db.tar.gz" "$repo_dir/$repo_name.db"
 sudo install -d -m 0755 /var/lib/pacman/sync
 sudo install -m 0644 "$repo_dir/$repo_name.db.tar.gz" "/var/lib/pacman/sync/$repo_name.db"

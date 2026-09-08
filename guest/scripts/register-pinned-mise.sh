@@ -139,7 +139,7 @@ download_verified() {
 
 download_verified "$url" "$sha256" "$asset_cache"
 
-package_name=try-omarchy-mise
+package_name=my-omarchy-mise
 package_version="$version-1"
 stage=$(mktemp -d "$work/mise-package.XXXXXX")
 cleanup() {
@@ -172,7 +172,7 @@ pkgver = $package_version
 pkgdesc = Pinned official mise $version binary for the Omarchy ARM64 guest
 url = https://github.com/jdx/mise
 builddate = $source_date_epoch
-packager = Try Omarchy reproducible guest builder
+packager = My Omarchy reproducible guest builder
 size = $installed_size
 arch = aarch64
 license = MIT
@@ -212,7 +212,7 @@ verify_file "$binary_sha256" "$root/usr/bin/mise" || fail "installed mise binary
 reported=$(arch-chroot "$root" /usr/bin/mise --version)
 [[ $reported == "$reported_version" ]] || fail "mise reported an unexpected identity: $reported"
 
-repo_dir="$root/usr/share/try-omarchy/repo"
+repo_dir="$root/usr/share/my-omarchy/repo"
 install -d -m 0755 "$repo_dir"
 install -m 0644 "$package_archive" "$repo_dir/$(basename "$package_archive")"
 echo "Registered $query from verified official asset $sha256"

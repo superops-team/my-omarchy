@@ -150,11 +150,11 @@ clean:
 	@set -e; if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then \
 	  while IFS= read -r container; do \
 	    [[ -z "$$container" ]] || docker container rm "$$container" >/dev/null; \
-	  done < <(docker container ls -aq --filter ancestor=try-omarchy-guest-builder); \
+	  done < <(docker container ls -aq --filter ancestor=my-omarchy-guest-builder); \
 	  while IFS= read -r volume; do \
 	    [[ -z "$$volume" ]] || docker volume rm "$$volume" >/dev/null; \
-	  done < <(docker volume ls -q --filter label=dev.tryomarchy.role=guest-work); \
-	  docker image rm -f try-omarchy-guest-builder >/dev/null 2>&1 || true; \
+	  done < <(docker volume ls -q --filter label=team.superops.myomarchy.role=guest-work); \
+	  docker image rm -f my-omarchy-guest-builder >/dev/null 2>&1 || true; \
 	  echo 'Removed My Omarchy Docker builder image and guest-work volumes.'; \
 	else \
 	  echo 'Docker is unavailable; skipped project Docker cache cleanup.' >&2; \

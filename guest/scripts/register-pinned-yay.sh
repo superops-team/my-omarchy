@@ -155,7 +155,7 @@ download_verified() {
 download_verified "$url" "$sha256" "$asset_cache"
 download_verified "$license_url" "$license_sha256" "$license_cache"
 
-package_name=try-omarchy-yay
+package_name=my-omarchy-yay
 package_version="$version-1"
 stage=$(mktemp -d "$work/yay-package.XXXXXX")
 cleanup() {
@@ -234,7 +234,7 @@ pkgver = $package_version
 pkgdesc = Pinned official yay $version binary for the Omarchy ARM64 guest
 url = https://github.com/Jguer/yay
 builddate = $source_date_epoch
-packager = Try Omarchy reproducible guest builder
+packager = My Omarchy reproducible guest builder
 size = $installed_size
 arch = aarch64
 license = GPL-3.0-or-later
@@ -276,7 +276,7 @@ verify_file "$binary_sha256" "$root/usr/bin/yay" || fail "installed yay binary d
 reported=$(arch-chroot "$root" /usr/bin/runuser -u alpm -- /usr/bin/yay --version)
 [[ $reported == "$reported_version" ]] || fail "yay reported an unexpected identity: $reported"
 
-repo_dir="$root/usr/share/try-omarchy/repo"
+repo_dir="$root/usr/share/my-omarchy/repo"
 install -d -m 0755 "$repo_dir"
 install -m 0644 "$package_archive" "$repo_dir/$(basename "$package_archive")"
 echo "Registered $query from verified official asset $sha256"

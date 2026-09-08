@@ -1211,8 +1211,10 @@ recover_persistent_boot_kit() {
   assert_direct_owned_export_file "$boot_export_dir/kernel" 'recovered kernel'
   assert_direct_owned_export_file "$boot_export_dir/initramfs" 'recovered initramfs'
   assert_direct_owned_export_file "$boot_export_dir/build-spec.json" 'recovered build specification'
-  [[ $(_qps_size "$boot_export_dir/complete") == 27 && \
-     $(<"$boot_export_dir/complete") == my-omarchy-boot-export-v1 ]] || {
+  boot_export_marker='my-omarchy-boot-export-v1'
+  boot_export_marker_bytes=$(printf '%s\n' "$boot_export_marker" | wc -c | tr -d '[:space:]')
+  [[ $(_qps_size "$boot_export_dir/complete") == "$boot_export_marker_bytes" && \
+     $(<"$boot_export_dir/complete") == "$boot_export_marker" ]] || {
     boot_recovery_fail 'the one-time boot recovery completion marker is invalid'
   }
   [[ $(_qps_size "$boot_export_dir/build-spec.json") =~ ^[1-9][0-9]*$ && \

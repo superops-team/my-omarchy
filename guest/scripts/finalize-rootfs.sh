@@ -3,7 +3,7 @@
 # Runs inside the ARM64 Arch root after packages and files are staged.
 set -euo pipefail
 
-spec=/usr/share/try-omarchy/build-spec.json
+spec=/usr/share/my-omarchy/build-spec.json
 [[ -f $spec ]] || { echo "Missing $spec" >&2; exit 1; }
 
 read_spec() {
@@ -65,7 +65,7 @@ for dependency in gtk4-layer-shell which; do
     exit 1
   }
 done
-[[ $(pacman -Qoq /usr/local/bin/omarchy-native-cursor-restore) == try-omarchy-runtime ]] || {
+[[ $(pacman -Qoq /usr/local/bin/omarchy-native-cursor-restore) == my-omarchy-runtime ]] || {
   echo "Screensaver cursor helper is not owned by the Omarchy runtime package" >&2
   exit 1
 }
@@ -73,8 +73,8 @@ if pacman -Qq vivaldi >/dev/null 2>&1; then
   echo "Vivaldi must remain a user-initiated post-build install" >&2
   exit 1
 fi
-vivaldi_installer=/usr/local/lib/try-omarchy/install-vivaldi-arm64
-vivaldi_key=/usr/local/share/try-omarchy/vivaldi/linux_signing_key.pub
+vivaldi_installer=/usr/local/lib/my-omarchy/install-vivaldi-arm64
+vivaldi_key=/usr/local/share/my-omarchy/vivaldi/linux_signing_key.pub
 [[ -x $vivaldi_installer && ! -L $vivaldi_installer ]] || {
   echo "Vivaldi ARM64 installer is missing or unsafe" >&2
   exit 1
@@ -83,11 +83,11 @@ vivaldi_key=/usr/local/share/try-omarchy/vivaldi/linux_signing_key.pub
   echo "Vivaldi package key is missing or unsafe" >&2
   exit 1
 }
-[[ $(pacman -Qoq "$vivaldi_installer") == try-omarchy-runtime ]] || {
+[[ $(pacman -Qoq "$vivaldi_installer") == my-omarchy-runtime ]] || {
   echo "Vivaldi ARM64 installer is not owned by the Omarchy runtime package" >&2
   exit 1
 }
-[[ $(pacman -Qoq "$vivaldi_key") == try-omarchy-runtime ]] || {
+[[ $(pacman -Qoq "$vivaldi_key") == my-omarchy-runtime ]] || {
   echo "Vivaldi package key is not owned by the Omarchy runtime package" >&2
   exit 1
 }

@@ -14,7 +14,7 @@ import time
 from typing import Any
 
 
-PORT = Path("/dev/virtio-ports/dev.tryomarchy.audio")
+PORT = Path("/dev/virtio-ports/team.superops.myomarchy.audio")
 PREFIX = "omarchy_host_"
 
 

@@ -281,7 +281,7 @@ Touch ID as a sufficient authentication method for guest `sudo`. Open
 **Omarchy Menu → Setup → Security → Touch ID for sudo**, or run:
 
 ```sh
-try-omarchy-touch-id
+my-omarchy-touch-id
 ```
 
 The integration ships disabled. Enabling first requires the normal guest sudo
@@ -321,7 +321,7 @@ Secure Enclave key representation.
 - macOS 15 or newer
 - At least 8 GB free initially
 
-On M3 and newer Apple Silicon, Try Omarchy also exposes ARM EL2 to Linux, so
+On M3 and newer Apple Silicon, My Omarchy also exposes ARM EL2 to Linux, so
 the guest provides `/dev/kvm` for nested VMs and compatible VMMs. Older Apple
 Silicon Macs automatically keep the normal non-nested launch path.
 
@@ -349,7 +349,7 @@ itself cannot be safely read.
 Use Omarchy's built-in updater for the updates it supports inside this ARM
 guest. Ordinary guest packages can advance without replacing the VM, but the
 current factory still pins its direct-boot kernel and headers, packaged
-`try-omarchy-runtime`, and reviewed compatibility backports in a prioritized
+`my-omarchy-runtime`, and reviewed compatibility backports in a prioritized
 local repository. Installing a newer My Omarchy app therefore does not apply
 all of that app's factory-image changes to an existing VM, and an in-guest
 update should not be assumed to reproduce them. A confirmed reset is the
@@ -375,7 +375,7 @@ unrecognized metadata, or a missing/invalid paired boot kit. An equal size is
 a no-op. Whole-number targets up to 8192 GiB are accepted.
 
 The default state directory is
-`~/Library/Application Support/Try Omarchy/VM/v1`. For a custom VM location,
+`~/Library/Application Support/My Omarchy/VM/v1`. For a custom VM location,
 pass `--state-root "/path/to/selected-folder/VM/v1"`, using the directory that
 contains `.omarchy-qemu-storage` and `disks/current`. The command does not read
 the app's saved location preference or select legacy development workspaces.

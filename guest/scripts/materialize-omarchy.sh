@@ -209,14 +209,14 @@ install_file 0644 "$source_dir/etc/nsswitch.conf" "$omarchy_root/etc-overrides/n
 install_file 0644 "$source_dir/etc/security/faillock.conf" "$omarchy_root/etc-overrides/security-faillock.conf"
 install_file 0644 "$source_dir/etc/plymouth/plymouthd.conf" "$omarchy_root/etc-overrides/plymouth-plymouthd.conf"
 
-mkdir -p "$root/usr/share/try-omarchy"
-install_file 0644 "$spec" "$root/usr/share/try-omarchy/build-spec.json"
+mkdir -p "$root/usr/share/my-omarchy"
+install_file 0644 "$spec" "$root/usr/share/my-omarchy/build-spec.json"
 if [[ -d $source_dir/.git && $skip_git_check == 0 ]]; then
   python3 "$guest_dir/scripts/source-digest.py" \
     --source "$source_dir" \
-    --output "$root/usr/share/try-omarchy/upstream-tree.json"
+    --output "$root/usr/share/my-omarchy/upstream-tree.json"
   expected_digest=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["upstream"]["treeSha256"])' "$spec")
-  actual_digest=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "$root/usr/share/try-omarchy/upstream-tree.json")
+  actual_digest=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "$root/usr/share/my-omarchy/upstream-tree.json")
   [[ $actual_digest == "$expected_digest" ]] || fail "normalized source digest mismatch: expected $expected_digest, got $actual_digest"
 fi
 

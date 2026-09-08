@@ -68,7 +68,7 @@ FAKE_GUEST_BUILDER = textwrap.dedent(
         records.append({"path": name, "bytes": len(contents), "sha256": digest})
     manifest = {
         "schemaVersion": 1,
-        "kind": "try-omarchy-guest-artifacts",
+        "kind": "my-omarchy-guest-artifacts",
         "artifacts": records,
     }
     manifest_bytes = (json.dumps(manifest, sort_keys=True) + "\n").encode()
@@ -226,7 +226,7 @@ class BuildCacheTests(unittest.TestCase):
                 records.append({"path": name, "bytes": len(contents), "sha256": digest})
             manifest = {
                 "schemaVersion": 1,
-                "kind": "try-omarchy-guest-artifacts",
+                "kind": "my-omarchy-guest-artifacts",
                 "artifacts": records,
             }
             manifest_bytes = (json.dumps(manifest, sort_keys=True) + "\n").encode()
