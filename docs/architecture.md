@@ -221,11 +221,14 @@ it, so it must already be empty (or already be a workspace Omarchy has used)
 instead. The volume must
 be APFS: the storage library clones the factory image with `cp -c` and expands
 the working disk sparsely, and it serializes launches with a `lockf` advisory
-lock. On exFAT the same expansion allocates the full working size immediately,
-and on a network share the lock is unreliable. Both layers check independently, the app
-when the folder is chosen and the shell library again at launch, because the
-volume can change in between. A location change never moves the existing VM;
-unrecognized host files stay untouched, as everywhere else here.
+lock. QEMU advertises `discard=unmap` on the writable root drive and the guest
+factory enables `fstrim.timer`, so deleted guest data can flow back to the APFS
+sparse-file layer. On exFAT the same expansion allocates the full working size
+immediately, and on a network share the lock is unreliable. Both layers check
+independently, the app when the folder is chosen and the shell library again at
+launch, because the volume can change in between. A location change never moves
+the existing VM; unrecognized host files stay untouched, as everywhere else
+here.
 
 ## Build layout
 

@@ -24,6 +24,7 @@ passwd --lock root >/dev/null
 systemctl enable NetworkManager.service
 systemctl enable systemd-resolved.service
 systemctl enable systemd-timesyncd.service
+systemctl enable fstrim.timer
 
 # Avoid a systemctl introspection path that crashes under some ARM container
 # runtimes after it has already written the link.

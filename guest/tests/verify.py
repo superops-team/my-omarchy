@@ -168,7 +168,15 @@ def main() -> None:
         },
         "SSH preset and boot activation are an exact loopback-only runtime contract",
     )
-    check(spec["runtime"]["storage"]["expandedSizeMiB"] == 24576, "working disk expands to 24 GiB")
+    storage = spec["runtime"]["storage"]
+    launcher = read(REPO / "macos/run-qemu-gpu.sh")
+    check(
+        storage["expandedSizeMiB"] == 24576
+        and storage["discard"] == "unmap"
+        and storage["fstrimTimer"] == "enabled"
+        and "cache=writeback,discard=unmap" in launcher,
+        "working disk expands to 24 GiB and advertises host discard",
+    )
     check(set(spec["inputs"]) == {"packages", "packageLock", "pacmanConfig"}, "spec has a minimal input set")
     for path in spec["inputs"].values():
         check((GUEST / path).is_file(), f"spec input exists: {path}")
@@ -1064,6 +1072,7 @@ def main() -> None:
     finalizer = read(GUEST / "scripts/finalize-rootfs.sh")
     check("factory" in finalizer and "aarch64" in finalizer, "finalizer enforces the native factory contract")
     check("systemd-growfs-root.service" in finalizer, "factory disk grows on first boot")
+    check("systemctl enable fstrim.timer" in finalizer, "guest enables periodic filesystem trim")
     check("systemctl enable omarchy-native-mac-share.service" in finalizer, "shared Mac folder mounts at boot")
     check("systemctl enable systemd-timesyncd.service" in finalizer, "guest time synchronization starts at boot")
     check(

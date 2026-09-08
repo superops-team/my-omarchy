@@ -440,6 +440,8 @@ assert_line_pair "$test_root/disabled/qemu.log" -smp \
 assert_line_pair "$test_root/disabled/qemu.log" -m '2560M'
 assert_contains "$(<"$test_root/disabled/stderr")" \
   'with 4 vCPUs and 2560 MiB RAM (automatic-v1)'
+assert_line_pair "$test_root/disabled/qemu.log" -drive \
+  "if=none,id=omarchy-root,file=$persistent_root/rootfs.ext4,format=raw,media=disk,cache=writeback,discard=unmap"
 assert_line_pair "$test_root/disabled/qemu.log" -netdev 'user,id=omarchy-net'
 assert_line_pair "$test_root/disabled/qemu.log" -kernel "$persistent_root/boot/kernel"
 assert_line_pair "$test_root/disabled/qemu.log" -initrd "$persistent_root/boot/initramfs"

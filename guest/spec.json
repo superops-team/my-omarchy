@@ -465,6 +465,8 @@
     },
     "storage": {
       "device": "virtio-blk-pci",
+      "discard": "unmap",
+      "fstrimTimer": "enabled",
       "format": "raw",
       "mode": "ephemeral",
       "initialization": "apfs-clone",

@@ -479,6 +479,8 @@ camera = {
 }
 storage = {
     "device": "virtio-blk-pci",
+    "discard": "unmap",
+    "fstrimTimer": "enabled",
     "format": "raw",
     "mode": "ephemeral",
     "initialization": "apfs-clone",
@@ -1444,7 +1446,7 @@ qemu_args=(
   -kernel "$launch_kernel"
   -initrd "$launch_initramfs"
   -append "$launch_kernel_command_line omarchy.qemu_virgl=1$shared_folder_kernel_argument$ssh_kernel_argument"
-  -drive "if=none,id=omarchy-root,file=$working_disk,format=raw,media=disk,cache=writeback"
+  -drive "if=none,id=omarchy-root,file=$working_disk,format=raw,media=disk,cache=writeback,discard=unmap"
   -device 'virtio-blk-pci,drive=omarchy-root,serial=omarchy-root'
   -device "$gpu_device"
   # Cocoa forwards its live backing-pixel dimensions and the current host

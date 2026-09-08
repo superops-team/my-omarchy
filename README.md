@@ -396,6 +396,11 @@ boot, the guest's enabled `systemd-growfs-root.service` grows ext4 to fill the
 disk. Verify inside Omarchy with `lsblk` and `df -h /`. No app rebuild, guest
 reinstall, or change to the factory image is needed.
 
+The QEMU root disk is launched with `discard=unmap`, and the factory guest
+enables `fstrim.timer` so deleted files can be returned to the APFS sparse-file
+backing store. Release qualification still needs the Phase 3 trim benchmark:
+host allocated bytes must be measured before and after guest `fstrim`.
+
 ### Choosing where the VM lives
 
 **Change…** on the start menu's **VM Location** row moves the VM to any folder
