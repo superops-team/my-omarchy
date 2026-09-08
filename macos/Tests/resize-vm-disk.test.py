@@ -15,7 +15,7 @@ GIB = 1024**3
 
 class ResizeDiskTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="omarchy-resize-test.")
+        self.temporary = tempfile.TemporaryDirectory(prefix="my-omarchy-resize-test.")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.state = self.root / "VM with spaces"
@@ -120,7 +120,7 @@ class ResizeDiskTests(unittest.TestCase):
         self.assert_rejected(self.run_resize("--size-gib", "1", "--apply"))
 
     def test_rejects_corrupt_marker_and_preserves_it(self):
-        marker = self.state / ".omarchy-qemu-storage"
+        marker = self.state / ".my-omarchy-storage"
         marker.write_text("unrecognized\n")
         self.assert_rejected(self.run_resize("--size-gib", "1", "--apply"))
         self.assertEqual(marker.read_text(), "unrecognized\n")

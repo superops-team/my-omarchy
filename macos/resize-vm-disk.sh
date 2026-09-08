@@ -10,7 +10,7 @@ Preview growing an existing, stopped VM to N GiB (whole number, at most 8192).
 Add --apply to retain a verified APFS clone backup and enlarge the disk.
 The root filesystem grows automatically on the next normal guest boot.
 
-DIR is the VM state directory containing .omarchy-qemu-storage and disks/current.
+DIR is the VM state directory containing .my-omarchy-storage and disks/current.
 Default: ~/Library/Application Support/My Omarchy/VM/v1
 Custom VM locations require --state-root; saved app preferences are not read.
 EOF
@@ -58,7 +58,7 @@ _qps_assert_private_directory "$state_root" 'existing state root'
 state_root=$(cd "$state_root" && pwd -P)
 _qps_assert_safe_root_path "$state_root"
 _qps_assert_volume_supported "$state_root"
-_qps_validate_root_marker "$state_root/.omarchy-qemu-storage"
+_qps_validate_root_marker "$state_root/.my-omarchy-storage"
 for child in disks boot locks; do
   _qps_assert_private_directory "$state_root/$child" "state $child directory"
 done

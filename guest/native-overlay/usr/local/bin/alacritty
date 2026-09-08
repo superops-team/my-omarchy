@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Alacritty's OpenGL path paints an empty transparent surface on Try Omarchy's
+# Alacritty's OpenGL path paints an empty transparent surface on My Omarchy's
 # VirGL guest. Force Mesa llvmpipe so Install → Terminal → Alacritty is usable.
 # Prefer the pacman binary so this PATH shim never recurses on itself.
 

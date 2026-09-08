@@ -377,7 +377,7 @@ a no-op. Whole-number targets up to 8192 GiB are accepted.
 The default state directory is
 `~/Library/Application Support/My Omarchy/VM/v1`. For a custom VM location,
 pass `--state-root "/path/to/selected-folder/VM/v1"`, using the directory that
-contains `.omarchy-qemu-storage` and `disks/current`. The command does not read
+contains `.my-omarchy-storage` and `disks/current`. The command does not read
 the app's saved location preference or select legacy development workspaces.
 
 The backup is an APFS clone in a private sibling directory named
