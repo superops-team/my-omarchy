@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/superops-team/my-omarchy/blob/main/config/legacy-identity-allowlist.schema.json",
+  "title": "My Omarchy legacy identity allowlist",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "entries"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "pattern", "expectedCount", "category", "ownerPhase", "reason"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "pattern": {"enum": ["legacy-display-name", "legacy-compact-name", "legacy-repository", "legacy-bundle-prefix", "legacy-kernel-prefix", "legacy-slug", "legacy-swift-module", "legacy-host-executable", "legacy-runtime-name"]},
+          "expectedCount": {"type": "integer", "minimum": 1},
+          "category": {"enum": ["brand", "repository", "host-identity", "host-storage", "guest-abi", "build-resource", "historical-attribution", "verification-fixture"]},
+          "ownerPhase": {"enum": ["1A", "1B", "1C", "1D", "permanent"]},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

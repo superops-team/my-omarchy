@@ -6,6 +6,7 @@ Releases are Apple Silicon-only and require macOS 15 or newer.
 
 ```sh
 make doctor
+make verify-release-identity
 make test
 make build
 make release
@@ -74,6 +75,10 @@ make release \
 
 Never publish generated artifacts from an unreviewed or locally modified build
 input.
+
+`make verify-release-identity` must pass before creating a release candidate. A
+passing baseline check is not sufficient: it only proves that migration-owned
+legacy identities have not grown or drifted.
 
 The saved boot-kit ABI is a compatibility boundary. Do not change it or remove
 support for an existing value without a reviewed preserving migration or an

@@ -71,3 +71,18 @@ make test
 3. 新 doctor 已能在全量测试前准确报告该阻断。
 4. 当前没有可用于发布、性能比较或真实 VM E2E 的可信制品。
 5. Phase 1A 可以继续建立设计时 identity contract 和扫描门禁；Phase 1 发布退出门禁仍要求在完整 Xcode 环境重跑全部测试。
+
+## 7. Phase 1A identity inventory
+
+`make verify-identity` 已对当前受版本控制文本建立精确基线：248 个
+path/pattern 条目，共 651 次旧身份命中。严格发布模式当前按迁移 owner 汇总为：
+
+| Owner phase | 条目 | 命中次数 |
+|-------------|-----:|---------:|
+| 1B | 8 | 36 |
+| 1C | 140 | 333 |
+| 1D | 81 | 216 |
+
+另有 19 个永久条目、66 次命中，仅用于历史归属和扫描器负向测试夹具。
+因此 `make verify-release-identity` 在 Phase 1A 预期失败；该结果是后续
+1B/1C/1D 的清零队列，不代表当前产品可发布。

@@ -23,6 +23,27 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Install pinned identity schema validator
+        run: python3 -m pip install jsonschema==4.25.1
+
+      - name: Validate product identity contracts
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema.validators import validator_for
+
+          for stem in ("product-identity", "legacy-identity-allowlist"):
+              schema = json.loads(Path(f"config/{stem}.schema.json").read_text())
+              document = json.loads(Path(f"config/{stem}.json").read_text())
+              validator = validator_for(schema)
+              validator.check_schema(schema)
+              validator(schema).validate(document)
+          PY
+
+      - name: Verify reviewed identity baseline
+        run: make verify-identity
+
       # This compiles the Swift product and runs the native, shell, and guest
       # contract suites. The full build additionally requires privileged ARM64
       # Docker, which is unavailable on GitHub-hosted macOS runners.

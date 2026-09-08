@@ -113,13 +113,14 @@ My Omarchy 已确定为与 Try Omarchy 完全独立的新产品。产品身份�
 | guest ABI | `tryomarchy.*`、`try-omarchy-*`、virtio port | 1D |
 | 构建资源 | Docker image、volume label、临时目录、artifact kind | 1D |
 | 历史归属 | LICENSE、THIRD_PARTY_NOTICES 和迁移说明 | 永久允许但精确审计 |
+| 验证夹具 | scanner 测试中刻意构造的旧 identity | 永久允许但精确审计 |
 
 allowlist 的每个条目必须包含 `path`、`pattern`、`expectedCount`、`category`、`ownerPhase` 和 `reason`。不允许目录级通配忽略；路径必须是仓库相对路径，pattern 必须匹配完整身份 token，计数必须精确。新增旧标识、删除后仍残留无效 allowlist、计数变化或未登记文件都必须失败。
 
 扫描器提供两种模式：
 
 - `baseline`：允许当前已登记旧身份，但禁止新增、漂移和无 owner 条目。Phase 1A 合并后 PR CI 使用该模式。
-- `release`：仅允许 LICENSE、THIRD_PARTY_NOTICES 和明确历史说明中的必要引用。Phase 1B–1D 每完成一项就删除对应 allowlist；Phase 1 完成与发布门禁使用该模式。
+- `release`：仅允许 LICENSE、THIRD_PARTY_NOTICES、明确历史说明以及 scanner 自身负向测试中的必要引用。Phase 1B–1D 每完成一项就删除对应 allowlist；Phase 1 完成与发布门禁使用该模式。
 
 扫描范围仅包含 `git ls-files` 返回的受版本控制文本文件，排除构建输出和二进制；是否为文本由读取解码与 NUL 检测决定，而不是目录级忽略。当前用户未提交的新文件在归属明确并提交后才进入清单，Phase 1A 不猜测或修改其内容。
 

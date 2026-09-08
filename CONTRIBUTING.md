@@ -12,7 +12,7 @@ source describe the current baseline and must not be published as My Omarchy.
 1. Open an issue for large behavioral or architecture changes.
 2. Keep changes within the current Apple Silicon, QEMU/HVF, and ARM64 guest
    architecture unless an architecture change has been discussed first.
-3. Run `make test`.
+3. Run `make verify-identity` and `make test`.
 4. If build inputs changed, run the relevant component build and explain how
    its pinned versions or checksums were reviewed.
 5. Update documentation when commands, requirements, output paths, or security
@@ -21,6 +21,13 @@ source describe the current baseline and must not be published as My Omarchy.
 The guest and QEMU supply chains are deliberately pinned. Do not update a URL,
 commit, package lock, archive, or checksum independently of its associated
 validation code.
+
+Product identity is governed by `config/product-identity.json`. Any temporary
+legacy identity occurrence must be an exact, reviewed entry in
+`config/legacy-identity-allowlist.json`; directory globs and approximate counts
+are rejected. See [`docs/identity.md`](docs/identity.md) before changing product
+names, bundle identifiers, storage paths, guest namespaces, build resources, or
+release names.
 
 Generated files in `dist/` and build caches in `macos/.build/` and
 `guest/.work/` are not committed. Use `make clean` to remove project build

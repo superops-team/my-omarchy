@@ -1,0 +1,1989 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "path": "CONTRIBUTING.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "brand",
+      "ownerPhase": "1B",
+      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
+    },
+    {
+      "path": "LICENSE",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "Makefile",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 4,
+      "category": "build-resource",
+      "ownerPhase": "1C",
+      "reason": "Removed with host build, package, and runtime naming in Phase 1C."
+    },
+    {
+      "path": "Makefile",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 1,
+      "category": "build-resource",
+      "ownerPhase": "1C",
+      "reason": "Removed with host build, package, and runtime naming in Phase 1C."
+    },
+    {
+      "path": "Makefile",
+      "pattern": "legacy-display-name",
+      "expectedCount": 8,
+      "category": "build-resource",
+      "ownerPhase": "1C",
+      "reason": "Removed with host build, package, and runtime naming in Phase 1C."
+    },
+    {
+      "path": "Makefile",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 7,
+      "category": "build-resource",
+      "ownerPhase": "1C",
+      "reason": "Removed with host build, package, and runtime naming in Phase 1C."
+    },
+    {
+      "path": "Makefile",
+      "pattern": "legacy-slug",
+      "expectedCount": 4,
+      "category": "build-resource",
+      "ownerPhase": "1D",
+      "reason": "Removed with guest build resource and ABI naming in Phase 1D."
+    },
+    {
+      "path": "README.md",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 1,
+      "category": "brand",
+      "ownerPhase": "1B",
+      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
+    },
+    {
+      "path": "README.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 20,
+      "category": "brand",
+      "ownerPhase": "1B",
+      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
+    },
+    {
+      "path": "README.md",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Updated when user-facing guest and release naming moves in Phase 1D."
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 3,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "docs/architecture.md",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Updated when the documented macOS host identity moves in Phase 1C."
+    },
+    {
+      "path": "docs/architecture.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 5,
+      "category": "brand",
+      "ownerPhase": "1B",
+      "reason": "Updated when current product-facing documentation adopts My Omarchy branding in Phase 1B."
+    },
+    {
+      "path": "docs/architecture.md",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Updated when the documented guest ABI moves to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "docs/architecture.md",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Updated when the documented guest ABI moves to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "docs/baselines/phase-0.md",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Records the immutable pre-migration Phase 0 baseline."
+    },
+    {
+      "path": "docs/releasing.md",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 1,
+      "category": "brand",
+      "ownerPhase": "1B",
+      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
+    },
+    {
+      "path": "docs/releasing.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "brand",
+      "ownerPhase": "1B",
+      "reason": "Updated when maintained product documentation adopts My Omarchy branding in Phase 1B."
+    },
+    {
+      "path": "docs/releasing.md",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Updated when user-facing guest and release naming moves in Phase 1D."
+    },
+    {
+      "path": "guest/README.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/README.md",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/README.md",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/build-container.sh",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/build-container.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/build.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 4,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/factory-overlay/etc/mkinitcpio.conf.d/90-try-omarchy.conf",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/factory-overlay/etc/systemd/zram-generator.conf.d/99-try-omarchy.conf",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/factory-overlay/usr/lib/environment.d/90-try-omarchy.conf",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/fragments/pre-refresh-pacman-restore-arm.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/fragments/pre-refresh-pacman-restore-arm.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/etc/modprobe.d/90-try-omarchy-camera.conf",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/etc/modules-load.d/90-try-omarchy-camera.conf",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/etc/skel/.config/omarchy/backgrounds/tokyo-night/try-omarchy-wallpaper.jpg",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/etc/systemd/system/omarchy-provision-owner.service.d/10-try-omarchy-native.conf",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/etc/udev/rules.d/91-omarchy-native-audio.rules",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/etc/udev/rules.d/92-omarchy-native-clipboard.rules",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/etc/udev/rules.d/94-omarchy-native-camera.rules",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/bin/omarchy-theme-bg-switcher",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/lib/initcpio/hooks/try-omarchy-boot-export",
+      "pattern": "legacy-display-name",
+      "expectedCount": 7,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/lib/initcpio/hooks/try-omarchy-boot-export",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/lib/initcpio/hooks/try-omarchy-boot-export",
+      "pattern": "legacy-slug",
+      "expectedCount": 5,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/lib/initcpio/install/try-omarchy-boot-export",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/lib/initcpio/install/try-omarchy-boot-export",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/lib/systemd/system-generators/try-omarchy-ssh-access",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/lib/systemd/system-generators/try-omarchy-ssh-access",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/lib/systemd/system/omarchy-native-mac-share.service",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/lib/systemd/user/omarchy-native-clipboard-bridge.service",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/local/bin/omarchy-native-audio-bridge",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/local/bin/omarchy-native-camera-bridge",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/local/bin/omarchy-native-clipboard-bridge",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/local/bin/omarchy-native-mac-share",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/local/lib/try-omarchy/install-vivaldi-arm64",
+      "pattern": "legacy-display-name",
+      "expectedCount": 6,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/local/lib/try-omarchy/install-vivaldi-arm64",
+      "pattern": "legacy-slug",
+      "expectedCount": 7,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/share/pipewire/pipewire.conf.d/90-try-omarchy-quantum.conf",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/native-overlay/usr/share/pipewire/pipewire.conf.d/90-try-omarchy-quantum.conf",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/patches/omarchy/1password-arm64-installer.patch",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/patches/omarchy/update-free-space-message.patch",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/patches/omarchy/vivaldi-browser-integration.patch",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/configure-rootfs.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/configure-rootfs.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 9,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/finalize-rootfs.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 6,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/materialize-omarchy.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 4,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/pack-image.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 4,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-local-repository.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-local-repository.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 14,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-omarchy-runtime.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-omarchy-runtime.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 8,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-patched-hyprland.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-patched-hyprland.sh",
+      "pattern": "legacy-repository",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-patched-hyprland.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 7,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-pinned-mise.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-pinned-mise.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-pinned-ttfx.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-pinned-ttfx.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 3,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-pinned-yay.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/register-pinned-yay.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/verify-background-switcher-override.py",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/write-guest-manifest.py",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/scripts/write-provenance.py",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/spec.json",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/spec.json",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/spec.json",
+      "pattern": "legacy-repository",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/spec.json",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/test_boot_export.py",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 8,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/test_boot_export.py",
+      "pattern": "legacy-slug",
+      "expectedCount": 11,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/test_ssh_access.py",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 5,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/test_ssh_access.py",
+      "pattern": "legacy-slug",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/verify.py",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 6,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/verify.py",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/verify.py",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/verify.py",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 2,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/verify.py",
+      "pattern": "legacy-repository",
+      "expectedCount": 1,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "guest/tests/verify.py",
+      "pattern": "legacy-slug",
+      "expectedCount": 21,
+      "category": "guest-abi",
+      "ownerPhase": "1D",
+      "reason": "Removed when the guest ABI and image identity move to My Omarchy in Phase 1D."
+    },
+    {
+      "path": "macos/Info.plist",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Info.plist",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Info.plist",
+      "pattern": "legacy-display-name",
+      "expectedCount": 8,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Info.plist",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/OmarchyIcon.svg",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "brand",
+      "ownerPhase": "1B",
+      "reason": "Replaced by the original My Omarchy visual identity in Phase 1B."
+    },
+    {
+      "path": "macos/Package.swift",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Package.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 5,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/README.md",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/README.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 3,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/README.md",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/AccessibilityPermissionRepair.swift",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/AccessibilityPermissionRepair.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/ApplicationPresentation.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/AudioDevices.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/BootRecoveryLaunch.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/FocusedCommandSuperBridge.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/FocusedCommandSuperBridge.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/FullscreenPreferences.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/Models.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/NativeAudioBridge.swift",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 3,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/NativeAudioBridge.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/NativeBridgeSocket.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/NativeCameraBridge.swift",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/NativeCameraBridge.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/NativeClipboardBridge.swift",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/NativeClipboardBridge.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/PermissionWindowRestorer.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/PortForwarding.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/PortForwardingEditor.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/PortForwardingEditorModel.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/QEMUGPULauncher.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 6,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/QEMUGPULauncher.swift",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 3,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/QEMUGPULauncher.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/QMPConnection.swift",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/QMPConnection.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/SharedFolder.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/StartMenuPresentation.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/StartMenuPresentation.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/StartMenuWindow.swift",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/StartMenuWindow.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 4,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/StartMenuWindow.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/StorageLocation.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/StorageLocation.swift",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 3,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/StorageLocation.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/VMApplicationController.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 6,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/VMApplicationController.swift",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 6,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/VMApplicationController.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/VMHostSleepController.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/VMRunLifecycle.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/VolumeCapabilities.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/VolumeCapabilities.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/main.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/main.swift",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Sources/OmarchyVMHelper/main.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/AccessibilityPermissionRepairTests.swift",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/AccessibilityPermissionRepairTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/ApplicationPresentationTests.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/ApplicationPresentationTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/AudioDevicesTests.swift",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/AudioDevicesTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/CocoaDynamicDisplayContractTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/FocusedCommandSuperBridgeTests.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 3,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/FocusedCommandSuperBridgeTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/FullscreenNativeContractTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/FullscreenPreferencesTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/NativeCameraBridgeTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/NativeClipboardBridgeTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/PermissionWindowRestorerTests.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/PermissionWindowRestorerTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/PortForwardAvailabilityTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/PortForwardingEditorModelTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/PortForwardingTests.swift",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/PortForwardingTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/QEMUGPULauncherTests.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/QEMUGPULauncherTests.swift",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 14,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/QEMUGPULauncherTests.swift",
+      "pattern": "legacy-slug",
+      "expectedCount": 5,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/QEMUGPULauncherTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/SharedFolderTests.swift",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/SharedFolderTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StartMenuAppearanceTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StartMenuPresentationTests.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StartMenuPresentationTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StartMenuWindowWidthTests.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 3,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StartMenuWindowWidthTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StorageLocationContractTests.swift",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StorageLocationContractTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StorageLocationTests.swift",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StorageLocationTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StorageMarkerAgreementTests.swift",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/StorageMarkerAgreementTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/OmarchyVMHelperTests/VMHostSleepControllerTests.swift",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/qemu-persistent-storage.test.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 5,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/qemu-persistent-storage.test.sh",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 6,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/qemu-power-actions.test.sh",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/run-qemu-ssh-contract.test.sh",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/run-qemu-ssh-contract.test.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 4,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/run-qemu-ssh-contract.test.sh",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/run-qemu-ssh-contract.test.sh",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 11,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/run-qemu-ssh-contract.test.sh",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/Tests/run-qemu-ssh-contract.test.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/build-app.sh",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/build-app.sh",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 4,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/build-app.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 3,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/build-app.sh",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 5,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/build-qemu-gpu-runtime.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 11,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/build-qemu-gpu-runtime.sh",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/omarchy-vm-helper.entitlements",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/open-qemu-gpu.sh",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/open-qemu-gpu.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/open-qemu-gpu.sh",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/package-dmg.sh",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/package-dmg.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/package-dmg.sh",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/patches/qemu-9p-guest-owner.patch",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/patches/qemu-cocoa-full-grab-focus.patch",
+      "pattern": "legacy-display-name",
+      "expectedCount": 3,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/patches/qemu-cocoa-immersive-mode.patch",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/patches/qemu-cocoa-pause-ownership.patch",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/patches/qemu-cocoa-product-identity.patch",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/patches/qemu-cocoa-product-identity.patch",
+      "pattern": "legacy-display-name",
+      "expectedCount": 7,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/patches/qemu-gpu-spike-resolution-fix.patch",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/prepare-qemu-gpu-runtime.sh",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/qemu-persistent-storage.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/qemu-persistent-storage.sh",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 2,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/qemu-persistent-storage.sh",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 6,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/run-qemu-gpu.sh",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 5,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/run-qemu-gpu.sh",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/run-qemu-gpu.sh",
+      "pattern": "legacy-display-name",
+      "expectedCount": 4,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/run-qemu-gpu.sh",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 1,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/run-qemu-gpu.sh",
+      "pattern": "legacy-kernel-prefix",
+      "expectedCount": 5,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/run-qemu-gpu.sh",
+      "pattern": "legacy-runtime-name",
+      "expectedCount": 4,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "macos/run-qemu-gpu.sh",
+      "pattern": "legacy-slug",
+      "expectedCount": 3,
+      "category": "host-identity",
+      "ownerPhase": "1C",
+      "reason": "Removed when the macOS host bundle, executable, storage, and runtime identity move in Phase 1C."
+    },
+    {
+      "path": "prd-spec/features/diagnostics-and-recovery/2026-09-08-diagnostics-and-recovery-design.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/features/diagnostics-and-recovery/2026-09-08-diagnostics-and-recovery-design.md",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/features/lightweight-vm-runtime/2026-09-08-lightweight-vm-runtime-design.md",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 21,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md",
+      "pattern": "legacy-repository",
+      "expectedCount": 2,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md",
+      "pattern": "legacy-slug",
+      "expectedCount": 3,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/features/vm-lifecycle-management/2026-09-08-vm-lifecycle-management-design.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 5,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-my-omarchy-product-readiness-roadmap.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 4,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
+      "pattern": "legacy-bundle-prefix",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
+      "pattern": "legacy-display-name",
+      "expectedCount": 8,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
+      "pattern": "legacy-repository",
+      "expectedCount": 1,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "prd-spec/refactors/product-readiness-roadmap/2026-09-08-phase-0-phase-1a-implementation-design.md",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "historical-attribution",
+      "ownerPhase": "permanent",
+      "reason": "Preserves explicit predecessor attribution and approved migration context."
+    },
+    {
+      "path": "scripts/build-cache.py",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 1,
+      "category": "build-resource",
+      "ownerPhase": "1C",
+      "reason": "Removed with host build, package, and runtime naming in Phase 1C."
+    },
+    {
+      "path": "scripts/build-cache.py",
+      "pattern": "legacy-display-name",
+      "expectedCount": 2,
+      "category": "build-resource",
+      "ownerPhase": "1C",
+      "reason": "Removed with host build, package, and runtime naming in Phase 1C."
+    },
+    {
+      "path": "scripts/build-cache.py",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 1,
+      "category": "build-resource",
+      "ownerPhase": "1C",
+      "reason": "Removed with host build, package, and runtime naming in Phase 1C."
+    },
+    {
+      "path": "scripts/build-cache.py",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "build-resource",
+      "ownerPhase": "1D",
+      "reason": "Removed with guest build resource and ABI naming in Phase 1D."
+    },
+    {
+      "path": "tests/test-build-cache.py",
+      "pattern": "legacy-display-name",
+      "expectedCount": 6,
+      "category": "build-resource",
+      "ownerPhase": "1C",
+      "reason": "Removed with host build, package, and runtime naming in Phase 1C."
+    },
+    {
+      "path": "tests/test-build-cache.py",
+      "pattern": "legacy-host-executable",
+      "expectedCount": 1,
+      "category": "build-resource",
+      "ownerPhase": "1C",
+      "reason": "Removed with host build, package, and runtime naming in Phase 1C."
+    },
+    {
+      "path": "tests/test-build-cache.py",
+      "pattern": "legacy-slug",
+      "expectedCount": 2,
+      "category": "build-resource",
+      "ownerPhase": "1D",
+      "reason": "Removed with guest build resource and ABI naming in Phase 1D."
+    },
+    {
+      "path": "tests/test-pack-app-icon.py",
+      "pattern": "legacy-compact-name",
+      "expectedCount": 6,
+      "category": "brand",
+      "ownerPhase": "1B",
+      "reason": "Updated with the My Omarchy app icon and brand artifact in Phase 1B."
+    },
+    {
+      "path": "tests/test-product-identity.py",
+      "pattern": "legacy-display-name",
+      "expectedCount": 7,
+      "category": "verification-fixture",
+      "ownerPhase": "permanent",
+      "reason": "Exercises rejection and allowlisting of legacy identity values."
+    },
+    {
+      "path": "tests/test-product-identity.py",
+      "pattern": "legacy-swift-module",
+      "expectedCount": 2,
+      "category": "verification-fixture",
+      "ownerPhase": "permanent",
+      "reason": "Exercises rejection and allowlisting of legacy identity values."
+    }
+  ]
+}
