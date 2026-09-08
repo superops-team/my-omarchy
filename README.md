@@ -1,12 +1,32 @@
 <p align="center">
-  <img src="macos/OmarchyIcon.svg" width="128" height="128" alt="Try Omarchy logo">
+  <img src="macos/OmarchyIcon.svg" width="128" height="128" alt="Legacy application icon pending replacement">
 </p>
 
-<h1 align="center">Try Omarchy</h1>
+<h1 align="center">My Omarchy</h1>
 
-Run the upstream [Omarchy](https://github.com/basecamp/omarchy) desktop as a native, hardware-accelerated app on an Apple Silicon Mac.
+> **Product transition:** This repository is being rebuilt as **My Omarchy**,
+> an independent product maintained at
+> [`superops-team/my-omarchy`](https://github.com/superops-team/my-omarchy).
+> Try Omarchy is a separate legacy product and is not maintained by this
+> project. My Omarchy will use its own brand, application identity, VM format,
+> data directories, and release artifacts; it will not import, modify, or
+> remove Try Omarchy data. The current source tree still contains legacy names
+> while the approved product-foundation specification is implemented.
+> See the [product readiness roadmap](prd-spec/refactors/product-readiness-roadmap/2026-09-08-my-omarchy-product-readiness-roadmap.md)
+> and [product foundation specification](prd-spec/features/my-omarchy-product-foundation/2026-09-08-my-omarchy-product-foundation-design.md)
+> for the implementation order and target identity contract.
 
-Try Omarchy packages a project-built ARM64 Arch Linux image configured with Omarchy Quattro, a QEMU runtime using Apple Hypervisor Framework, and a small Swift/AppKit launcher into one macOS app. The image is built from pinned Arch Linux ARM packages and a pinned revision of the upstream Omarchy source. Temporary fixes carried ahead of the next upstream release are enumerated with strict hashes in the guest build spec and artifact provenance.
+My Omarchy's product goal is to run the upstream
+[Omarchy](https://github.com/basecamp/omarchy) desktop as a native,
+hardware-accelerated app on an Apple Silicon Mac.
+
+The current legacy implementation packages a project-built ARM64 Arch Linux
+image configured with Omarchy Quattro, a QEMU runtime using Apple Hypervisor
+Framework, and a small Swift/AppKit launcher into one macOS app. The approved
+My Omarchy specifications preserve this architecture while replacing the
+product identity, brand, storage/guest ABI, and release lifecycle. Sections
+below that still name Try Omarchy describe the implementation baseline, not a
+maintained Try Omarchy distribution.
 
 <img width="800" src="https://github.com/user-attachments/assets/1368a8f5-5099-43e4-8d3b-3d7d7fba0326" />
 
@@ -138,9 +158,12 @@ port. The `dtc` mirror should be reverted once kernel.org returns.
 
 ## Quick start
 
-1. Open [Releases](https://github.com/omacom/try-omarchy/releases) and download the latest signed and notarized `.dmg`.
-2. Open the DMG and drag **Try Omarchy** to **Applications**.
-3. Launch **Try Omarchy** from Applications.
+My Omarchy does not yet have a product-qualified release. Do not publish or
+redistribute the current legacy app as My Omarchy. Once the product-foundation
+and release-gate specifications are complete, signed and notarized builds will
+be published only through
+[My Omarchy Releases](https://github.com/superops-team/my-omarchy/releases).
+The remaining launch description documents the current implementation baseline.
 
 Every launch begins at the start menu. While that menu is open, Try Omarchy behaves like a regular Mac app with standard Quit, Close Window, and Minimize commands; after the VM starts, that native app chrome steps aside for Omarchy. **Immersive** is on by default, so Omarchy opens Full Screen with the Mac menu bar and Dock hidden. Turn it off to open a resizable window; if you later enter Full Screen, the Mac menu bar and Dock remain available at the screen edges. Whenever the Omarchy window is focused, Command belongs to the guest as Super in either mode; Accessibility permission lets system shortcuts such as Command-Space reach it before macOS. Microphone and camera access are optional. The first launch takes longer while the app prepares Linux and starts Omarchy's account provisioning.
 
@@ -526,10 +549,13 @@ The architecture and trust boundaries are documented in [`docs/architecture.md`]
 
 ## Project status and support
 
-Try Omarchy is pre-1.0 and under active development. Omarchy and bundled dependencies retain their own licenses; see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+My Omarchy is pre-1.0 and under active development. The repository is currently
+transitioning from its Try Omarchy-derived implementation to the independent
+My Omarchy product contract. Omarchy and bundled dependencies retain their own
+licenses; see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
-Report ordinary bugs through [GitHub Issues](https://github.com/omacom/try-omarchy/issues). Report suspected vulnerabilities using the private process in [`SECURITY.md`](SECURITY.md), not a public issue.
+Report ordinary bugs through [My Omarchy GitHub Issues](https://github.com/superops-team/my-omarchy/issues). Report suspected vulnerabilities using the private process in [`SECURITY.md`](SECURITY.md), not a public issue.
 
-Try Omarchy's original code is licensed under the [MIT License](LICENSE).
+My Omarchy's original code is licensed under the [MIT License](LICENSE).
 
 by [@martiano](https://x.com/martiano)
