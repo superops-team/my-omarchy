@@ -319,6 +319,12 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 )
                 return
             }
+            guard context.resourceUnavailableReason == nil else {
+                startMenuWindow?.resetDidFinish(
+                    errorMessage: context.resourceUnavailableReason
+                )
+                return
+            }
             activeStateRoot = context.stateRoot
             try supervisor.start(
                 executableURL: launcherURL,
@@ -382,6 +388,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         /// Set when a chosen data folder could not be validated. Starting the
         /// launcher anyway would silently retarget the default workspace.
         let storageUnavailableReason: String?
+        /// Set when this Mac cannot satisfy the minimum VM resource contract.
+        let resourceUnavailableReason: String?
     }
 
     /// The environment every launcher invocation receives.
@@ -413,8 +421,11 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             baseEnvironment: forwarding.environment,
             preferences: fullscreenPreferenceStore.load()
         )
+        let resources = VMResourceLaunchConfiguration.make(
+            baseEnvironment: fullscreen.environment
+        )
         let storage = StorageLocationLaunchConfiguration.make(
-            baseEnvironment: fullscreen.environment,
+            baseEnvironment: resources.environment,
             preference: storageLocationStore.load(),
             metrics: bundledMetrics,
             probe: volumeProbe,
@@ -424,7 +435,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             environment: storage.environment,
             stateRoot: storage.stateRoot,
             portForwardMappings: forwarding.mappings,
-            storageUnavailableReason: storage.unavailableReason
+            storageUnavailableReason: storage.unavailableReason,
+            resourceUnavailableReason: resources.unavailableReason
         )
     }
 
@@ -433,6 +445,9 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         // The UI gate above normally resolves this first; failing closed here
         // too keeps a silent fallback impossible for any future caller.
         if let reason = context.storageUnavailableReason {
+            throw HelperError.io(reason)
+        }
+        if let reason = context.resourceUnavailableReason {
             throw HelperError.io(reason)
         }
         try PortForwardAvailability.validate(context.portForwardMappings)

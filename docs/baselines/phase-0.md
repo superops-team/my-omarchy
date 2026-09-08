@@ -49,7 +49,7 @@ make test
 | runtime relocation | 通过 | `runtime relocation tests passed` |
 | Swift product compilation | 通过 | `my-omarchy` 完成 link |
 | Swift test target | 已修复 | `swift-testing` 0.12.0；202 tests passed |
-| QEMU port/power/storage shell tests | 待重跑 | Swift 阻断解除后由完整 `make test` 继续覆盖 |
+| QEMU port/power/storage shell tests | 通过 | 完整 `make test` 已继续覆盖 |
 
 该失败曾是环境工具链阻断，不是产品回归；当前修复路径是把 Swift Testing
 作为测试依赖随仓库解析并锁定。发布前仍必须重新运行完整 `make test`。
@@ -74,7 +74,7 @@ make test
 2. Swift `Testing` module 阻断已通过仓库级 `swift-testing` 依赖修复。
 3. 新 doctor 已能在全量测试前验证 SwiftPM 测试入口可构建。
 4. 当前没有可用于发布、性能比较或真实 VM E2E 的可信制品。
-5. Phase 1A 可以继续建立设计时 identity contract 和扫描门禁；Phase 1 发布退出门禁仍要求在完整 Xcode 环境重跑全部测试。
+5. Phase 1A 可以继续建立设计时 identity contract 和扫描门禁；后续发布退出门禁仍要求在 release candidate 上重跑全部测试和真实设备验证。
 
 ## 7. Phase 1A identity inventory
 

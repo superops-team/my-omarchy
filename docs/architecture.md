@@ -24,9 +24,15 @@ Accessibility grant to capture system-wide Command chords and deliver Command
 as guest Super. Swift does not replace QEMU or run the Omarchy desktop itself.
 
 QEMU presents the hardware that Linux expects: CPUs, memory, storage, networking,
-graphics, audio, keyboard, and pointer devices. Because both the Mac and the
-guest are ARM64, Apple Hypervisor Framework runs the guest CPU instructions on
-the Apple Silicon processor. QEMU provides the virtual devices around that CPU.
+graphics, audio, keyboard, and pointer devices. The Swift launcher chooses a
+versioned `VMResourceProfile` before each start and passes the selected vCPU and
+RAM values to the shell launcher; the shell only validates and consumes those
+values. The automatic profile gives 8 GiB Macs 4 vCPUs and 2560 MiB RAM,
+16-23 GiB Macs 4 vCPUs and 4096 MiB RAM, and 24 GiB or larger Macs 6 vCPUs and
+4096 MiB RAM, while always reserving 2 active CPUs for macOS. Because both the
+Mac and the guest are ARM64, Apple Hypervisor Framework runs the guest CPU
+instructions on the Apple Silicon processor. QEMU provides the virtual devices
+around that CPU.
 
 Linux then boots from the selected VM disk and its paired kernel and initramfs,
 and Omarchy runs inside Linux. For a new, reset, or ephemeral VM, that pair and

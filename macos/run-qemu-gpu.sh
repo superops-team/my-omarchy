@@ -58,7 +58,7 @@ port_forwarding_library="$script_dir/qemu-port-forwarding.sh"
 [[ -d $guest_input && ! -L $guest_input ]] || fail "ARM guest directory is missing or unsafe: $guest_input"
 guest_dir=$(cd "$guest_input" && pwd -P)
 
-for command in codesign file getconf id mktemp plutil ps sysctl; do
+for command in codesign file getconf id mktemp plutil ps; do
   command -v "$command" >/dev/null || fail "$command is required"
 done
 
@@ -383,6 +383,7 @@ runtime = exact_keys(
         "minimumMemoryMiB",
         "network",
         "recommendedMemoryMiB",
+        "resourceProfile",
         "sharedFolder",
         "storage",
         "virtualMachineMonitor",
@@ -507,6 +508,44 @@ if (
     or runtime.get("minimumCpuCount") != 4
 ):
     fail("native runtime contract is invalid")
+
+resource_profile = {
+    "schemaVersion": 1,
+    "selector": "host-memory-tier",
+    "minimumHostMemoryMiB": 8192,
+    "reservedHostCPUs": 2,
+    "maximumDefaultVCPUs": 6,
+    "profiles": [
+        {
+            "name": "automatic-v1",
+            "hostMemoryMiBMinimum": 8192,
+            "hostMemoryMiBMaximumExclusive": 16384,
+            "vcpus": 4,
+            "memoryMiB": 2560,
+        },
+        {
+            "name": "automatic-v1",
+            "hostMemoryMiBMinimum": 16384,
+            "hostMemoryMiBMaximumExclusive": 24576,
+            "vcpus": 4,
+            "memoryMiB": 4096,
+        },
+        {
+            "name": "automatic-v1",
+            "hostMemoryMiBMinimum": 24576,
+            "hostMemoryMiBMaximumExclusive": None,
+            "vcpus": 6,
+            "memoryMiB": 4096,
+        },
+    ],
+    "lowResource": {
+        "name": "low-resource-v1",
+        "vcpus": 4,
+        "memoryMiB": 2048,
+    },
+}
+if runtime.get("resourceProfile") != resource_profile:
+    fail("runtime resource profile contract is invalid")
 
 upstream = exact_keys(
     spec.get("upstream"),
@@ -897,19 +936,16 @@ if ((QEMU_PORT_FORWARDING_ENABLES_SSH)); then
   ssh_kernel_argument=' myomarchy.ssh_access=1'
 fi
 
-host_cpu_count=$(
-  sysctl -n hw.logicalcpu 2>/dev/null ||
-    sysctl -n hw.ncpu 2>/dev/null ||
-    getconf _NPROCESSORS_ONLN 2>/dev/null
-) || {
-  fail "cannot determine the host CPU count"
+resource_profile=${OMARCHY_QEMU_GPU_RESOURCE_PROFILE:-}
+vcpu_count=${OMARCHY_QEMU_GPU_VCPUS:-}
+memory_mib=${OMARCHY_QEMU_GPU_MEMORY_MIB:-}
+[[ $resource_profile == automatic-v1 || $resource_profile == low-resource-v1 ]] || {
+  fail "VM resource profile must be provided by the My Omarchy launcher"
 }
-[[ $host_cpu_count =~ ^[0-9]+$ ]] || fail "host CPU count is invalid: $host_cpu_count"
-vcpu_count=8
-if (( host_cpu_count < vcpu_count )); then
-  vcpu_count=$host_cpu_count
-fi
-(( vcpu_count >= 4 )) || fail "the ARM guest requires at least four host CPUs"
+[[ $vcpu_count =~ ^[1-9][0-9]*$ ]] || fail "VM vCPU count is invalid: $vcpu_count"
+[[ $memory_mib =~ ^[1-9][0-9]*$ ]] || fail "VM memory size is invalid: $memory_mib"
+(( vcpu_count >= 4 && vcpu_count <= 6 )) || fail "VM vCPU count must be between 4 and 6"
+(( memory_mib >= 2048 && memory_mib <= 4096 )) || fail "VM memory must be between 2048 and 4096 MiB"
 
 # The launcher publishes one optional Mac folder for the guest. The Swift app
 # canonicalizes and validates the selection first; re-check here so a stray
@@ -1393,7 +1429,7 @@ qemu_args=(
   # one: Linux otherwise probes the dead device and prints a misleading failure.
   -cpu 'host,pmu=off'
   -smp "$vcpu_count,sockets=1,cores=$vcpu_count,threads=1"
-  -m 4G
+  -m "${memory_mib}M"
   -nodefaults
   # Reboot the guest inside this QEMU process, but let shutdown close the app.
   -action 'reboot=reset,shutdown=poweroff'
@@ -1483,10 +1519,10 @@ fi
 }
 
 if [[ $QEMU_SELECTED_STORAGE_MODE == persistent ]]; then
-  echo "[qemu-gpu] Starting the persistent ARM64 VirGL guest with $vcpu_count vCPUs and 4 GiB RAM." >&2
+  echo "[qemu-gpu] Starting the persistent ARM64 VirGL guest with $vcpu_count vCPUs and $memory_mib MiB RAM ($resource_profile)." >&2
   echo "[qemu-gpu] User data: $QEMU_PERSISTENT_STORAGE_DIRECTORY" >&2
 else
-  echo "[qemu-gpu] Starting a disposable ARM64 VirGL guest with $vcpu_count vCPUs and 4 GiB RAM." >&2
+  echo "[qemu-gpu] Starting a disposable ARM64 VirGL guest with $vcpu_count vCPUs and $memory_mib MiB RAM ($resource_profile)." >&2
 fi
 if [[ -n $shared_folder ]]; then
   echo "[qemu-gpu] Shared folder: $shared_folder (guest ~/$shared_folder_name)" >&2

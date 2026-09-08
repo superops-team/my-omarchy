@@ -110,6 +110,45 @@ def main() -> None:
     )
     check(spec["runtime"]["virtualMachineMonitor"] == "qemu-system-aarch64", "runtime uses native ARM QEMU")
     check(spec["runtime"]["hypervisor"] == "hvf", "runtime uses Apple Hypervisor.framework")
+    expected_resource_profile = {
+        "schemaVersion": 1,
+        "selector": "host-memory-tier",
+        "minimumHostMemoryMiB": 8192,
+        "reservedHostCPUs": 2,
+        "maximumDefaultVCPUs": 6,
+        "profiles": [
+            {
+                "name": "automatic-v1",
+                "hostMemoryMiBMinimum": 8192,
+                "hostMemoryMiBMaximumExclusive": 16384,
+                "vcpus": 4,
+                "memoryMiB": 2560,
+            },
+            {
+                "name": "automatic-v1",
+                "hostMemoryMiBMinimum": 16384,
+                "hostMemoryMiBMaximumExclusive": 24576,
+                "vcpus": 4,
+                "memoryMiB": 4096,
+            },
+            {
+                "name": "automatic-v1",
+                "hostMemoryMiBMinimum": 24576,
+                "hostMemoryMiBMaximumExclusive": None,
+                "vcpus": 6,
+                "memoryMiB": 4096,
+            },
+        ],
+        "lowResource": {
+            "name": "low-resource-v1",
+            "vcpus": 4,
+            "memoryMiB": 2048,
+        },
+    }
+    check(
+        spec["runtime"].get("resourceProfile") == expected_resource_profile,
+        "runtime resource profile keeps My Omarchy lightweight by host tier",
+    )
     check(
         spec["runtime"]["network"].get("sshAccess")
         == {

@@ -405,11 +405,17 @@ run_scenario() {
   local actual_status=0
   mkdir -p "$scenario_dir"
   : >"$scenario_dir/storage.log"
-  if env \
+  local scenario_environment=(
     PATH="$shim_dir:/usr/bin:/bin:/usr/sbin:/sbin" \
     FAKE_STORAGE_LOG="$scenario_dir/storage.log" \
     FAKE_PERSISTENT_ROOT="$persistent_root" \
     FAKE_QEMU_LOG="$scenario_dir/qemu.log" \
+    OMARCHY_QEMU_GPU_RESOURCE_PROFILE=automatic-v1 \
+    OMARCHY_QEMU_GPU_VCPUS=4 \
+    OMARCHY_QEMU_GPU_MEMORY_MIB=2560 \
+  )
+  if env \
+    "${scenario_environment[@]}" \
     "$@" \
     "$launcher" ${launcher_argument:+"$launcher_argument"} \
     >"$scenario_dir/stdout" 2>"$scenario_dir/stderr"; then
@@ -429,6 +435,11 @@ assert_line_pair "$test_root/disabled/qemu.log" -machine \
   'virt,gic-version=3,virtualization=on'
 assert_line_pair "$test_root/disabled/qemu.log" -accel 'hvf,kernel-irqchip=on'
 assert_not_contains "$disabled_qemu" gic-version=2
+assert_line_pair "$test_root/disabled/qemu.log" -smp \
+  '4,sockets=1,cores=4,threads=1'
+assert_line_pair "$test_root/disabled/qemu.log" -m '2560M'
+assert_contains "$(<"$test_root/disabled/stderr")" \
+  'with 4 vCPUs and 2560 MiB RAM (automatic-v1)'
 assert_line_pair "$test_root/disabled/qemu.log" -netdev 'user,id=omarchy-net'
 assert_line_pair "$test_root/disabled/qemu.log" -kernel "$persistent_root/boot/kernel"
 assert_line_pair "$test_root/disabled/qemu.log" -initrd "$persistent_root/boot/initramfs"
@@ -616,6 +627,21 @@ assert_not_contains "$(<"$test_root/reset-only/stderr")" myomarchy.ssh_access
 assert_contains "$(<"$persistent_root/boot/kernel")" new-kernel
 assert_contains "$(<"$persistent_root/boot/initramfs")" new-initramfs
 assert_contains "$(<"$persistent_root/boot/command-line")" loglevel=5
+
+run_scenario missing-resource-profile 1 '' OMARCHY_QEMU_GPU_RESOURCE_PROFILE=
+[[ ! -s $test_root/missing-resource-profile/storage.log ]] || \
+  fail 'missing resource profile touched storage'
+assert_contains "$(<"$test_root/missing-resource-profile/stderr")" \
+  'VM resource profile must be provided by the My Omarchy launcher'
+
+run_scenario invalid-resource-values 1 '' \
+  OMARCHY_QEMU_GPU_RESOURCE_PROFILE=automatic-v1 \
+  OMARCHY_QEMU_GPU_VCPUS=8 \
+  OMARCHY_QEMU_GPU_MEMORY_MIB=4096
+[[ ! -s $test_root/invalid-resource-values/storage.log ]] || \
+  fail 'invalid resource values touched storage'
+assert_contains "$(<"$test_root/invalid-resource-values/stderr")" \
+  'VM vCPU count must be between 4 and 6'
 
 /usr/bin/plutil -replace kernelCommandLine -string \
   'root=/dev/vda rw rootwait console=tty0 console=hvc0 myomarchy.ssh_access=0' \

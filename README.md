@@ -166,7 +166,7 @@ be published only through
 [My Omarchy Releases](https://github.com/superops-team/my-omarchy/releases).
 The remaining launch description documents the current implementation baseline.
 
-Every launch begins at the start menu. While that menu is open, My Omarchy behaves like a regular Mac app with standard Quit, Close Window, and Minimize commands; after the VM starts, that native app chrome steps aside for Omarchy. **Immersive** is on by default, so Omarchy opens Full Screen with the Mac menu bar and Dock hidden. Turn it off to open a resizable window; if you later enter Full Screen, the Mac menu bar and Dock remain available at the screen edges. Whenever the Omarchy window is focused, Command belongs to the guest as Super in either mode; Accessibility permission lets system shortcuts such as Command-Space reach it before macOS. Microphone and camera access are optional. The first launch takes longer while the app prepares Linux and starts Omarchy's account provisioning.
+Every launch begins at the start menu. While that menu is open, My Omarchy behaves like a regular Mac app with standard Quit, Close Window, and Minimize commands; after the VM starts, that native app chrome steps aside for Omarchy. **Immersive** is on by default, so Omarchy opens Full Screen with the Mac menu bar and Dock hidden. Turn it off to open a resizable window; if you later enter Full Screen, the Mac menu bar and Dock remain available at the screen edges. Whenever the Omarchy window is focused, Command belongs to the guest as Super in either mode; Accessibility permission lets system shortcuts such as Command-Space reach it before macOS. Microphone and camera access are optional. The launcher chooses a lightweight resource profile from the Mac's memory and active CPU count before QEMU starts: 8 GiB Macs use 4 vCPUs and 2560 MiB RAM, 16-23 GiB Macs use 4 vCPUs and 4096 MiB RAM, and larger Macs use 6 vCPUs and 4096 MiB RAM while reserving 2 CPUs for macOS. The first launch takes longer while the app prepares Linux and starts Omarchy's account provisioning.
 
 Restarting from inside Omarchy reboots the guest in the same My Omarchy app.
 Shutting down Omarchy closes the app and leaves it closed.
@@ -439,11 +439,13 @@ Install the one Homebrew build tool with:
 brew install pkg-config
 ```
 
-`make doctor` performs the basic preflight. `make runtime` downloads a
-checksum-pinned `arm64_sequoia` dependency set, builds QEMU for macOS 15.0,
-and rejects any runtime image that raises that minimum or strongly imports an
-API unavailable on the declared platform. Installed Homebrew library versions
-are never copied into the app.
+`make doctor` performs the basic preflight, including a SwiftPM build of the
+test bundle with the repository-pinned Swift Testing dependency. The first run
+may fetch the locked `swift-testing` and `swift-syntax` packages. `make runtime`
+downloads a checksum-pinned `arm64_sequoia` dependency set, builds QEMU for
+macOS 15.0, and rejects any runtime image that raises that minimum or strongly
+imports an API unavailable on the declared platform. Installed Homebrew library
+versions are never copied into the app.
 
 ## Build and run
 
