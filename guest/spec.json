@@ -224,7 +224,7 @@
           {
             "path": "bin/omarchy-install-service-1password",
             "beforeSha256": "5d5a5a9b3cf87579b4232067c9f7c78091cecf250111b802ffffa49c607f52d7",
-            "afterSha256": "ce404a13daf7cb08fab413ae0100786fc64abe6aefc403147114e6208c58b5c4"
+            "afterSha256": "38cae3b79ddc25cba6a1f8cf3d65ed3b27010e3b0cde142c6b279b7e8fe099ca"
           },
           {
             "path": "default/hypr/bindings/applications.lua",
@@ -243,7 +243,7 @@
           {
             "path": "bin/omarchy-install-browser",
             "beforeSha256": "bd9e97178359eafda0f2a5a47b63322514298e3c8681fe76d0de7044a7e9a1f7",
-            "afterSha256": "33313c59d4a41e1e50dae3740112170f92033f8e0a91c68efe4a2b6625582508"
+            "afterSha256": "895c48490548e012ddf180d8ee9cf0028fbfc7a79009655a24fbe4f17d2d7bd7"
           },
           {
             "path": "bin/omarchy-remove-browser",
@@ -329,7 +329,7 @@
           {
             "path": "bin/omarchy-update-requires-free-space",
             "beforeSha256": "50a5ddef021dac5e79f789a53643fa91a6b8d7193b4d27786516d142525eca93",
-            "afterSha256": "8e8102cb08ff4fde4f89c64a7febeca0ba142c309e20e581ae0cf295f6e7f093"
+            "afterSha256": "c979e8f57edc83d9e4c05521557747f1c41a6f9312f3c77db2d4ae45045b201a"
           }
         ]
       },
