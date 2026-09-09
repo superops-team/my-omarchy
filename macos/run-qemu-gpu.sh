@@ -633,7 +633,7 @@ exact_keys(
 hyprland_identity = hashlib.sha256(
     json.dumps(hyprland, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("utf-8")
 ).hexdigest()
-if hyprland_identity != "5b903841b4dc0b5c6b41e8149b43b535f14eca78989d6061583ea9288e0b03de":
+if hyprland_identity != "66e793b16d0d6c386a256a97c688cdb4c0c963318ff34f3adba6d66895aa85f6":
     fail("factory Hyprland component is not the reviewed rounded-border build")
 mise = exact_keys(
     supply_chain.get("mise"),

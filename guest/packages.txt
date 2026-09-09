@@ -27,9 +27,11 @@ gnome-keyring
 grim
 gum
 gvfs
-hyprland
+aquamarine
+hyprland-guiutils
 hyprpicker
 hyprsunset
+hyprtoolkit
 imagemagick
 imv
 inotify-tools

@@ -364,7 +364,6 @@ expected = {
     "gcc",
     "gcc-libs",
     "glibc",
-    "hyprland",
     "hyprland-protocols",
     "make",
     "meson",
@@ -378,7 +377,7 @@ for name in sorted(packages):
     print(f"{name}|{packages[name]}")
 PY
 )
-(( ${#build_package_records[@]} == 13 )) || fail "unexpected Hyprland buildPackages set"
+(( ${#build_package_records[@]} == 12 )) || fail "unexpected Hyprland buildPackages set"
 build_package_specs=()
 for record in "${build_package_records[@]}"; do
   IFS='|' read -r package package_version extra <<<"$record"
@@ -430,10 +429,6 @@ if pacman -Q glaze >/dev/null 2>&1; then
   fail "unpinned system Glaze would bypass the verified source extraction"
 fi
 
-upstream_query=$(pacman --config "$pacman_config" --root "$root" --dbpath "$root/var/lib/pacman" -Q hyprland)
-[[ $upstream_query == "hyprland $upstream_package_version" ]] ||
-  fail "staged root does not contain the expected upstream Hyprland package: $upstream_query"
-
 export SOURCE_DATE_EPOCH="$source_date_epoch"
 export CFLAGS="-ffile-prefix-map=$stage=/usr/src/my-omarchy-hyprland -fdebug-prefix-map=$stage=/usr/src/my-omarchy-hyprland"
 export CXXFLAGS="$CFLAGS"
@@ -483,6 +478,13 @@ built_binary_sha256=${built_binary_sha256%% *}
 
 package_cache="$work/pacman-cache"
 [[ -d $package_cache ]] || fail "signed pacman cache is missing: $package_cache"
+pacman \
+  --noconfirm \
+  --config "$pacman_config" \
+  --root "$root" \
+  --dbpath "$root/var/lib/pacman" \
+  --logfile "$root/var/log/pacman.log" \
+  -Swdd "hyprland=$upstream_package_version"
 upstream_candidates=()
 for extension in xz zst; do
   candidate="$package_cache/hyprland-$upstream_package_version-aarch64.pkg.tar.$extension"
@@ -717,8 +719,8 @@ pacman \
   -U "$package_archive"
 
 query=$(pacman --config "$pacman_config" --root "$root" --dbpath "$root/var/lib/pacman" -Q "$package_name")
-[[ $query == "$package_name $package_version" && $query != "$upstream_query" ]] ||
-  fail "upstream Hyprland package was not replaced: $query"
+[[ $query == "$package_name $package_version" ]] ||
+  fail "patched Hyprland package was not installed: $query"
 pacman --config "$pacman_config" --root "$root" --dbpath "$root/var/lib/pacman" -Qkk "$package_name" >/dev/null ||
   fail "installed Hyprland package failed its ownership check"
 verify_file "$built_binary_sha256" "$root/usr/bin/Hyprland" || fail "installed Hyprland binary digest mismatch"

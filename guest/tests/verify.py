@@ -312,9 +312,9 @@ def main() -> None:
         "factory pacman retains the ARM Omarchy keyring repository",
     )
     check(
-        "IgnorePkg = linux-aarch64 linux-aarch64-headers hyprland aquamarine"
-        in pacman_conf,
-        "factory pacman holds the QEMU-booted kernel, matching headers, patched compositor, and its aquamarine ABI",
+        "IgnorePkg = linux-aarch64 linux-aarch64-headers hyprland" in pacman_conf
+        and "aquamarine" not in pacman_conf.split("IgnorePkg =", 1)[1].splitlines()[0],
+        "factory pacman holds the QEMU-booted kernel, matching headers, and patched compositor",
     )
     arm_mirrorlist = read(GUEST / "mirrorlist.aarch64")
     check(
@@ -530,7 +530,6 @@ def main() -> None:
                 "gcc": "16.1.1+r12+g301eb08fa2c5-1",
                 "gcc-libs": "16.1.1+r12+g301eb08fa2c5-1",
                 "glibc": "2.43+r22+g8362e8ce10b2-2",
-                "hyprland": "0.56.1-3",
                 "hyprland-protocols": "0.7.0-1",
                 "make": "4.4.1-3",
                 "meson": "1.12.0-1",
@@ -539,8 +538,9 @@ def main() -> None:
                 "xorgproto": "2025.1-1",
             },
         }
-        and packages.get("hyprland") == hyprland["upstreamPackageVersion"],
-        "rounded-border Hyprland source, toolchain, and upstream package are fully pinned",
+        and "hyprland" not in requested_packages
+        and "hyprland" not in packages,
+        "rounded-border Hyprland source and toolchain are fully pinned outside the broken upstream transaction",
     )
     hyprland_patch = GUEST / hyprland["patch"]
     check(
@@ -973,10 +973,11 @@ def main() -> None:
         and "pacman -Qkk" in register_hyprland
         and "Glaze license digest mismatch" in register_hyprland
         and "LICENSE.glaze" in register_hyprland
-        and "build_package_records[@]} == 13" in register_hyprland
+        and "build_package_records[@]} == 12" in register_hyprland
         and "builder_pacman_config" in register_hyprland
         and "could not derive the Hyprland builder pacman configuration" in register_hyprland
         and 'pacman -Syy --noconfirm --config "$builder_pacman_config"' in register_hyprland
+        and '-Swdd "hyprland=$upstream_package_version"' in register_hyprland
         and register_hyprland.index(
             'pacman -Syy --noconfirm --config "$builder_pacman_config"'
         )
