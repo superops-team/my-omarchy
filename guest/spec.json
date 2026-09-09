@@ -62,6 +62,7 @@
         "gcc": "16.1.1+r12+g301eb08fa2c5-1",
         "gcc-libs": "16.1.1+r12+g301eb08fa2c5-1",
         "glibc": "2.43+r22+g8362e8ce10b2-2",
+        "glslang": "1:1.4.357.0-1",
         "hyprland-protocols": "0.7.0-1",
         "libglvnd": "1.7.0-3",
         "make": "4.4.1-3",
