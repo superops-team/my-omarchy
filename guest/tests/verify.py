@@ -318,9 +318,12 @@ def main() -> None:
     )
     arm_mirrorlist = read(GUEST / "mirrorlist.aarch64")
     check(
-        "mirror.archlinuxarm.org/$arch/$repo" in arm_mirrorlist
+        arm_mirrorlist.index("mirrors.sjtug.sjtu.edu.cn/archlinuxarm/$arch/$repo")
+        < arm_mirrorlist.index("mirror.archlinuxarm.org/$arch/$repo")
+        and "mirrors.bfsu.edu.cn/archlinuxarm/$arch/$repo" in arm_mirrorlist
+        and "mirrors.aliyun.com/archlinuxarm/$arch/$repo" in arm_mirrorlist
         and "stable-mirror.omarchy.org" not in arm_mirrorlist,
-        "factory mirrorlist uses Arch Linux ARM",
+        "factory mirrorlist prioritizes reachable Arch Linux ARM mirrors",
     )
 
     package_text = (GUEST / spec["inputs"]["packages"]).read_bytes()
@@ -630,6 +633,12 @@ def main() -> None:
     check(
         "arch-install-scripts e2fsprogs git python rust=1:1.98.1-1 zstd" in containerfile,
         "guest builder pins Rust for source-built components",
+    )
+    check(
+        "mirrors.sjtug.sjtu.edu.cn/archlinuxarm/aarch64/$repo" in containerfile
+        and "mirrors.bfsu.edu.cn/archlinuxarm/aarch64/$repo" in containerfile
+        and "mirrors.aliyun.com/archlinuxarm/aarch64/$repo" in containerfile,
+        "guest builder bootstrap prioritizes reachable Arch Linux ARM mirrors",
     )
 
     materialize = read(GUEST / "scripts/materialize-omarchy.sh")

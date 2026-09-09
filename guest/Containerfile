@@ -13,7 +13,8 @@ RUN mkdir -p /etc/pacman.d /usr/share/pacman/keyrings && \
     printf '[options]\nHoldPkg = pacman glibc\nArchitecture = auto\nSigLevel = Required DatabaseOptional\nLocalFileSigLevel = Optional\n\n[core]\nInclude = /etc/pacman.d/mirrorlist\n\n[extra]\nInclude = /etc/pacman.d/mirrorlist\n\n[alarm]\nInclude = /etc/pacman.d/mirrorlist\n\n[aur]\nInclude = /etc/pacman.d/mirrorlist\n' > /etc/pacman.conf && \
     curl -fsSL https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/0b5418fc3f62860b191cd872cb2f933f9fc77841/core/pacman-mirrorlist/mirrorlist -o /tmp/mirrorlist && \
     echo 'e25f0bc284287342b221377d2a0ca0203eaf13f52d369d6676c4730a8e2b1de1  /tmp/mirrorlist' | sha256sum -c - && \
-    sed -E 's/^\s*#\s*Server\s*=/Server =/g; s/\$arch/aarch64/g' /tmp/mirrorlist > /etc/pacman.d/mirrorlist && \
+    printf 'Server = https://mirrors.sjtug.sjtu.edu.cn/archlinuxarm/aarch64/$repo\nServer = https://mirrors.bfsu.edu.cn/archlinuxarm/aarch64/$repo\nServer = https://mirrors.aliyun.com/archlinuxarm/aarch64/$repo\n' > /etc/pacman.d/mirrorlist && \
+    sed -E 's/^\s*#\s*Server\s*=/Server =/g; s/\$arch/aarch64/g' /tmp/mirrorlist >> /etc/pacman.d/mirrorlist && \
     for pair in \
       'archlinuxarm-revoked e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' \
       'archlinuxarm-trusted f2a7250f2a2b77542f82f4219b2bae7895f27b3dcfdf350b497e2be306af776d' \

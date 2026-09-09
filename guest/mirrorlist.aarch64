@@ -1,6 +1,12 @@
 #
 # Arch Linux ARM repository mirrorlist
 # Pinned from archlinuxarm/PKGBUILDs 0b5418fc3f62860b191cd872cb2f933f9fc77841
-# (core/pacman-mirrorlist). pacman expands $arch.
+# (core/pacman-mirrorlist), with reachable Asia mirrors first for repeatable
+# local factory-image builds on macOS. pacman expands $arch.
 #
+Server = https://mirrors.sjtug.sjtu.edu.cn/archlinuxarm/$arch/$repo
+Server = https://mirrors.bfsu.edu.cn/archlinuxarm/$arch/$repo
+Server = https://mirrors.aliyun.com/archlinuxarm/$arch/$repo
+Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxarm/$arch/$repo
+Server = http://tw.mirror.archlinuxarm.org/$arch/$repo
 Server = http://mirror.archlinuxarm.org/$arch/$repo
