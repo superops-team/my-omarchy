@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import MyOmarchy
 
@@ -99,6 +100,27 @@ struct VMResourceProfileTests {
         #expect(configuration.unavailableReason == nil)
     }
 
+    @Test("launch configuration can publish the low resource profile")
+    func launchEnvironmentPublishesLowResourceProfile() throws {
+        let configuration = VMResourceLaunchConfiguration.make(
+            baseEnvironment: ["KEEP_ME": "yes"],
+            preference: .lowResource,
+            physicalMemoryBytes: gibibytes(16),
+            activeProcessorCount: 8
+        )
+
+        #expect(configuration.profile == VMResourceProfile(
+            name: "low-resource-v1",
+            vcpuCount: 4,
+            memoryMiB: 2_048
+        ))
+        #expect(configuration.environment["KEEP_ME"] == "yes")
+        #expect(configuration.environment[VMResourceProfile.profileEnvironmentKey] == "low-resource-v1")
+        #expect(configuration.environment[VMResourceProfile.vcpuEnvironmentKey] == "4")
+        #expect(configuration.environment[VMResourceProfile.memoryEnvironmentKey] == "2048")
+        #expect(configuration.unavailableReason == nil)
+    }
+
     @Test("launch configuration fails closed without publishing partial resources")
     func launchEnvironmentFailsClosed() {
         let configuration = VMResourceLaunchConfiguration.make(
@@ -118,7 +140,50 @@ struct VMResourceProfileTests {
         #expect(configuration.unavailableReason?.contains("requires at least 8192 MiB") == true)
     }
 
+    @Test("resource profile preference defaults and invalid payloads fail safely")
+    func resourceProfilePreferenceStore() throws {
+        let fixture = DefaultsFixture()
+
+        #expect(fixture.store.load() == .automatic)
+
+        fixture.store.save(.lowResource)
+        #expect(VMResourceProfilePreferenceStore(defaults: fixture.defaults).load() == .lowResource)
+
+        fixture.defaults.set(Data("junk".utf8), forKey: VMResourceProfilePreferenceStore.key)
+        #expect(fixture.store.load() == .automatic)
+
+        let future = try JSONSerialization.data(withJSONObject: [
+            "schemaVersion": VMResourceProfilePreferenceStore.schemaVersion + 1,
+            "profile": VMResourceProfilePreference.lowResource.rawValue,
+        ])
+        fixture.defaults.set(future, forKey: VMResourceProfilePreferenceStore.key)
+        #expect(fixture.store.load() == .automatic)
+
+        let unknown = try JSONSerialization.data(withJSONObject: [
+            "schemaVersion": VMResourceProfilePreferenceStore.schemaVersion,
+            "profile": "future-profile",
+        ])
+        fixture.defaults.set(unknown, forKey: VMResourceProfilePreferenceStore.key)
+        #expect(fixture.store.load() == .automatic)
+    }
+
     private func gibibytes(_ value: UInt64) -> UInt64 {
         value * 1_073_741_824
+    }
+
+    private final class DefaultsFixture {
+        let suiteName = "VMResourceProfileTests.\(UUID().uuidString)"
+        let defaults: UserDefaults
+        let store: VMResourceProfilePreferenceStore
+
+        init() {
+            defaults = UserDefaults(suiteName: suiteName)!
+            defaults.removePersistentDomain(forName: suiteName)
+            store = VMResourceProfilePreferenceStore(defaults: defaults)
+        }
+
+        deinit {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
     }
 }

@@ -269,4 +269,16 @@ struct StartMenuPresentationTests {
         #expect(StartMenuPresentation.immersiveDetail(isEnabled: false)
             == "Omarchy opens in a window with the Mac menu bar and Dock available.")
     }
+
+    @Test("resource profile guidance distinguishes automatic and low resource launch")
+    func resourceProfileGuidance() {
+        let automatic = StartMenuPresentation.resourceProfile(preference: .automatic)
+        #expect(!automatic.isLowResource)
+        #expect(automatic.detail.contains("Balances Omarchy speed"))
+
+        let lowResource = StartMenuPresentation.resourceProfile(preference: .lowResource)
+        #expect(lowResource.isLowResource)
+        #expect(lowResource.detail.contains("4 vCPUs"))
+        #expect(lowResource.detail.contains("2 GiB RAM"))
+    }
 }

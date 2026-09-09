@@ -54,6 +54,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private let sharedFolderStore: SharedFolderPreferenceStore
     private let portForwardingStore: PortForwardingPreferenceStore
     private let fullscreenPreferenceStore: FullscreenPreferenceStore
+    private let resourceProfilePreferenceStore: VMResourceProfilePreferenceStore
     private let storageLocationStore: StorageLocationPreferenceStore
     private let volumeProbe: VolumeProbing
     private let volumeRootDetector: VolumeRootDetecting
@@ -92,6 +93,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         sharedFolderStore: SharedFolderPreferenceStore = SharedFolderPreferenceStore(),
         portForwardingStore: PortForwardingPreferenceStore = PortForwardingPreferenceStore(),
         fullscreenPreferenceStore: FullscreenPreferenceStore = FullscreenPreferenceStore(),
+        resourceProfilePreferenceStore: VMResourceProfilePreferenceStore = VMResourceProfilePreferenceStore(),
         storageLocationStore: StorageLocationPreferenceStore = StorageLocationPreferenceStore(),
         volumeProbe: VolumeProbing = URLVolumeProbe(),
         volumeRootDetector: VolumeRootDetecting = FileManagerVolumeRootDetector(),
@@ -106,6 +108,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         self.sharedFolderStore = sharedFolderStore
         self.portForwardingStore = portForwardingStore
         self.fullscreenPreferenceStore = fullscreenPreferenceStore
+        self.resourceProfilePreferenceStore = resourceProfilePreferenceStore
         self.storageLocationStore = storageLocationStore
         self.volumeProbe = volumeProbe
         self.volumeRootDetector = volumeRootDetector
@@ -203,6 +206,12 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 self?.fullscreenPreferenceStore.save(
                     FullscreenPreferences(isImmersive: isImmersive)
                 )
+            },
+            resourceProfilePreference: { [weak self] in
+                self?.resourceProfilePreferenceStore.load() ?? .automatic
+            },
+            setResourceProfilePreference: { [weak self] preference in
+                self?.resourceProfilePreferenceStore.save(preference)
             },
             launch: { [weak self] in
                 self?.startVirtualMachine()
@@ -422,7 +431,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             preferences: fullscreenPreferenceStore.load()
         )
         let resources = VMResourceLaunchConfiguration.make(
-            baseEnvironment: fullscreen.environment
+            baseEnvironment: fullscreen.environment,
+            preference: resourceProfilePreferenceStore.load()
         )
         let storage = StorageLocationLaunchConfiguration.make(
             baseEnvironment: resources.environment,

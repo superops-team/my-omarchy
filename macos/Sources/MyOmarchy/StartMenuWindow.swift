@@ -191,6 +191,8 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
     private let savePortForwarding: ([PortForwardMapping]) -> String?
     private let immersiveMode: () -> Bool
     private let setImmersiveMode: (Bool) -> Void
+    private let resourceProfilePreference: () -> VMResourceProfilePreference
+    private let setResourceProfilePreference: (VMResourceProfilePreference) -> Void
     private let launch: () -> Void
     private let canResetStorage: Bool
     private let storageLocation: () -> String?
@@ -209,6 +211,7 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
     private weak var startMenuScrollView: NSScrollView?
     private(set) var portForwardingEditor: PortForwardingEditor?
     private weak var immersiveCaption: NSTextField?
+    private weak var resourceProfileCaption: NSTextField?
     private lazy var permissionWindowRestorer = PermissionWindowRestorer(
         canRestore: { [weak self] in
             guard let self else { return false }
@@ -271,6 +274,8 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         savePortForwarding: @escaping ([PortForwardMapping]) -> String? = { _ in nil },
         immersiveMode: @escaping () -> Bool = { true },
         setImmersiveMode: @escaping (Bool) -> Void = { _ in },
+        resourceProfilePreference: @escaping () -> VMResourceProfilePreference = { .automatic },
+        setResourceProfilePreference: @escaping (VMResourceProfilePreference) -> Void = { _ in },
         launch: @escaping () -> Void
     ) {
         self.accessibilityStatus = accessibilityStatus
@@ -295,6 +300,8 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         self.savePortForwarding = savePortForwarding
         self.immersiveMode = immersiveMode
         self.setImmersiveMode = setImmersiveMode
+        self.resourceProfilePreference = resourceProfilePreference
+        self.setResourceProfilePreference = setResourceProfilePreference
         self.launch = launch
 
         window = NSWindow(
@@ -324,7 +331,7 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
     func prepareForPresentation(visibleFrame: NSRect?) {
         render()
         if let visibleFrame {
-            // The menu carries six rows once a resettable VM can choose where it
+            // The menu carries seven rows once a resettable VM can choose where it
             // lives. At 690 the launch button cleared the bottom edge by 15pt,
             // which any difference in system font metrics turned into a button
             // clipped off the window.
@@ -558,6 +565,9 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
             actions: [("Configure…", #selector(beginPortForwardingConfiguration))],
             minimumHeight: 90
         )
+        let resourceProfileRow = resourceProfileSettingRow(
+            preference: resourceProfilePreference()
+        )
         let immersiveRow = immersiveSettingRow(isEnabled: immersiveMode())
 
         let storageStatus = storageLocationStatus()
@@ -616,7 +626,11 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         if let storageRow {
             integrationRowViews.append(storageRow)
         }
-        integrationRowViews.append(contentsOf: [portForwardingRow, immersiveRow])
+        integrationRowViews.append(contentsOf: [
+            portForwardingRow,
+            resourceProfileRow,
+            immersiveRow,
+        ])
 
         var permissionRowsAndSeparators: [NSView] = []
         for (index, row) in permissionRowViews.enumerated() {
@@ -724,7 +738,7 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
             launchButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 500),
         ])
 
-        let footerText = "by @martiano"
+        let footerText = "superops-team/my-omarchy"
         let footerTitle = NSMutableAttributedString(
             string: footerText,
             attributes: [
@@ -735,14 +749,15 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         let footerNSString = footerText as NSString
         footerTitle.addAttributes(
             [
-                .link: URL(string: "https://x.com/martiano")!,
+                .link: URL(string: "https://github.com/superops-team/my-omarchy")!,
                 .foregroundColor: OmarchyStartMenuTheme.accent,
             ],
-            range: footerNSString.range(of: "@martiano")
+            range: footerNSString.range(of: footerText)
         )
         let footer = LinkCursorTextField(labelWithAttributedString: footerTitle)
         footer.isSelectable = true
         footer.allowsEditingTextAttributes = true
+        footer.identifier = NSUserInterfaceItemIdentifier("project-footer")
         footer.translatesAutoresizingMaskIntoConstraints = false
 
         let footerContainer = NSView()
@@ -1148,6 +1163,77 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         return row
     }
 
+    private func resourceProfileSettingRow(
+        preference: VMResourceProfilePreference
+    ) -> NSView {
+        let presentation = StartMenuPresentation.resourceProfile(preference: preference)
+
+        let symbol = NSImageView()
+        symbol.image = NSImage(systemSymbolName: "gauge.with.dots.needle.bottom.50percent", accessibilityDescription: nil)
+        symbol.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 19, weight: .medium)
+        symbol.contentTintColor = OmarchyStartMenuTheme.accent
+        symbol.identifier = NSUserInterfaceItemIdentifier("resource-profile-symbol")
+        symbol.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            symbol.widthAnchor.constraint(equalToConstant: 26),
+            symbol.heightAnchor.constraint(equalToConstant: 26),
+        ])
+
+        let title = NSTextField(labelWithString: "Resource profile")
+        title.font = .monospacedSystemFont(ofSize: 13, weight: .bold)
+        title.textColor = OmarchyStartMenuTheme.foreground
+        title.identifier = NSUserInterfaceItemIdentifier("resource-profile-title")
+
+        let detail = NSTextField(wrappingLabelWithString: presentation.detail)
+        detail.font = .monospacedSystemFont(ofSize: 10, weight: .regular)
+        detail.textColor = OmarchyStartMenuTheme.muted
+        detail.maximumNumberOfLines = 2
+        detail.identifier = NSUserInterfaceItemIdentifier("resource-profile-caption")
+        resourceProfileCaption = detail
+
+        let labels = NSStackView(views: [title, detail])
+        labels.orientation = .vertical
+        labels.alignment = .leading
+        labels.spacing = 3
+        labels.translatesAutoresizingMaskIntoConstraints = false
+
+        let selector = NSSegmentedControl(
+            labels: ["Auto", "Low"],
+            trackingMode: .selectOne,
+            target: self,
+            action: #selector(changeResourceProfile(_:))
+        )
+        selector.selectedSegment = presentation.isLowResource ? 1 : 0
+        selector.isEnabled = !microphoneRequestInFlight && !launchInProgress && !resetInProgress
+        selector.identifier = NSUserInterfaceItemIdentifier("resource-profile-selector")
+        selector.setAccessibilityLabel("Resource profile")
+        selector.setAccessibilityHelp(presentation.detail)
+        selector.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            selector.widthAnchor.constraint(equalToConstant: 124),
+        ])
+
+        let row = NSView()
+        row.identifier = NSUserInterfaceItemIdentifier("resource-profile-row")
+        row.translatesAutoresizingMaskIntoConstraints = false
+        row.addSubview(symbol)
+        row.addSubview(labels)
+        row.addSubview(selector)
+        NSLayoutConstraint.activate([
+            row.heightAnchor.constraint(greaterThanOrEqualToConstant: 72),
+            symbol.leadingAnchor.constraint(equalTo: row.leadingAnchor),
+            symbol.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+            labels.leadingAnchor.constraint(equalTo: symbol.trailingAnchor, constant: 12),
+            labels.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+            labels.trailingAnchor.constraint(lessThanOrEqualTo: selector.leadingAnchor, constant: -12),
+            selector.trailingAnchor.constraint(equalTo: row.trailingAnchor),
+            selector.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+        ])
+        labels.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        labels.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return row
+    }
+
     @objc private func beginAccessibilityRequest() {
         permissionWindowRestorer.cancel()
         requestAccessibility()
@@ -1389,6 +1475,25 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
             notification: .announcementRequested,
             userInfo: [
                 .announcement: detailText,
+                .priority: NSAccessibilityPriorityLevel.medium.rawValue,
+            ]
+        )
+    }
+
+    @objc private func changeResourceProfile(_ sender: NSSegmentedControl) {
+        guard !launchInProgress, !resetInProgress else { return }
+        let preference: VMResourceProfilePreference = sender.selectedSegment == 1
+            ? .lowResource
+            : .automatic
+        setResourceProfilePreference(preference)
+        let presentation = StartMenuPresentation.resourceProfile(preference: preference)
+        resourceProfileCaption?.stringValue = presentation.detail
+        sender.setAccessibilityHelp(presentation.detail)
+        NSAccessibility.post(
+            element: NSApplication.shared,
+            notification: .announcementRequested,
+            userInfo: [
+                .announcement: presentation.detail,
                 .priority: NSAccessibilityPriorityLevel.medium.rawValue,
             ]
         )

@@ -89,8 +89,65 @@ struct StartMenuWindowWidthTests {
         try expectDetailsFit(["permission-detail-externaldrive"], in: menu)
     }
 
+    @Test("resource profile selector persists the low resource choice")
+    func resourceProfileSelectorPersistsChoice() throws {
+        _ = NSApplication.shared
+        var preference = VMResourceProfilePreference.automatic
+        let menu = makeMenu(
+            storageState: { .defaultLocation },
+            resourceProfilePreference: { preference },
+            setResourceProfilePreference: { preference = $0 }
+        )
+        menu.prepareForPresentation(
+            visibleFrame: NSRect(x: 0, y: 0, width: 1440, height: 900)
+        )
+        defer { menu.dismiss() }
+
+        let content = try #require(menu.window.contentView)
+        let selector = try #require(descendant(
+            withIdentifier: "resource-profile-selector",
+            in: content
+        ) as? NSSegmentedControl)
+        #expect(selector.selectedSegment == 0)
+
+        selector.selectedSegment = 1
+        NSApp.sendAction(selector.action!, to: selector.target, from: selector)
+        #expect(preference == .lowResource)
+
+        let caption = try #require(descendant(
+            withIdentifier: "resource-profile-caption",
+            in: content
+        ) as? NSTextField)
+        #expect(caption.stringValue.contains("2 GiB RAM"))
+    }
+
+    @Test("start menu footer points at the My Omarchy project")
+    func footerUsesMyOmarchyProjectIdentity() throws {
+        _ = NSApplication.shared
+        let menu = makeMenu(storageState: { .defaultLocation })
+        menu.prepareForPresentation(
+            visibleFrame: NSRect(x: 0, y: 0, width: 1440, height: 900)
+        )
+        defer { menu.dismiss() }
+
+        let content = try #require(menu.window.contentView)
+        let footer = try #require(descendant(
+            withIdentifier: "project-footer",
+            in: content
+        ) as? NSTextField)
+        #expect(footer.attributedStringValue.string == "superops-team/my-omarchy")
+        let link = footer.attributedStringValue.attribute(
+            .link,
+            at: 0,
+            effectiveRange: nil
+        ) as? URL
+        #expect(link?.absoluteString == "https://github.com/superops-team/my-omarchy")
+    }
+
     private func makeMenu(
-        storageState: @escaping () -> StorageLocationMenuState
+        storageState: @escaping () -> StorageLocationMenuState,
+        resourceProfilePreference: @escaping () -> VMResourceProfilePreference = { .automatic },
+        setResourceProfilePreference: @escaping (VMResourceProfilePreference) -> Void = { _ in }
     ) -> StartMenuWindow {
         StartMenuWindow(
             accessibilityStatus: { true },
@@ -116,6 +173,8 @@ struct StartMenuWindowWidthTests {
             portForwardingStatus: { [] },
             immersiveMode: { true },
             setImmersiveMode: { _ in },
+            resourceProfilePreference: resourceProfilePreference,
+            setResourceProfilePreference: setResourceProfilePreference,
             launch: {}
         )
     }

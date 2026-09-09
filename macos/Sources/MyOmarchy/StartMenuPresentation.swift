@@ -26,6 +26,11 @@ struct StartMenuPortForwardingPresentation: Equatable {
     let grantedStatusLabel: String
 }
 
+struct StartMenuResourceProfilePresentation: Equatable {
+    let detail: String
+    let isLowResource: Bool
+}
+
 /// Pure presentation rules for the start menu. Keeping user-visible state out
 /// of AppKit makes the important behavior testable without relying on window
 /// positions, font metrics, run-loop timing, or the current display size.
@@ -183,5 +188,22 @@ enum StartMenuPresentation {
         isEnabled
             ? "Omarchy opens Full Screen with the Mac menu bar and Dock hidden."
             : "Omarchy opens in a window with the Mac menu bar and Dock available."
+    }
+
+    static func resourceProfile(
+        preference: VMResourceProfilePreference
+    ) -> StartMenuResourceProfilePresentation {
+        switch preference {
+        case .automatic:
+            StartMenuResourceProfilePresentation(
+                detail: "Balances Omarchy speed with Mac headroom.",
+                isLowResource: false
+            )
+        case .lowResource:
+            StartMenuResourceProfilePresentation(
+                detail: "Uses 4 vCPUs and 2 GiB RAM for tighter Mac headroom.",
+                isLowResource: true
+            )
+        }
     }
 }

@@ -94,6 +94,46 @@ struct VMResourceProfile: Equatable {
     }
 }
 
+enum VMResourceProfilePreference: String, Codable, Equatable {
+    case automatic
+    case lowResource
+}
+
+struct VMResourceProfilePreferenceStore {
+    static let key = "vmResourceProfilePreference"
+    static let schemaVersion = 1
+
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    func load() -> VMResourceProfilePreference {
+        guard let data = defaults.data(forKey: Self.key),
+              let payload = try? JSONDecoder().decode(Payload.self, from: data),
+              payload.schemaVersion == Self.schemaVersion,
+              let preference = VMResourceProfilePreference(rawValue: payload.profile) else {
+            return .automatic
+        }
+        return preference
+    }
+
+    func save(_ preference: VMResourceProfilePreference) {
+        let payload = Payload(
+            schemaVersion: Self.schemaVersion,
+            profile: preference.rawValue
+        )
+        guard let data = try? JSONEncoder().encode(payload) else { return }
+        defaults.set(data, forKey: Self.key)
+    }
+
+    private struct Payload: Codable {
+        let schemaVersion: Int
+        let profile: String
+    }
+}
+
 struct VMResourceLaunchConfiguration: Equatable {
     let profile: VMResourceProfile?
     let environment: [String: String]
@@ -101,12 +141,14 @@ struct VMResourceLaunchConfiguration: Equatable {
 
     static func make(
         baseEnvironment: [String: String],
+        preference: VMResourceProfilePreference = .automatic,
         physicalMemoryBytes: UInt64 = ProcessInfo.processInfo.physicalMemory,
         activeProcessorCount: Int = ProcessInfo.processInfo.activeProcessorCount
     ) -> Self {
         let cleaned = VMResourceLaunchConfiguration.cleaned(baseEnvironment)
         do {
-            let profile = try VMResourceProfile.automatic(
+            let profile = try selectedProfile(
+                preference: preference,
                 physicalMemoryBytes: physicalMemoryBytes,
                 activeProcessorCount: activeProcessorCount
             )
@@ -120,6 +162,25 @@ struct VMResourceLaunchConfiguration: Equatable {
                 profile: nil,
                 environment: cleaned,
                 unavailableReason: error.localizedDescription
+            )
+        }
+    }
+
+    private static func selectedProfile(
+        preference: VMResourceProfilePreference,
+        physicalMemoryBytes: UInt64,
+        activeProcessorCount: Int
+    ) throws -> VMResourceProfile {
+        switch preference {
+        case .automatic:
+            try VMResourceProfile.automatic(
+                physicalMemoryBytes: physicalMemoryBytes,
+                activeProcessorCount: activeProcessorCount
+            )
+        case .lowResource:
+            try VMResourceProfile.lowResource(
+                physicalMemoryBytes: physicalMemoryBytes,
+                activeProcessorCount: activeProcessorCount
             )
         }
     }
