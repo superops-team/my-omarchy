@@ -496,7 +496,7 @@ def main() -> None:
             "target": "aarch64-unknown-linux-gnu",
             "rustPackageVersion": "rust 1:1.98.1-1",
             "rustcVersion": "rustc 1.98.1 (48a229cea 2026-09-01) (Arch Linux rust 1:1.98.1-1)",
-            "cargoVersion": "cargo 1.98.0 (797e8a9bc 2026-08-05) (Arch Linux rust 1:1.98.1-1)",
+            "cargoVersion": "cargo 1.98.1 (797e8a9bc 2026-08-05) (Arch Linux rust 1:1.98.1-1)",
             "reportedVersion": "ttfx 0.3.2",
             "license": "MIT",
             "licenseSha256": "175441de2eb9a0d3f0627c404ad71929336fd98d75926cc27b9e364d35cc7977",
