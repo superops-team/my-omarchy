@@ -210,7 +210,7 @@
           {
             "path": "config/omarchy/extensions/omarchy-menu.jsonc",
             "beforeSha256": "1ca0fdf7d2c0976f0e4c5d8c8a5d5eeeddc693ad05c72809638eeb730c9f470c",
-            "afterSha256": "39b4fb16cdc9ab0812613d39530c5d44b7c5627926d57784b252cf501cda3c89"
+            "afterSha256": "bc3ab8005ced8289fb0e9c1f3ff4fc6a79baf921a1314bb167abc9ef95c2375a"
           }
         ]
       },
