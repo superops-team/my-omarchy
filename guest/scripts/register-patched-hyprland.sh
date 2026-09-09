@@ -358,6 +358,7 @@ import sys
 
 packages = json.loads(sys.argv[1])
 expected = {
+    "aquamarine",
     "base-devel",
     "binutils",
     "cmake",
@@ -365,13 +366,43 @@ expected = {
     "gcc-libs",
     "glibc",
     "glslang",
+    "hyprcursor",
+    "hyprgraphics",
+    "hyprlang",
     "hyprland-protocols",
+    "hyprutils",
+    "hyprwayland-scanner",
+    "lcms2",
+    "libdrm",
     "libglvnd",
+    "libinput",
+    "libx11",
+    "libxcb",
+    "libxcomposite",
+    "libxcursor",
+    "libxfixes",
+    "libxkbcommon",
+    "libxrender",
+    "lua",
     "make",
     "meson",
     "mesa",
+    "muparser",
     "ninja",
+    "pango",
+    "pixman",
     "pkgconf",
+    "re2",
+    "tomlplusplus",
+    "wayland",
+    "wayland-protocols",
+    "xcb-proto",
+    "xcb-util",
+    "xcb-util-errors",
+    "xcb-util-image",
+    "xcb-util-keysyms",
+    "xcb-util-renderutil",
+    "xcb-util-wm",
     "xorgproto",
 }
 if set(packages) != expected:
@@ -380,7 +411,7 @@ for name in sorted(packages):
     print(f"{name}|{packages[name]}")
 PY
 )
-(( ${#build_package_records[@]} == 15 )) || fail "unexpected Hyprland buildPackages set"
+(( ${#build_package_records[@]} == 44 )) || fail "unexpected Hyprland buildPackages set"
 build_package_specs=()
 for record in "${build_package_records[@]}"; do
   IFS='|' read -r package package_version extra <<<"$record"
