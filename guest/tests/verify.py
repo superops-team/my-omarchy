@@ -529,7 +529,7 @@ def main() -> None:
             "buildPackages": {
                 "base-devel": "1-2",
                 "binutils": "2.46+r70+g155188ea10a7-1",
-                "cmake": "4.4.3-1",
+                "cmake": "4.4.3-2",
                 "gcc": "16.1.1+r12+g301eb08fa2c5-1",
                 "gcc-libs": "16.1.1+r12+g301eb08fa2c5-1",
                 "glibc": "2.43+r22+g8362e8ce10b2-2",
@@ -537,7 +537,7 @@ def main() -> None:
                 "make": "4.4.1-3",
                 "meson": "1.12.0-1",
                 "ninja": "1.13.2-3",
-                "pkgconf": "3.0.6-1",
+                "pkgconf": "3.0.7-1",
                 "xorgproto": "2025.1-1",
             },
         }
