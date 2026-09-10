@@ -1017,10 +1017,13 @@ def main() -> None:
         and "Glaze license digest mismatch" in register_hyprland
         and "LICENSE.glaze" in register_hyprland
         and "build_package_records[@]} == 46" in register_hyprland
+        and "--assume-installed libaquamarine.so=13-64" in register_hyprland
+        and "could not derive the current aquamarine shared-library dependency" in register_hyprland
+        and "dependency.startswith(\"libaquamarine.so=\")" in register_hyprland
         and "builder_pacman_config" in register_hyprland
         and "could not derive the Hyprland builder pacman configuration" in register_hyprland
         and 'pacman -Syy --noconfirm --config "$builder_pacman_config"' in register_hyprland
-        and '-Swdd "hyprland=$upstream_package_version"' in register_hyprland
+        and '-Sddw' in register_hyprland
         and register_hyprland.index(
             'pacman -Syy --noconfirm --config "$builder_pacman_config"'
         )

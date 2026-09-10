@@ -518,7 +518,9 @@ pacman \
   --root "$root" \
   --dbpath "$root/var/lib/pacman" \
   --logfile "$root/var/log/pacman.log" \
-  -Swdd "hyprland=$upstream_package_version"
+  -Sddw \
+  --assume-installed libaquamarine.so=13-64 \
+  "hyprland=$upstream_package_version"
 upstream_candidates=()
 for extension in xz zst; do
   candidate="$package_cache/hyprland-$upstream_package_version-aarch64.pkg.tar.$extension"
@@ -659,14 +661,24 @@ cmp -s "$glaze_license" "$package_root/usr/share/licenses/hyprland/LICENSE.glaze
 
 rm -f -- "$package_root/.BUILDINFO" "$package_root/.MTREE"
 installed_size=$(du -sb "$package_root/usr" | awk '{print $1}')
+aquamarine_provides=$(pacman --config "$pacman_config" --root "$root" --dbpath "$root/var/lib/pacman" -Qi aquamarine |
+  awk -F': ' '/^Provides[[:space:]]*:/ {print $2}')
+aquamarine_so_dependency=""
+for provide in $aquamarine_provides; do
+  if [[ $provide == libaquamarine.so=*-64 ]]; then
+    aquamarine_so_dependency=$provide
+    break
+  fi
+done
+[[ -n $aquamarine_so_dependency ]] || fail "could not derive the current aquamarine shared-library dependency"
 [[ $installed_size =~ ^[1-9][0-9]*$ ]] || fail "could not determine patched Hyprland installed size"
 python3 - "$package_root/.PKGINFO" "$version-$pkgrel" "$repository" "$source_date_epoch" \
-  "$installed_size" "$license" <<'PY' || fail "could not adapt upstream Hyprland package metadata"
+  "$installed_size" "$license" "$aquamarine_so_dependency" <<'PY' || fail "could not adapt upstream Hyprland package metadata"
 import pathlib
 import sys
 
 path = pathlib.Path(sys.argv[1])
-package_version, repository, build_date, installed_size, expected_license = sys.argv[2:]
+package_version, repository, build_date, installed_size, expected_license, aquamarine_so_dependency = sys.argv[2:]
 fields = {}
 for raw_line in path.read_text().splitlines():
     if not raw_line or raw_line.startswith("#"):
@@ -691,6 +703,14 @@ if (
 ):
     raise SystemExit(1)
 
+dependencies = []
+for dependency in fields.get("depend", []):
+    if dependency.startswith("libaquamarine.so="):
+        dependency = aquamarine_so_dependency
+    dependencies.append(dependency)
+if aquamarine_so_dependency not in dependencies:
+    raise SystemExit(1)
+
 lines = [
     "pkgname = hyprland",
     "pkgbase = hyprland",
@@ -704,7 +724,10 @@ lines = [
     "arch = aarch64",
     f"license = {expected_license}",
 ]
-for key in ("group", "provides", "conflict", "replaces", "depend", "optdepend", "backup"):
+for key in ("group", "provides", "conflict", "replaces"):
+    lines.extend(f"{key} = {value}" for value in fields.get(key, []))
+lines.extend(f"depend = {value}" for value in dependencies)
+for key in ("optdepend", "backup"):
     lines.extend(f"{key} = {value}" for value in fields.get(key, []))
 path.write_text("\n".join(lines) + "\n")
 PY
