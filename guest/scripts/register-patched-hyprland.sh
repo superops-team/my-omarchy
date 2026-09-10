@@ -376,8 +376,6 @@ expected = {
     "libdrm",
     "libglvnd",
     "libinput",
-    "libx11",
-    "libxcb",
     "libxcomposite",
     "libxcursor",
     "libxfixes",
