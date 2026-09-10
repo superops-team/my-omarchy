@@ -374,6 +374,7 @@ expected = {
     "hyprwayland-scanner",
     "lcms2",
     "libdrm",
+    "libei",
     "libglvnd",
     "libinput",
     "libxcomposite",
@@ -409,7 +410,7 @@ for name in sorted(packages):
     print(f"{name}|{packages[name]}")
 PY
 )
-(( ${#build_package_records[@]} == 44 )) || fail "unexpected Hyprland buildPackages set"
+(( ${#build_package_records[@]} == 45 )) || fail "unexpected Hyprland buildPackages set"
 build_package_specs=()
 for record in "${build_package_records[@]}"; do
   IFS='|' read -r package package_version extra <<<"$record"

@@ -543,6 +543,7 @@ def main() -> None:
                 "hyprwayland-scanner": "0.4.6-1",
                 "lcms2": "2.19.1-1",
                 "libdrm": "2.4.134-1",
+                "libei": "1.6.0-1",
                 "libglvnd": "1.7.0-3",
                 "libinput": "1.31.3-1",
                 "libxcomposite": "0.4.7-1",
@@ -1014,7 +1015,7 @@ def main() -> None:
         and "pacman -Qkk" in register_hyprland
         and "Glaze license digest mismatch" in register_hyprland
         and "LICENSE.glaze" in register_hyprland
-        and "build_package_records[@]} == 44" in register_hyprland
+        and "build_package_records[@]} == 45" in register_hyprland
         and "builder_pacman_config" in register_hyprland
         and "could not derive the Hyprland builder pacman configuration" in register_hyprland
         and 'pacman -Syy --noconfirm --config "$builder_pacman_config"' in register_hyprland
