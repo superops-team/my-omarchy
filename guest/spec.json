@@ -380,6 +380,20 @@
             "afterSha256": "d19334d7da8c857782b2d9fa283cb83a61ba4ab0fb3bc6118afb99b2ea2b6ad4"
           }
         ]
+      },
+      {
+        "id": "preserve-caps-lock-toggle",
+        "description": "Keep Caps Lock as the normal capitalization toggle in the My Omarchy Hyprland session instead of reserving it as the Compose key.",
+        "reference": "https://github.com/basecamp/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/input.lua",
+        "patch": "patches/omarchy/preserve-caps-lock-toggle.patch",
+        "patchSha256": "cbff4a0adebead0fe9157f1da448ee1fd47f0849e9266837dc785423a0b54a6c",
+        "targets": [
+          {
+            "path": "default/hypr/input.lua",
+            "beforeSha256": "f508d4d0f923cab45a7aa9ded838d45b6e502ed179db024c771caa0bd3ab53ac",
+            "afterSha256": "49cf6da3310d7e10799ae303974f6199ba2a2161706a8cfb5fa0ca348100660a"
+          }
+        ]
       }
     ],
     "postBuildUserInstallers": [

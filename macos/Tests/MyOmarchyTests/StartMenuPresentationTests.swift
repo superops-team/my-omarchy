@@ -262,12 +262,12 @@ struct StartMenuPresentationTests {
         ])
     }
 
-    @Test("immersive guidance distinguishes windowed and fullscreen launch")
-    func immersiveGuidance() {
-        #expect(StartMenuPresentation.immersiveDetail(isEnabled: true)
-            == "Omarchy opens Full Screen with the Mac menu bar and Dock hidden.")
-        #expect(StartMenuPresentation.immersiveDetail(isEnabled: false)
-            == "Omarchy opens in a window with the Mac menu bar and Dock available.")
+    @Test("launch mode guidance distinguishes windowed and fullscreen launch")
+    func launchModeGuidance() {
+        #expect(StartMenuPresentation.launchModeDetail(isImmersive: true)
+            == "Starts Full Screen with the Mac menu bar and Dock hidden.")
+        #expect(StartMenuPresentation.launchModeDetail(isImmersive: false)
+            == "Starts in a Mac window with the menu bar and Dock available.")
     }
 
     @Test("resource profile guidance distinguishes automatic and low resource launch")

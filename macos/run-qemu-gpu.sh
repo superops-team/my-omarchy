@@ -1701,6 +1701,7 @@ else
   qemu_status=$?
 fi
 qemu_pid=""
+echo "[qemu-gpu] QEMU exited with status $qemu_status" >&2
 
 for ((attempt = 0; attempt < 40; attempt++)); do
   audio_bridge_state=$(ps -p "$audio_bridge_pid" -o state= 2>/dev/null || true)

@@ -121,6 +121,43 @@ struct StartMenuWindowWidthTests {
         #expect(caption.stringValue.contains("2 GiB RAM"))
     }
 
+    @Test("launch mode selector persists window and full screen choices")
+    func launchModeSelectorPersistsChoice() throws {
+        _ = NSApplication.shared
+        var isImmersive = true
+        let menu = makeMenu(
+            storageState: { .defaultLocation },
+            immersiveMode: { isImmersive },
+            setImmersiveMode: { isImmersive = $0 }
+        )
+        menu.prepareForPresentation(
+            visibleFrame: NSRect(x: 0, y: 0, width: 1440, height: 900)
+        )
+        defer { menu.dismiss() }
+
+        let content = try #require(menu.window.contentView)
+        let selector = try #require(descendant(
+            withIdentifier: "launch-mode-selector",
+            in: content
+        ) as? NSSegmentedControl)
+        #expect(selector.selectedSegment == 0)
+
+        selector.selectedSegment = 1
+        NSApp.sendAction(selector.action!, to: selector.target, from: selector)
+        #expect(!isImmersive)
+
+        let caption = try #require(descendant(
+            withIdentifier: "launch-mode-caption",
+            in: content
+        ) as? NSTextField)
+        #expect(caption.stringValue.contains("Mac window"))
+
+        selector.selectedSegment = 0
+        NSApp.sendAction(selector.action!, to: selector.target, from: selector)
+        #expect(isImmersive)
+        #expect(caption.stringValue.contains("Full Screen"))
+    }
+
     @Test("start menu footer points at the My Omarchy project")
     func footerUsesMyOmarchyProjectIdentity() throws {
         _ = NSApplication.shared
@@ -146,6 +183,8 @@ struct StartMenuWindowWidthTests {
 
     private func makeMenu(
         storageState: @escaping () -> StorageLocationMenuState,
+        immersiveMode: @escaping () -> Bool = { true },
+        setImmersiveMode: @escaping (Bool) -> Void = { _ in },
         resourceProfilePreference: @escaping () -> VMResourceProfilePreference = { .automatic },
         setResourceProfilePreference: @escaping (VMResourceProfilePreference) -> Void = { _ in }
     ) -> StartMenuWindow {
@@ -171,8 +210,8 @@ struct StartMenuWindowWidthTests {
             chooseSharedFolder: { _ in nil },
             setSharedFolderEnabled: { _ in },
             portForwardingStatus: { [] },
-            immersiveMode: { true },
-            setImmersiveMode: { _ in },
+            immersiveMode: immersiveMode,
+            setImmersiveMode: setImmersiveMode,
             resourceProfilePreference: resourceProfilePreference,
             setResourceProfilePreference: setResourceProfilePreference,
             launch: {}

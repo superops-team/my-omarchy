@@ -830,6 +830,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         cancelHostWakeRetry()
         hostSleepCoordinator.disconnect()
         let recentStandardError = supervisor.recentStandardError
+        let diagnosticsLogPath = supervisor.recentDiagnosticsLogPath
 
         let wasStopping = lifecycle.isStopping
         let presentation = VMExitPresentationDecision.make(
@@ -843,7 +844,12 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         if applicationTerminationPending {
             NSApp.reply(toApplicationShouldTerminate: true)
         } else if let hostSleepControlFailure {
-            startMenuWindow?.launchDidFail(errorMessage: hostSleepControlFailure)
+            startMenuWindow?.launchDidFail(
+                errorMessage: launchFailureMessage(
+                    hostSleepControlFailure,
+                    diagnosticsLogPath: diagnosticsLogPath
+                )
+            )
         } else {
             if presentation.showsStartupFailure,
                let startMenuWindow,
@@ -851,7 +857,12 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                    standardError: recentStandardError,
                    mappings: portForwardingStore.load()
                ) {
-                startMenuWindow.launchDidFail(errorMessage: portFailure)
+                startMenuWindow.launchDidFail(
+                    errorMessage: launchFailureMessage(
+                        portFailure,
+                        diagnosticsLogPath: diagnosticsLogPath
+                    )
+                )
                 return
             }
             if presentation.requiresWorkspaceReset {
@@ -864,7 +875,10 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             ) {
             case .reportFailure:
                 startMenuWindow?.launchDidFail(
-                    errorMessage: "My Omarchy could not complete the one-time boot-file pairing. The saved VM was not reset or upgraded. You can safely try again."
+                    errorMessage: launchFailureMessage(
+                        "My Omarchy could not complete the one-time boot-file pairing. The saved VM was not reset or upgraded. You can safely try again.",
+                        diagnosticsLogPath: diagnosticsLogPath
+                    )
                 )
                 return
             case .requestConfirmation:
@@ -900,7 +914,10 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 let alert = NSAlert()
                 alert.alertStyle = .critical
                 alert.messageText = "My Omarchy couldn’t start"
-                alert.informativeText = "The app’s virtual machine stopped during startup. Reinstall the latest Omarchy app and try again."
+                alert.informativeText = launchFailureMessage(
+                    "The app’s virtual machine stopped during startup. Reinstall the latest Omarchy app and try again.",
+                    diagnosticsLogPath: diagnosticsLogPath
+                )
                 alert.addButton(withTitle: "Close")
                 alert.runModal()
             }
@@ -914,7 +931,22 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             finish(status: 1)
             return
         }
-        startMenuWindow.launchDidFail(errorMessage: error.localizedDescription)
+        startMenuWindow.launchDidFail(
+            errorMessage: launchFailureMessage(
+                error.localizedDescription,
+                diagnosticsLogPath: supervisor.recentDiagnosticsLogPath
+            )
+        )
+    }
+
+    private func launchFailureMessage(
+        _ message: String,
+        diagnosticsLogPath: String?
+    ) -> String {
+        guard let diagnosticsLogPath, !diagnosticsLogPath.isEmpty else {
+            return message
+        }
+        return "\(message)\n\nDiagnostic log: \(diagnosticsLogPath)"
     }
 
     private func finish(status: Int32) {

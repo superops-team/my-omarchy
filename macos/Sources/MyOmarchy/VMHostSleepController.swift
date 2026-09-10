@@ -102,16 +102,35 @@ final class QMPVMHostSleepController: VMHostSleepControlling {
             )
         }
         makeConnection = factory
-        let probe = try factory()
+        let probe = try Self.connectWithStartupRetry(factory)
         probe.close()
     }
 
     init(connectionFactory: @escaping ConnectionFactory, validateImmediately: Bool = true) throws {
         makeConnection = connectionFactory
         if validateImmediately {
-            let probe = try connectionFactory()
+            let probe = try Self.connectWithStartupRetry(connectionFactory)
             probe.close()
         }
+    }
+
+    private static func connectWithStartupRetry(
+        _ factory: ConnectionFactory,
+        attempts: Int = 6,
+        delay: TimeInterval = 0.15
+    ) throws -> QMPConnection {
+        var lastError: Error?
+        for attempt in 0..<max(1, attempts) {
+            do {
+                return try factory()
+            } catch {
+                lastError = error
+                if attempt + 1 < attempts {
+                    Thread.sleep(forTimeInterval: delay)
+                }
+            }
+        }
+        throw lastError ?? HelperError.io("QMP control is unavailable")
     }
 
     func pauseIfRunning() throws -> Bool {

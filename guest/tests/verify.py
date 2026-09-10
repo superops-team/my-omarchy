@@ -219,6 +219,7 @@ def main() -> None:
             "notification-screen-privacy",
             "update-free-space-message",
             "provision-keyboard-xkb-sync",
+            "preserve-caps-lock-toggle",
         ],
         "Omarchy backports are explicitly ordered and identified",
     )
@@ -260,6 +261,12 @@ def main() -> None:
         and "XKBOPTIONS=%s" in keyboard_sync_patch
         and "/etc/vconsole.conf" in keyboard_sync_patch,
         "provisioning backport persists matching console and XKB keyboard layouts",
+    )
+    caps_lock_patch = read(GUEST / "patches/omarchy/preserve-caps-lock-toggle.patch")
+    check(
+        "local kb_options = vconsole.XKBOPTIONS or \"\"" in caps_lock_patch
+        and "compose:caps,shift:both_capslock_cancel" in caps_lock_patch,
+        "Hyprland keyboard backport preserves Caps Lock as capitalization toggle",
     )
 
     post_build_installers = authenticity["postBuildUserInstallers"]
@@ -1926,11 +1933,43 @@ HOTPLUG=1
             "|| hyprctl keyword cursor:invisible false &>/dev/null || true"
         )
         native_cursor_restore = "  /usr/local/bin/omarchy-native-cursor-restore 2>/dev/null || true"
+        upstream_frame_rate = (
+            "    --frame-rate 120 --canvas-width 0 --canvas-height 0 --reuse-canvas "
+            "--anchor-canvas c --anchor-text c\\"
+        )
+        native_frame_rate = (
+            "    --frame-rate \"$frame_rate\" --canvas-width 0 --canvas-height 0 "
+            "--reuse-canvas --anchor-canvas c --anchor-text c\\"
+        )
+        native_rate_guard = """frame_rate=${MY_OMARCHY_SCREENSAVER_FRAME_RATE:-15}
+if [[ ! $frame_rate =~ ^[1-9][0-9]*$ || $frame_rate -gt 60 ]]; then
+  frame_rate=15
+fi
+"""
+        native_dynamic_guard = """if [[ ${MY_OMARCHY_DYNAMIC_SCREENSAVER:-0} != 1 ]]; then
+  exit_screensaver
+fi
+"""
+        expected_screensaver = upstream_screensaver.replace(
+            upstream_cursor_restore, native_cursor_restore
+        )
+        expected_screensaver = expected_screensaver.replace(
+            upstream_frame_rate, native_frame_rate
+        )
+        expected_screensaver = expected_screensaver.replace(
+            "\nprintf '\\033]11;rgb:00/00/00\\007'  # Set background color to black\n",
+            "\n"
+            + native_dynamic_guard
+            + "\nprintf '\\033]11;rgb:00/00/00\\007'  # Set background color to black\n",
+        )
+        expected_screensaver = expected_screensaver.replace(
+            "\nwhile true; do\n", "\n" + native_rate_guard + "\nwhile true; do\n"
+        )
         check(
             upstream_screensaver.count(upstream_cursor_restore) == 1
-            and read(screensaver_override)
-            == upstream_screensaver.replace(upstream_cursor_restore, native_cursor_restore),
-            "native screensaver override differs from pinned upstream only at cursor restoration",
+            and upstream_screensaver.count(upstream_frame_rate) == 1
+            and read(screensaver_override) == expected_screensaver,
+            "native screensaver override differs from pinned upstream only at cursor restoration, default idle suppression, and VM-safe frame-rate limiting",
         )
 
     print("native guest contract verified")

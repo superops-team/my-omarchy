@@ -719,6 +719,89 @@ enum CameraPreflight {
     }
 }
 
+final class LaunchDiagnosticsLog: @unchecked Sendable {
+    static let directoryName = "My Omarchy"
+
+    let url: URL
+    private let handle: FileHandle
+    private let lock = NSLock()
+
+    private init(url: URL, handle: FileHandle) {
+        self.url = url
+        self.handle = handle
+    }
+
+    static func create(
+        directory: URL? = nil,
+        fileManager: FileManager = .default,
+        now: Date = Date(),
+        processIdentifier: Int32 = getpid(),
+        uuid: UUID = UUID()
+    ) -> LaunchDiagnosticsLog? {
+        guard let directory = directory ?? defaultDirectory(fileManager: fileManager) else {
+            return nil
+        }
+        do {
+            try fileManager.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true,
+                attributes: [.posixPermissions: 0o700]
+            )
+            try fileManager.setAttributes(
+                [.posixPermissions: 0o700],
+                ofItemAtPath: directory.path
+            )
+            let url = directory.appendingPathComponent(
+                fileName(now: now, processIdentifier: processIdentifier, uuid: uuid),
+                isDirectory: false
+            )
+            fileManager.createFile(
+                atPath: url.path,
+                contents: nil,
+                attributes: [.posixPermissions: 0o600]
+            )
+            let handle = try FileHandle(forWritingTo: url)
+            return LaunchDiagnosticsLog(url: url, handle: handle)
+        } catch {
+            return nil
+        }
+    }
+
+    static func defaultDirectory(fileManager: FileManager = .default) -> URL? {
+        fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("Logs", isDirectory: true)
+            .appendingPathComponent(directoryName, isDirectory: true)
+            .standardizedFileURL
+    }
+
+    static func fileName(
+        now: Date,
+        processIdentifier: Int32,
+        uuid: UUID
+    ) -> String {
+        let seconds = max(0, Int(now.timeIntervalSince1970.rounded(.down)))
+        let prefix = uuid.uuidString.prefix(8).lowercased()
+        return "launch-\(seconds)-\(processIdentifier)-\(prefix).log"
+    }
+
+    func appendLine(_ line: String) {
+        append(Data((line + "\n").utf8))
+    }
+
+    func append(_ data: Data) {
+        lock.lock()
+        defer { lock.unlock() }
+        try? handle.write(contentsOf: data)
+    }
+
+    func close() {
+        lock.lock()
+        defer { lock.unlock() }
+        try? handle.synchronize()
+        try? handle.close()
+    }
+}
+
 final class QEMUGPUProcessSupervisor: @unchecked Sendable {
     enum LaunchEvent: Equatable {
         case virtualMachineReady(qmpSocketPath: String?)
@@ -738,10 +821,22 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
 
     private let lock = NSLock()
     private let standardErrorReadLock = NSLock()
+    private let diagnosticsLogDirectory: URL?
+    private let enablesDiagnosticsLog: Bool
     private var child: Process?
     private var errorPipe: Pipe?
     private var errorBuffer = ""
     private var didReportVirtualMachineStart = false
+    private var diagnosticsLog: LaunchDiagnosticsLog?
+    private var diagnosticsLogPath: String?
+
+    init(
+        diagnosticsLogDirectory: URL? = nil,
+        enablesDiagnosticsLog: Bool = true
+    ) {
+        self.diagnosticsLogDirectory = diagnosticsLogDirectory
+        self.enablesDiagnosticsLog = enablesDiagnosticsLog
+    }
 
     func start(
         executableURL: URL,
@@ -750,6 +845,14 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
         launchEvent: @escaping @MainActor @Sendable (LaunchEvent) -> Void = { _ in },
         completion: @escaping @MainActor @Sendable (Int32) -> Void
     ) throws {
+        let log = enablesDiagnosticsLog
+            ? LaunchDiagnosticsLog.create(directory: diagnosticsLogDirectory)
+            : nil
+        log?.appendLine("[my-omarchy] Launch diagnostics started at \(Date())")
+        log?.appendLine("[my-omarchy] Executable: \(executableURL.path)")
+        log?.appendLine("[my-omarchy] Arguments: \(arguments.joined(separator: " "))")
+        log?.appendLine(Self.launchEnvironmentSummary(environment))
+
         let process = Process()
         let pipe = Pipe()
         process.executableURL = executableURL
@@ -790,8 +893,9 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
                     }
                 }
             }
-            self?.clear(process)
             let status = Self.status(for: process)
+            self?.recordDiagnosticLine("[my-omarchy] Launcher exited with status \(status)")
+            self?.clear(process)
             // NSApplication owns a synchronous AppKit run loop. Dispatching a
             // main-queue block lets that run loop service child completion;
             // a MainActor Task could wait behind the still-running call.
@@ -803,17 +907,22 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
         lock.lock()
         guard child == nil else {
             lock.unlock()
+            log?.close()
             throw HelperError.io("QEMU launcher process is already running")
         }
         child = process
         errorPipe = pipe
         errorBuffer = ""
         didReportVirtualMachineStart = false
+        diagnosticsLog = log
+        diagnosticsLogPath = log?.url.path
         lock.unlock()
 
         do {
             try process.run()
+            log?.appendLine("[my-omarchy] Launcher pid: \(process.processIdentifier)")
         } catch {
+            log?.appendLine("[my-omarchy] Failed to start launcher: \(error.localizedDescription)")
             clear(process)
             throw error
         }
@@ -831,6 +940,12 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
         return errorBuffer
     }
 
+    var recentDiagnosticsLogPath: String? {
+        lock.lock()
+        defer { lock.unlock() }
+        return diagnosticsLogPath
+    }
+
     func forward(signal: Int32) {
         lock.lock()
         defer { lock.unlock() }
@@ -844,6 +959,8 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
             child = nil
             errorPipe?.fileHandleForReading.readabilityHandler = nil
             errorPipe = nil
+            diagnosticsLog?.close()
+            diagnosticsLog = nil
         }
         lock.unlock()
     }
@@ -865,6 +982,7 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
             )
         }
         try? FileHandle.standardError.write(contentsOf: drain.data)
+        recordDiagnosticData(drain.data)
         return StandardErrorConsumption(
             reachedEnd: drain.reachedEnd,
             launchEvents: recordStandardError(drain.data)
@@ -946,7 +1064,6 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
 
     private func recordStandardError(_ data: Data) -> [LaunchEvent] {
         lock.lock()
-        defer { lock.unlock() }
         errorBuffer += String(decoding: data, as: UTF8.self)
         var launchEvents: [LaunchEvent] = []
         if !didReportVirtualMachineStart,
@@ -956,6 +1073,12 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
         }
         if errorBuffer.count > 4_096 {
             errorBuffer = String(errorBuffer.suffix(4_096))
+        }
+        let shouldRecordReady = !launchEvents.isEmpty
+        let log = diagnosticsLog
+        lock.unlock()
+        if shouldRecordReady {
+            log?.appendLine("[my-omarchy] Virtual machine ready event detected")
         }
         return launchEvents
     }
@@ -1006,5 +1129,36 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
         @unknown default:
             return 1
         }
+    }
+
+    private func recordDiagnosticLine(_ line: String) {
+        lock.lock()
+        let log = diagnosticsLog
+        lock.unlock()
+        log?.appendLine(line)
+    }
+
+    private func recordDiagnosticData(_ data: Data) {
+        lock.lock()
+        let log = diagnosticsLog
+        lock.unlock()
+        log?.append(data)
+    }
+
+    private static func launchEnvironmentSummary(_ environment: [String: String]) -> String {
+        let keys = [
+            "OMARCHY_QEMU_GPU_RESOURCE_PROFILE",
+            "OMARCHY_QEMU_GPU_VCPUS",
+            "OMARCHY_QEMU_GPU_MEMORY_MIB",
+            "OMARCHY_QEMU_GPU_STATE_ROOT",
+            "OMARCHY_QEMU_GPU_PORT_FORWARDS",
+            "OMARCHY_QEMU_GPU_SHARED_FOLDER",
+            "OMARCHY_QEMU_GPU_IMMERSIVE",
+            "OMARCHY_QEMU_GPU_ALLOW_BOOT_RECOVERY",
+        ]
+        let values = keys.map { key -> String in
+            "\(key)=\(environment[key] ?? "<unset>")"
+        }
+        return "[my-omarchy] Environment: " + values.joined(separator: " ")
     }
 }

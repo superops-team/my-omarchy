@@ -210,7 +210,7 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
     private var resetConfirmationPrompt: ResetConfirmationPrompt?
     private weak var startMenuScrollView: NSScrollView?
     private(set) var portForwardingEditor: PortForwardingEditor?
-    private weak var immersiveCaption: NSTextField?
+    private weak var launchModeCaption: NSTextField?
     private weak var resourceProfileCaption: NSTextField?
     private lazy var permissionWindowRestorer = PermissionWindowRestorer(
         canRestore: { [weak self] in
@@ -568,7 +568,7 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         let resourceProfileRow = resourceProfileSettingRow(
             preference: resourceProfilePreference()
         )
-        let immersiveRow = immersiveSettingRow(isEnabled: immersiveMode())
+        let launchModeRow = launchModeSettingRow(isImmersive: immersiveMode())
 
         let storageStatus = storageLocationStatus()
         var storageRow: NSView?
@@ -629,7 +629,7 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         integrationRowViews.append(contentsOf: [
             portForwardingRow,
             resourceProfileRow,
-            immersiveRow,
+            launchModeRow,
         ])
 
         var permissionRowsAndSeparators: [NSView] = []
@@ -1096,33 +1096,33 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         return view
     }
 
-    private func immersiveSettingRow(isEnabled: Bool) -> NSView {
+    private func launchModeSettingRow(isImmersive: Bool) -> NSView {
         let symbol = NSImageView()
         symbol.image = NSImage(
-            systemSymbolName: "arrow.up.left.and.arrow.down.right",
+            systemSymbolName: "macwindow",
             accessibilityDescription: nil
         )
         symbol.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 19, weight: .medium)
         symbol.contentTintColor = OmarchyStartMenuTheme.accent
-        symbol.identifier = NSUserInterfaceItemIdentifier("immersive-symbol")
+        symbol.identifier = NSUserInterfaceItemIdentifier("launch-mode-symbol")
         symbol.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             symbol.widthAnchor.constraint(equalToConstant: 26),
             symbol.heightAnchor.constraint(equalToConstant: 26),
         ])
 
-        let title = NSTextField(labelWithString: "Immersive")
+        let title = NSTextField(labelWithString: "Launch mode")
         title.font = .monospacedSystemFont(ofSize: 13, weight: .bold)
         title.textColor = OmarchyStartMenuTheme.foreground
-        title.identifier = NSUserInterfaceItemIdentifier("immersive-title")
+        title.identifier = NSUserInterfaceItemIdentifier("launch-mode-title")
 
-        let detailText = StartMenuPresentation.immersiveDetail(isEnabled: isEnabled)
+        let detailText = StartMenuPresentation.launchModeDetail(isImmersive: isImmersive)
         let detail = NSTextField(wrappingLabelWithString: detailText)
         detail.font = .monospacedSystemFont(ofSize: 10, weight: .regular)
         detail.textColor = OmarchyStartMenuTheme.muted
         detail.maximumNumberOfLines = 2
-        detail.identifier = NSUserInterfaceItemIdentifier("immersive-caption")
-        immersiveCaption = detail
+        detail.identifier = NSUserInterfaceItemIdentifier("launch-mode-caption")
+        launchModeCaption = detail
 
         let labels = NSStackView(views: [title, detail])
         labels.orientation = .vertical
@@ -1130,33 +1130,37 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         labels.spacing = 3
         labels.translatesAutoresizingMaskIntoConstraints = false
 
-        let toggle = OmarchyToggleButton(
-            isOn: isEnabled,
+        let selector = NSSegmentedControl(
+            labels: ["Full Screen", "Window"],
+            trackingMode: .selectOne,
             target: self,
-            action: #selector(changeImmersiveMode(_:))
+            action: #selector(changeLaunchMode(_:))
         )
-        toggle.isEnabled = !microphoneRequestInFlight && !launchInProgress && !resetInProgress
-        toggle.identifier = NSUserInterfaceItemIdentifier("immersive-toggle")
-        toggle.setAccessibilityLabel("Immersive mode")
-        toggle.setAccessibilityTitleUIElement(title)
-        toggle.setAccessibilityHelp(detailText)
-        toggle.translatesAutoresizingMaskIntoConstraints = false
+        selector.selectedSegment = isImmersive ? 0 : 1
+        selector.isEnabled = !microphoneRequestInFlight && !launchInProgress && !resetInProgress
+        selector.identifier = NSUserInterfaceItemIdentifier("launch-mode-selector")
+        selector.setAccessibilityLabel("Launch mode")
+        selector.setAccessibilityHelp(detailText)
+        selector.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            selector.widthAnchor.constraint(equalToConstant: 172),
+        ])
 
         let row = NSView()
-        row.identifier = NSUserInterfaceItemIdentifier("immersive-row")
+        row.identifier = NSUserInterfaceItemIdentifier("launch-mode-row")
         row.translatesAutoresizingMaskIntoConstraints = false
         row.addSubview(symbol)
         row.addSubview(labels)
-        row.addSubview(toggle)
+        row.addSubview(selector)
         NSLayoutConstraint.activate([
             row.heightAnchor.constraint(greaterThanOrEqualToConstant: 72),
             symbol.leadingAnchor.constraint(equalTo: row.leadingAnchor),
             symbol.centerYAnchor.constraint(equalTo: row.centerYAnchor),
             labels.leadingAnchor.constraint(equalTo: symbol.trailingAnchor, constant: 12),
             labels.centerYAnchor.constraint(equalTo: row.centerYAnchor),
-            labels.trailingAnchor.constraint(lessThanOrEqualTo: toggle.leadingAnchor, constant: -12),
-            toggle.trailingAnchor.constraint(equalTo: row.trailingAnchor),
-            toggle.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+            labels.trailingAnchor.constraint(lessThanOrEqualTo: selector.leadingAnchor, constant: -12),
+            selector.trailingAnchor.constraint(equalTo: row.trailingAnchor),
+            selector.centerYAnchor.constraint(equalTo: row.centerYAnchor),
         ])
         labels.setContentHuggingPriority(.defaultLow, for: .horizontal)
         labels.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -1462,13 +1466,12 @@ final class StartMenuWindow: NSObject, NSWindowDelegate {
         editor.beginSheet(for: window)
     }
 
-    @objc private func changeImmersiveMode(_ sender: NSButton) {
+    @objc private func changeLaunchMode(_ sender: NSSegmentedControl) {
         guard !launchInProgress, !resetInProgress else { return }
-        let isEnabled = sender.state == .on
-        setImmersiveMode(isEnabled)
-        let detailText = StartMenuPresentation.immersiveDetail(isEnabled: isEnabled)
-        immersiveCaption?.stringValue = detailText
-        (sender as? OmarchyToggleButton)?.refreshAppearance()
+        let isImmersive = sender.selectedSegment == 0
+        setImmersiveMode(isImmersive)
+        let detailText = StartMenuPresentation.launchModeDetail(isImmersive: isImmersive)
+        launchModeCaption?.stringValue = detailText
         sender.setAccessibilityHelp(detailText)
         NSAccessibility.post(
             element: NSApplication.shared,

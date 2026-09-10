@@ -184,10 +184,16 @@ enum StartMenuPresentation {
         )
     }
 
+    static func launchModeDetail(isImmersive: Bool) -> String {
+        isImmersive
+            ? "Starts Full Screen with the Mac menu bar and Dock hidden."
+            : "Starts in a Mac window with the menu bar and Dock available."
+    }
+
     static func immersiveDetail(isEnabled: Bool) -> String {
         isEnabled
-            ? "Omarchy opens Full Screen with the Mac menu bar and Dock hidden."
-            : "Omarchy opens in a window with the Mac menu bar and Dock available."
+            ? "Starts Full Screen with the Mac menu bar and Dock hidden."
+            : "Starts in a Mac window with the menu bar and Dock available."
     }
 
     static func resourceProfile(

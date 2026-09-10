@@ -124,6 +124,90 @@ struct QEMUGPURuntimeEnvironmentTests {
 
 @Suite("QEMU standard-error drain")
 struct QEMUStandardErrorDrainTests {
+    @Test("launch diagnostic logs use the user log directory")
+    func launchDiagnosticLogPath() throws {
+        let directory = try #require(LaunchDiagnosticsLog.defaultDirectory())
+
+        #expect(directory.path.hasSuffix("/Library/Logs/My Omarchy"))
+    }
+
+    @Test("launch diagnostic logs create private files with deterministic names")
+    func launchDiagnosticLogWritesPrivateFile() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("my-omarchy-launch-log-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let log = try #require(LaunchDiagnosticsLog.create(
+            directory: directory,
+            now: Date(timeIntervalSince1970: 1_789_017_130),
+            processIdentifier: 42,
+            uuid: UUID(uuidString: "A1B2C3D4-0000-0000-0000-000000000000")!
+        ))
+        log.appendLine("[my-omarchy] hello")
+        log.append(Data("[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock\n".utf8))
+        log.close()
+
+        #expect(log.url.lastPathComponent == "launch-1789017130-42-a1b2c3d4.log")
+        let directoryMode = try mode(of: directory)
+        let fileMode = try mode(of: log.url)
+        #expect(directoryMode & 0o777 == 0o700)
+        #expect(fileMode & 0o777 == 0o600)
+        let contents = try String(contentsOf: log.url, encoding: .utf8)
+        #expect(contents.contains("[my-omarchy] hello"))
+        #expect(contents.contains("[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock"))
+    }
+
+    @Test("supervisor persists launcher diagnostics while preserving the recent error buffer")
+    func supervisorWritesLaunchDiagnostics() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("my-omarchy-supervisor-log-\(UUID().uuidString)", isDirectory: true)
+        let script = directory.appendingPathComponent("launcher.sh")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data(
+            """
+            #!/bin/sh
+            echo '[qemu-gpu] Starting test launcher' >&2
+            echo '[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock' >&2
+            echo 'guest diagnostic line' >&2
+            exit 7
+            """.utf8
+        ).write(to: script)
+        #expect(Darwin.chmod(script.path, 0o755) == 0)
+
+        let supervisor = QEMUGPUProcessSupervisor(diagnosticsLogDirectory: directory)
+        let finished = DispatchSemaphore(value: 0)
+        let result = LockedLaunchResult()
+
+        try supervisor.start(
+            executableURL: script,
+            arguments: ["--flag"],
+            environment: ["OMARCHY_QEMU_GPU_RESOURCE_PROFILE": "balanced"],
+            launchEvent: { event in
+                if case .virtualMachineReady(let path) = event {
+                    result.setReadySocket(path)
+                }
+            }
+        ) { status in
+            result.setExitStatus(status)
+            finished.signal()
+        }
+
+        #expect(waitFor(finished, timeout: 2))
+        #expect(result.exitStatus == 7)
+        #expect(result.readySocket == "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock")
+        #expect(supervisor.recentStandardError.contains("guest diagnostic line"))
+        let logPath = try #require(supervisor.recentDiagnosticsLogPath)
+        let contents = try String(contentsOfFile: logPath, encoding: .utf8)
+        #expect(contents.contains("[my-omarchy] Executable: \(script.path)"))
+        #expect(contents.contains("[my-omarchy] Arguments: --flag"))
+        #expect(contents.contains("OMARCHY_QEMU_GPU_RESOURCE_PROFILE=balanced"))
+        #expect(contents.contains("[qemu-gpu] Starting test launcher"))
+        #expect(contents.contains("guest diagnostic line"))
+        #expect(contents.contains("[my-omarchy] Virtual machine ready event detected"))
+        #expect(contents.contains("[my-omarchy] Launcher exited with status 7"))
+    }
+
     @Test("drains a bounded tail without waiting for EOF and restores descriptor flags")
     func boundedNonblockingDrain() throws {
         let pipe = Pipe()
@@ -206,6 +290,52 @@ struct QEMUStandardErrorDrainTests {
             let output = "[qemu-gpu] Ready. QMP: \(path)\n"
             #expect(QEMUGPUProcessSupervisor.virtualMachineReadyEvent(in: output) ==
                 .virtualMachineReady(qmpSocketPath: nil))
+        }
+    }
+
+    private func mode(of url: URL) throws -> Int {
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        return try #require((attributes[.posixPermissions] as? NSNumber)?.intValue)
+    }
+
+    private func waitFor(_ semaphore: DispatchSemaphore, timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if semaphore.wait(timeout: .now()) == .success {
+                return true
+            }
+            RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.01))
+        }
+        return semaphore.wait(timeout: .now()) == .success
+    }
+
+    private final class LockedLaunchResult: @unchecked Sendable {
+        private let lock = NSLock()
+        private var storedExitStatus: Int32?
+        private var storedReadySocket: String?
+
+        var exitStatus: Int32? {
+            lock.lock()
+            defer { lock.unlock() }
+            return storedExitStatus
+        }
+
+        var readySocket: String? {
+            lock.lock()
+            defer { lock.unlock() }
+            return storedReadySocket
+        }
+
+        func setExitStatus(_ status: Int32) {
+            lock.lock()
+            storedExitStatus = status
+            lock.unlock()
+        }
+
+        func setReadySocket(_ socket: String?) {
+            lock.lock()
+            storedReadySocket = socket
+            lock.unlock()
         }
     }
 }

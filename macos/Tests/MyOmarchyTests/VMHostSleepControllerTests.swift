@@ -280,6 +280,30 @@ struct QMPVMHostSleepControllerTests {
         #expect(descriptors.isEmpty)
     }
 
+    @Test("startup validation retries a transient QMP negotiation failure")
+    func startupValidationRetriesTransientFailure() throws {
+        let transcript = LockedQMPTranscript()
+        let session = try Self.startServer(steps: [], transcript: transcript)
+        var attempts = 0
+
+        let controller = try QMPVMHostSleepController(connectionFactory: {
+            attempts += 1
+            if attempts == 1 {
+                throw HelperError.io("QMP capability negotiation failed")
+            }
+            return try QMPConnection(
+                connectedDescriptor: session.clientDescriptor,
+                identifierPrefix: "test-host-power"
+            )
+        })
+        controller.close()
+
+        #expect(session.finished.wait(timeout: .now() + 2) == .success)
+        #expect(attempts == 2)
+        #expect(transcript.errorDescription == nil)
+        #expect(transcript.commands == ["qmp_capabilities"])
+    }
+
     @Test("retries a transient connection failure before sending stop")
     func retriesBeforeStop() throws {
         let transcript = LockedQMPTranscript()
