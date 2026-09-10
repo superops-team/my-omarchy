@@ -198,7 +198,7 @@ _qps_volume_filesystem() {
 # sparsely to its full size. Sparse files are the part that cannot be given up:
 # on exFAT a `truncate` to the working size allocates every byte immediately, so
 # a 24 GiB disk would cost 24 GiB the moment it is created. Cloning matters less
-# — a full copy works, it just costs another 6 GiB and takes far longer.
+# — a full copy works, it just costs another 7 GiB and takes far longer.
 # Refuse anything but APFS, naming what was actually found.
 _qps_assert_volume_supported() {
   local qps_root=$1
@@ -1084,7 +1084,7 @@ _qps_validate_immutable_source() {
 
 # Expand a signed, manifest-verified Zstandard artifact into an identity-keyed
 # immutable APFS source exactly once. The persistent workspace is then cloned
-# from this source, so the 6 GiB base blocks are not physically duplicated.
+# from this source, so the 7 GiB base blocks are not physically duplicated.
 qemu_persistent_storage_materialize_source() {
   local qps_identity=${1:-}
   local qps_compressed=${2:-}

@@ -5,7 +5,7 @@
     "filesystem": "ext4",
     "filesystemLabel": "omarchy-factory",
     "filesystemUuid": "89054943-1f4e-4f14-b934-d6db3fba4254",
-    "sizeMiB": 6144,
+    "sizeMiB": 7168,
     "sourceDateEpoch": 1788130066
   },
   "guest": {
