@@ -145,6 +145,14 @@ struct QEMUStandardErrorDrainTests {
         ))
         log.appendLine("[my-omarchy] hello")
         log.append(Data("[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock\n".utf8))
+        let arkSecret = "secret-" + "ark-value"
+        let anthropicSecret = "secret-" + "anthropic-value"
+        let openAISecret = "sk-" + "testsecretvalue1234567890"
+        let arkKey = "ARK" + "_API_KEY"
+        let openAIKey = "OPENAI" + "_API_KEY"
+        let anthropicKey = "ANTHROPIC" + "_API_KEY"
+        log.appendLine("[my-omarchy] Environment: \(arkKey)=\(arkSecret) \(openAIKey)=\(openAISecret)")
+        log.append(Data("stderr \(anthropicKey)='\(anthropicSecret)' raw \(openAISecret)\n".utf8))
         log.close()
 
         #expect(log.url.lastPathComponent == "launch-1789017130-42-a1b2c3d4.log")
@@ -155,6 +163,13 @@ struct QEMUStandardErrorDrainTests {
         let contents = try String(contentsOf: log.url, encoding: .utf8)
         #expect(contents.contains("[my-omarchy] hello"))
         #expect(contents.contains("[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock"))
+        #expect(contents.contains("ARK_API_KEY=<redacted>"))
+        #expect(contents.contains("OPENAI_API_KEY=<redacted>"))
+        #expect(contents.contains("ANTHROPIC_API_KEY=<redacted>"))
+        #expect(contents.contains("sk-<redacted>"))
+        #expect(!contents.contains(arkSecret))
+        #expect(!contents.contains(anthropicSecret))
+        #expect(!contents.contains(openAISecret))
     }
 
     @Test("supervisor persists launcher diagnostics while preserving the recent error buffer")

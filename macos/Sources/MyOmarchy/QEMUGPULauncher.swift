@@ -785,13 +785,14 @@ final class LaunchDiagnosticsLog: @unchecked Sendable {
     }
 
     func appendLine(_ line: String) {
-        append(Data((line + "\n").utf8))
+        append(Data((Self.redactSecrets(in: line) + "\n").utf8))
     }
 
     func append(_ data: Data) {
+        let redacted = Self.redactedData(data)
         lock.lock()
         defer { lock.unlock() }
-        try? handle.write(contentsOf: data)
+        try? handle.write(contentsOf: redacted)
     }
 
     func close() {
@@ -800,6 +801,41 @@ final class LaunchDiagnosticsLog: @unchecked Sendable {
         try? handle.synchronize()
         try? handle.close()
     }
+
+    static func redactSecrets(in text: String) -> String {
+        var redacted = text
+        for pattern in [
+            #"(?i)\b(ARK_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY)\b(\s*=\s*)("[^"\r\n]*"|'[^'\r\n]*'|[^\s"']+)"#,
+            #"\bsk-[A-Za-z0-9_-]{20,}\b"#,
+        ] {
+            guard let expression = try? NSRegularExpression(pattern: pattern) else {
+                continue
+            }
+            let range = NSRange(redacted.startIndex..<redacted.endIndex, in: redacted)
+            if pattern.hasPrefix("(?i)") {
+                redacted = expression.stringByReplacingMatches(
+                    in: redacted,
+                    range: range,
+                    withTemplate: "$1$2<redacted>"
+                )
+            } else {
+                redacted = expression.stringByReplacingMatches(
+                    in: redacted,
+                    range: range,
+                    withTemplate: "sk-<redacted>"
+                )
+            }
+        }
+        return redacted
+    }
+
+    private static func redactedData(_ data: Data) -> Data {
+        guard let text = String(data: data, encoding: .utf8) else {
+            return data
+        }
+        return Data(redactSecrets(in: text).utf8)
+    }
+
 }
 
 final class QEMUGPUProcessSupervisor: @unchecked Sendable {
