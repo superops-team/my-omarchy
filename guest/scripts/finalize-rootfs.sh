@@ -50,6 +50,17 @@ printf '%s  %s\n' "$expected_hyprland_sha256" /usr/bin/Hyprland | sha256sum -c -
   echo "Rounded-border Hyprland binary digest mismatch" >&2
   exit 1
 }
+expected_venus="1:$(read_spec '["supplyChain"]["mesaVenus"]["version"]')-$(read_spec '["supplyChain"]["mesaVenus"]["pkgrel"]')"
+[[ $(pacman -Q vulkan-virtio) == "vulkan-virtio $expected_venus" ]] || {
+  echo "Patched Venus driver is missing" >&2
+  exit 1
+}
+for path in /usr/lib/libvulkan_virtio.so /usr/share/vulkan/icd.d/virtio_icd.aarch64.json; do
+  [[ -f $path && $(pacman -Qoq "$path") == vulkan-virtio ]] || {
+    echo "Venus driver ownership mismatch: $path" >&2
+    exit 1
+  }
+done
 expected_voxtype="$(read_spec '["supplyChain"]["voxtype"]["version"]')-$(read_spec '["supplyChain"]["voxtype"]["pkgrel"]')"
 [[ ! $(pacman -Qq voxtype-bin 2>/dev/null || true) ]] || {
   echo "Opt-in Voxtype must not be installed in the factory image" >&2

@@ -1,0 +1,72 @@
+--- a/server/render_socket.c
++++ b/server/render_socket.c
+@@ -140,5 +140,9 @@
+ #endif
+ 
++   /* Avoid XNU installing rights omitted by a truncated control buffer. */
++   char control[65536];
++   const size_t control_capacity = msg->msg_controllen;
++
+    enum socket_state state = SOCKET_STATE_FIRST_MSG;
+    struct render_context_socket_header hdr = {0};
+    ssize_t want = sizeof(hdr);
+@@ -151,5 +155,5 @@
+       .msg_iovlen = 1,
+-      .msg_control = msg->msg_control,
+-      .msg_controllen = msg->msg_controllen,
++      .msg_control = control,
++      .msg_controllen = sizeof(control),
+    };
+    socklen_t _msg_controllen = 0;
+@@ -179,6 +183,15 @@
+       if (state == SOCKET_STATE_FIRST_MSG) {
+          _msg_controllen = _msg.msg_controllen;
++         if (_msg_controllen > control_capacity) {
++            int count;
++            const int *fds = get_received_fds(&_msg, &count);
++            for (int i = 0; i < count; i++)
++               close(fds[i]);
++            return false;
++         }
++         if (_msg_controllen)
++            memcpy(msg->msg_control, control, _msg_controllen);
+          msg->msg_controllen = _msg_controllen;
+          _msg.msg_control = NULL;
+          _msg.msg_controllen = 0;
+          state = socket->is_seqpacket ? SOCKET_STATE_DATA : SOCKET_STATE_HEADER;
+--- a/src/proxy/proxy_socket.c
++++ b/src/proxy/proxy_socket.c
+@@ -150,5 +150,9 @@
+ #endif
+ 
++   /* Avoid XNU installing rights omitted by a truncated control buffer. */
++   char control[65536];
++   const size_t control_capacity = msg->msg_controllen;
++
+    enum socket_state state = SOCKET_STATE_FIRST_MSG;
+    struct render_context_socket_header hdr = {0};
+    ssize_t want = sizeof(hdr);
+@@ -161,5 +165,5 @@
+       .msg_iovlen = 1,
+-      .msg_control = msg->msg_control,
+-      .msg_controllen = msg->msg_controllen,
++      .msg_control = control,
++      .msg_controllen = sizeof(control),
+    };
+    socklen_t _msg_controllen = 0;
+@@ -188,6 +192,15 @@
+       if (state == SOCKET_STATE_FIRST_MSG) {
+          _msg_controllen = _msg.msg_controllen;
++         if (_msg_controllen > control_capacity) {
++            int count;
++            const int *fds = get_received_fds(&_msg, &count);
++            for (int i = 0; i < count; i++)
++               close(fds[i]);
++            return false;
++         }
++         if (_msg_controllen)
++            memcpy(msg->msg_control, control, _msg_controllen);
+          msg->msg_controllen = _msg_controllen;
+          _msg.msg_control = NULL;
+          _msg.msg_controllen = 0;
+          state = socket->is_seqpacket ? SOCKET_STATE_DATA : SOCKET_STATE_HEADER;

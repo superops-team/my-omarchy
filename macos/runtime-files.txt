@@ -1,7 +1,9 @@
 bin/qemu-system-aarch64
 bin/zstd
+bin/venus-probe
 lib/libEGL.dylib
 lib/libGLESv2.dylib
+lib/libMoltenVK.dylib
 lib/libSDL2-2.0.0.dylib
 lib/libSDL3.dylib
 lib/libepoxy.0.dylib
@@ -13,4 +15,5 @@ lib/libpcre2-8.0.dylib
 lib/libpixman-1.0.dylib
 lib/libslirp.0.dylib
 lib/libvirglrenderer.1.dylib
+lib/libvulkan.1.dylib
 lib/libzstd.1.dylib

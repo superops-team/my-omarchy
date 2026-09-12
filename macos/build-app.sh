@@ -173,6 +173,7 @@ install -m 0644 "$macos_dir/Info.plist" "$contents/Info.plist"
 install -m 0644 "$generated_icon" "$contents/Resources/MyOmarchy.icns"
 ditto "$runtime_source" "$contents/Resources/runtime"
 install -m 0755 "$macos_dir/run-qemu-gpu.sh" "$contents/Resources/scripts/run-qemu-gpu.sh"
+install -m 0644 "$macos_dir/MoltenVK_icd.json" "$contents/Resources/scripts/MoltenVK_icd.json"
 install -m 0644 "$macos_dir/qemu-persistent-storage.sh" \
   "$contents/Resources/scripts/qemu-persistent-storage.sh"
 install -m 0644 "$macos_dir/qemu-port-forwarding.sh" \
@@ -212,6 +213,7 @@ for library in "$contents/Resources/runtime/lib"/*.dylib; do
   codesign "${sign_options[@]}" "$library"
 done
 codesign "${sign_options[@]}" "$contents/Resources/runtime/bin/zstd"
+codesign "${sign_options[@]}" "$contents/Resources/runtime/bin/venus-probe"
 codesign "${qemu_sign_options[@]}" \
   --entitlements "$macos_dir/qemu-hvf.entitlements" \
   "$bundled_qemu"

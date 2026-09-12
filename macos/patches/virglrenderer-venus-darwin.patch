@@ -1,0 +1,291 @@
+--- a/server/render_socket.c
++++ b/server/render_socket.c
+@@ -53,7 +53,7 @@
+ render_socket_pair(int out_fds[static 2])
+ {
+ #ifdef __APPLE__
+-   int type = SOCK_SEQPACKET;
++   int type = SOCK_STREAM;
+ #else
+    int type = SOCK_SEQPACKET;
+ #endif
+@@ -113,7 +113,13 @@
+       return NULL;
+    }
+ 
+-   *out_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
++   /* Darwin reports the original cmsg_len even when control data is truncated. */
++   size_t length = cmsg->cmsg_len;
++   if (length > msg->msg_controllen)
++      length = msg->msg_controllen;
++   *out_count = length >= CMSG_LEN(0)
++                   ? (length - CMSG_LEN(0)) / sizeof(int)
++                   : 0;
+    return (const int *)CMSG_DATA(cmsg);
+ }
+ 
+@@ -147,5 +147,6 @@
+       .msg_controllen = msg->msg_controllen,
+    };
+-	socklen_t _msg_controllen;
++   socklen_t _msg_controllen = 0;
++   msg->msg_controllen = 0;
+
+    assert(msg->msg_iovlen == 1);
+@@ -166,7 +167,12 @@
+          render_log("failed to receive message: %s", strerror(errno));
+-         return false;
++         goto fail;
+       }
++      if (unlikely(!s))
++         goto fail;
+
+       if (state == SOCKET_STATE_FIRST_MSG) {
+          _msg_controllen = _msg.msg_controllen;
++         msg->msg_controllen = _msg_controllen;
++         _msg.msg_control = NULL;
++         _msg.msg_controllen = 0;
+          state = socket->is_seqpacket ? SOCKET_STATE_DATA : SOCKET_STATE_HEADER;
+@@ -177,7 +179,7 @@
+ 
+       if (unlikely(_msg.msg_flags & MSG_CTRUNC ||
+                    (socket->is_seqpacket &&
+-                     (_msg.msg_flags & MSG_TRUNC) ||
+-                      _msg.msg_iov[0].iov_len != (size_t)s))) {
++                    ((_msg.msg_flags & MSG_TRUNC) ||
++                     _msg.msg_iov[0].iov_len != (size_t)s)))) {
+          render_log("failed to receive message: truncated or incomplete");
+
+@@ -184,7 +191,2 @@
+-         int fd_count;
+-         const int *fds = get_received_fds(&_msg, &fd_count);
+-         for (int i = 0; i < fd_count; i++)
+-            close(fds[i]);
+-
+-         return false;
++         goto fail;
+       }
+@@ -204,5 +215,9 @@
+       if (!want && state == SOCKET_STATE_HEADER) {
+          want = ntohl(hdr.length);
++         if (!want || (size_t)want > msg->msg_iov[0].iov_len) {
++            render_log("invalid stream message length");
++            goto fail;
++         }
+          _msg.msg_iov[0].iov_base = msg->msg_iov[0].iov_base;
+          _msg.msg_iov[0].iov_len = want;
+          state = SOCKET_STATE_DATA;
+@@ -228,3 +239,13 @@
+    return true;
++
++fail:
++   {
++      int count;
++      const int *fds = get_received_fds(msg, &count);
++      for (int i = 0; i < count; i++)
++         close(fds[i]);
++      msg->msg_controllen = 0;
++   }
++   return false;
+ }
+
+--- a/src/proxy/proxy_renderer.c
++++ b/src/proxy/proxy_renderer.c
+@@ -15,7 +15,11 @@
+ int
+ proxy_renderer_init(const struct proxy_renderer_cbs *cbs, uint32_t flags)
+ {
++#ifdef __APPLE__
++   bool in_process = true;
++#else
+    bool in_process = !(flags & VIRGL_RENDERER_RENDER_SERVER);
++#endif
+ 
+    assert(flags & VIRGL_RENDERER_NO_VIRGL);
+ 
+--- a/src/proxy/proxy_socket.c
++++ b/src/proxy/proxy_socket.c
+@@ -43,7 +43,7 @@
+ proxy_socket_pair(int out_fds[static 2])
+ {
+ #ifdef __APPLE__
+-   int type = SOCK_SEQPACKET;
++   int type = SOCK_STREAM;
+ #else
+    int type = SOCK_SEQPACKET;
+ #endif
+@@ -123,7 +123,13 @@
+       return NULL;
+    }
+ 
+-   *out_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
++   /* Darwin reports the original cmsg_len even when control data is truncated. */
++   size_t length = cmsg->cmsg_len;
++   if (length > msg->msg_controllen)
++      length = msg->msg_controllen;
++   *out_count = length >= CMSG_LEN(0)
++                   ? (length - CMSG_LEN(0)) / sizeof(int)
++                   : 0;
+    return (const int *)CMSG_DATA(cmsg);
+ }
+ 
+@@ -157,5 +157,6 @@
+       .msg_controllen = msg->msg_controllen,
+    };
+-	socklen_t _msg_controllen;
++   socklen_t _msg_controllen = 0;
++   msg->msg_controllen = 0;
+
+    assert(msg->msg_iovlen == 1);
+@@ -175,7 +176,12 @@
+          proxy_log("failed to receive message: %s", strerror(errno));
+-         return false;
++         goto fail;
+       }
++      if (unlikely(!s))
++         goto fail;
+
+       if (state == SOCKET_STATE_FIRST_MSG) {
+          _msg_controllen = _msg.msg_controllen;
++         msg->msg_controllen = _msg_controllen;
++         _msg.msg_control = NULL;
++         _msg.msg_controllen = 0;
+          state = socket->is_seqpacket ? SOCKET_STATE_DATA : SOCKET_STATE_HEADER;
+@@ -186,7 +188,7 @@
+ 
+       if (unlikely(_msg.msg_flags & MSG_CTRUNC ||
+                    (socket->is_seqpacket &&
+-                     (_msg.msg_flags & MSG_TRUNC) ||
+-                      _msg.msg_iov[0].iov_len != (size_t)s))) {
++                    ((_msg.msg_flags & MSG_TRUNC) ||
++                     _msg.msg_iov[0].iov_len != (size_t)s)))) {
+          proxy_log("failed to receive message: truncated or incomplete");
+
+@@ -193,7 +200,2 @@
+-         int fd_count;
+-         const int *fds = get_received_fds(&_msg, &fd_count);
+-         for (int i = 0; i < fd_count; i++)
+-            close(fds[i]);
+-
+-         return false;
++         goto fail;
+       }
+@@ -207,5 +218,9 @@
+       if (!want && state == SOCKET_STATE_HEADER) {
+          want = ntohl(hdr.length);
++         if (!want || (size_t)want != msg->msg_iov[0].iov_len) {
++            proxy_log("invalid stream reply length");
++            goto fail;
++         }
+          _msg.msg_iov[0].iov_base = msg->msg_iov[0].iov_base;
+          _msg.msg_iov[0].iov_len = want;
+          state = SOCKET_STATE_DATA;
+@@ -233,3 +244,13 @@
+    return true;
++
++fail:
++   {
++      int count;
++      const int *fds = get_received_fds(msg, &count);
++      for (int i = 0; i < count; i++)
++         close(fds[i]);
++      msg->msg_controllen = 0;
++   }
++   return false;
+ }
+
+--- a/src/venus/vkr_library.c
++++ b/src/venus/vkr_library.c
+@@ -36,8 +36,8 @@
+ #if defined(ENABLE_VULKAN_DLOAD)
+
+ #ifdef __APPLE__
+-#define LIBVULKAN1 "libvulkan.1.dylib"
+-#define LIBVULKAN  "libvulkan.dylib"
++#define LIBVULKAN1 "@loader_path/libvulkan.1.dylib"
++#define LIBVULKAN  "@loader_path/libvulkan.1.dylib"
+ #else
+ #define LIBVULKAN1 "libvulkan.so.1"
+ #define LIBVULKAN  "libvulkan.so"
+--- a/src/venus/vkr_device.c
++++ b/src/venus/vkr_device.c
+@@ -13,6 +13,11 @@
+ #include "vkr_device_memory.h"
+ #include "vkr_physical_device.h"
+ #include "vkr_queue.h"
++
++#ifdef __APPLE__
++#include <dlfcn.h>
++#include <limits.h>
++#endif
+ 
+ static VkResult
+ vkr_device_create_queues(struct vkr_context *ctx,
+@@ -75,6 +80,40 @@
+ 
+    vn_util_init_device_proc_table(dev->base.handle.device, vk->GetDeviceProcAddr,
+                                   api_version, &ext_table, &dev->proc_table);
++
++#ifdef __APPLE__
++   /* The loader does not forward the provisional Metal external-memory procs. */
++   if (dev->physical_device->EXT_external_memory_metal &&
++       (!dev->proc_table.GetMemoryMetalHandleEXT ||
++        !dev->proc_table.GetMemoryMetalHandlePropertiesEXT)) {
++      void *moltenvk = NULL;
++      Dl_info self_info;
++      if (dladdr((const void *)&vkr_device_init_proc_table, &self_info) &&
++          self_info.dli_fname) {
++         char path[PATH_MAX];
++         const char *slash = strrchr(self_info.dli_fname, '/');
++         if (slash) {
++            const size_t dir_len = slash - self_info.dli_fname + 1;
++            const char name[] = "libMoltenVK.dylib";
++            if (dir_len + sizeof(name) <= sizeof(path)) {
++               memcpy(path, self_info.dli_fname, dir_len);
++               memcpy(path + dir_len, name, sizeof(name));
++               moltenvk = dlopen(path, RTLD_NOW | RTLD_LOCAL);
++            }
++         }
++      }
++      if (moltenvk) {
++         if (!dev->proc_table.GetMemoryMetalHandleEXT)
++            dev->proc_table.GetMemoryMetalHandleEXT =
++               (PFN_vkGetMemoryMetalHandleEXT)dlsym(moltenvk, "vkGetMemoryMetalHandleEXT");
++         if (!dev->proc_table.GetMemoryMetalHandlePropertiesEXT)
++            dev->proc_table.GetMemoryMetalHandlePropertiesEXT =
++               (PFN_vkGetMemoryMetalHandlePropertiesEXT)dlsym(
++                  moltenvk, "vkGetMemoryMetalHandlePropertiesEXT");
++         dlclose(moltenvk);
++      }
++   }
++#endif
+ }
+ 
+ static void
+--- a/src/venus/vkr_device_memory.c
++++ b/src/venus/vkr_device_memory.c
+@@ -652,6 +652,10 @@
+    } else if (can_export_metal) {
+       assert(handle_type == VK_EXTERNAL_MEMORY_HANDLE_TYPE_MTLHEAP_BIT_EXT);
+       struct vn_device_proc_table *vk = &mem->device->proc_table;
++      if (!vk->GetMemoryMetalHandleEXT) {
++         vkr_log("metal export entry point unavailable");
++         return false;
++      }
+       const VkMemoryGetMetalHandleInfoEXT metal_info = {
+          .sType = VK_STRUCTURE_TYPE_MEMORY_GET_METAL_HANDLE_INFO_EXT,
+          .memory = mem->base.handle.device_memory,
+--- a/src/virglrenderer.c
++++ b/src/virglrenderer.c
+@@ -861,9 +861,9 @@
+ 
+    int ret;
+ 
+-   /* VIRGL_RENDERER_THREAD_SYNC is a hint and can be silently ignored */
++   /* Without eventfd, both fence flags must use the caller's polling path. */
+    if (!has_eventfd() || getenv("VIRGL_DISABLE_MT"))
+-      flags &= ~VIRGL_RENDERER_THREAD_SYNC;
++      flags &= ~(VIRGL_RENDERER_THREAD_SYNC | VIRGL_RENDERER_ASYNC_FENCE_CB);
+ 
+    if (state.client_initialized && (state.cookie != cookie ||
+                                     state.flags != flags ||

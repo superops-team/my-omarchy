@@ -104,6 +104,39 @@
         "xorgproto": "2025.1-1"
       }
     },
+    "mesaVenus": {
+      "version": "26.2.2",
+      "pkgrel": "1.1",
+      "url": "https://archive.mesa3d.org/mesa-26.2.2.tar.xz",
+      "sha256": "eeb29ca7e56cfaa8e8a79538dcf834e3b18e501c31bef5145e959ea437cc4216",
+      "patch": "patches/mesa-venus-16k.patch",
+      "patchSha256": "7a3a23a5282427c45f59a50f43084259d44f5bed315ecfaa324fa5cf8dea6fc1",
+      "buildPackages": {
+        "patch": "2.8-1",
+        "binutils": "2.46+r70+g155188ea10a7-1",
+        "gcc": "16.1.1+r12+g301eb08fa2c5-1",
+        "gcc-libs": "16.1.1+r12+g301eb08fa2c5-1",
+        "glibc": "2.43+r22+g8362e8ce10b2-2",
+        "python": "3.14.7-1",
+        "meson": "1.12.0-1",
+        "ninja": "1.13.2-3",
+        "python-mako": "1.3.12-1",
+        "python-yaml": "6.0.3-2",
+        "python-packaging": "26.3-1",
+        "python-markupsafe": "3.0.3-1",
+        "pkgconf": "3.0.7-1",
+        "libdrm": "2.4.134-1",
+        "wayland": "1.26.0-1",
+        "wayland-protocols": "1.49-1",
+        "xorgproto": "2025.1-1",
+        "libxcb": "1.17.0-1",
+        "libxshmfence": "1.3.3-1",
+        "libxrandr": "1.5.5-1",
+        "libx11": "1.8.13-1",
+        "zlib": "1:1.3.2-3",
+        "expat": "2.8.4-1"
+      }
+    },
     "mise": {
       "version": "2026.8.11",
       "url": "https://github.com/jdx/mise/releases/download/v2026.8.11/mise-v2026.8.11-linux-arm64.tar.xz",
@@ -471,7 +504,11 @@
       "device": "virtio-gpu-gl-pci",
       "display": "cocoa",
       "guestRenderer": "virgl",
-      "hostRenderer": "angle-metal"
+      "hostRenderer": "angle-metal",
+      "vulkanGuestRenderer": "venus",
+      "vulkanHostRenderer": "moltenvk-metal",
+      "blobAlignment": 16384,
+      "hostMemoryMiB": 1024
     },
     "network": {
       "device": "virtio-net-pci",

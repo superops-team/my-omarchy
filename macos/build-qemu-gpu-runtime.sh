@@ -52,6 +52,8 @@ pause_ownership_patch="$native_dir/patches/qemu-cocoa-pause-ownership.patch"
 audio_device_patch="$native_dir/patches/qemu-sdl-audio-device-selection.patch"
 shared_folder_patch="$native_dir/patches/qemu-9p-guest-owner.patch"
 strchrnul_patch="$native_dir/patches/qemu-darwin-strchrnul-compat.patch"
+venus_alignment_patch="$native_dir/patches/qemu-venus-blob-alignment.patch"
+venus_hvf_patch="$native_dir/patches/qemu-venus-hvf-mapping.patch"
 prepare_runtime="$native_dir/prepare-qemu-gpu-runtime.sh"
 pinned_bottles="$native_dir/pinned-runtime-bottles.sh"
 
@@ -71,6 +73,8 @@ pause_ownership_patch_sha256=a6f13f3a57215c8c8ced2c8dc00262163d21f2a251b660538f5
 audio_device_patch_sha256=03aca71c26163c337338cc3b2013c35430690fc0e8b66c5ce92a42f59a9b3334
 shared_folder_patch_sha256=a878c312a67f8eed4ac15daba3d45ff3ecd9750eee3a05e8158b71c1547795db
 strchrnul_patch_sha256=ec1048dd0e8ebe53bf7e8a3bca9bf2f5f4336cd607d4cd077437470e9a32094a
+venus_alignment_patch_sha256=cb37e46c0699f58d96ba674ec4c72a518e10f5f4d0d3e027b72de9e08e3f9f7d
+venus_hvf_patch_sha256=cfb7eb9f2ff505a1b109e9120a4ea91efe46ac7d6cbc29b30578838e94f1d3aa
 macos_deployment_target=15.0
 
 keycodemap_commit=f5772a62ec52591ff6870b7e8ef32482371f22c6
@@ -90,7 +94,6 @@ ninja_archive_name=ninja-1.13.0-py3-none-macosx_10_9_universal2.whl
 ninja_url="https://files.pythonhosted.org/packages/3c/74/d02409ed2aa865e051b7edda22ad416a39d81a84980f544f8de717cab133/$ninja_archive_name"
 ninja_sha256=fa2a8bfc62e31b08f83127d1613d10821775a0eb334197154c4d6067b7068ff1
 
-virgl_version=1.0.33
 setuptools_archive_name=setuptools-84.0.0-py3-none-any.whl
 setuptools_url="https://files.pythonhosted.org/packages/95/9c/c510029fc6ef33a6275cd2c5d3cecd6613dfd6aa401d57c54f1c18852ccf/$setuptools_archive_name"
 setuptools_sha256=51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670
@@ -102,10 +105,6 @@ wheel_sha256=3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab
 pip_archive_name=pip-26.2.1-py3-none-any.whl
 pip_url="https://files.pythonhosted.org/packages/f3/6e/1736e5b4ae2b778ef2f81c47d797de9f891d4d8acb047a24ca37a60294dd/$pip_archive_name"
 pip_sha256=71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e
-
-virgl_archive_name=virglrenderer-1.0.33.arm64_sequoia.bottle.tar.gz
-virgl_url="https://github.com/startergo/homebrew-virglrenderer/releases/download/v1.0.33/$virgl_archive_name"
-virgl_sha256=26ad3e927d300587024cd92276d38bf813f6228d130a1800c97f1c18688b34ba
 
 angle_version=1.0.15
 angle_archive_name=angle-1.0.15.arm64_sequoia.bottle.tar.gz
@@ -274,7 +273,6 @@ qemu_archive="$archive_dir/$qemu_archive_name"
 keycodemap_archive="$archive_dir/$keycodemap_archive_name"
 dtc_archive="$archive_dir/$dtc_archive_name"
 ninja_archive="$archive_dir/$ninja_archive_name"
-virgl_archive="$archive_dir/$virgl_archive_name"
 angle_archive="$archive_dir/$angle_archive_name"
 epoxy_archive="$archive_dir/$epoxy_archive_name"
 setuptools_archive="$archive_dir/$setuptools_archive_name"
@@ -285,7 +283,6 @@ obtain_and_verify "QEMU $qemu_commit" "$qemu_url" "$qemu_sha256" "$qemu_archive"
 obtain_and_verify "keycodemapdb $keycodemap_commit" "$keycodemap_url" "$keycodemap_sha256" "$keycodemap_archive"
 obtain_and_verify "dtc $dtc_commit" "$dtc_url" "$dtc_sha256" "$dtc_archive"
 obtain_and_verify "Ninja $ninja_version" "$ninja_url" "$ninja_sha256" "$ninja_archive"
-obtain_and_verify "virglrenderer $virgl_version" "$virgl_url" "$virgl_sha256" "$virgl_archive"
 obtain_and_verify "ANGLE $angle_version" "$angle_url" "$angle_sha256" "$angle_archive"
 obtain_and_verify "libepoxy $epoxy_version" "$epoxy_url" "$epoxy_sha256" "$epoxy_archive"
 while IFS=$'\t' read -r formula version archive_name archive_root archive_sha; do
@@ -303,12 +300,10 @@ obtain_and_verify "pip" "$pip_url" "$pip_sha256" "$pip_archive"
 validate_tar_root "QEMU $qemu_commit" "$qemu_archive" "$qemu_root" "$listing_dir/qemu.txt"
 validate_tar_root "keycodemapdb" "$keycodemap_archive" "$keycodemap_root" "$listing_dir/keycodemapdb.txt"
 validate_tar_root "dtc" "$dtc_archive" "$dtc_root" "$listing_dir/dtc.txt"
-validate_tar_root "virglrenderer" "$virgl_archive" "virglrenderer/$virgl_version" "$listing_dir/virglrenderer.txt"
 validate_tar_root "ANGLE" "$angle_archive" "angle/$angle_version" "$listing_dir/angle.txt"
 validate_tar_root "libepoxy" "$epoxy_archive" "libepoxy/$epoxy_version" "$listing_dir/libepoxy.txt"
 
 tar -xzf "$qemu_archive" -C "$source_parent"
-tar -xzf "$virgl_archive" -C "$dependency_root"
 tar -xzf "$angle_archive" -C "$dependency_root"
 tar -xzf "$epoxy_archive" -C "$dependency_root"
 while IFS=$'\t' read -r formula version archive_name archive_root archive_sha; do
@@ -355,8 +350,11 @@ patch -d "$source_dir" -p1 -f -i "$pause_ownership_patch"
 patch -d "$source_dir" -p1 -f -i "$audio_device_patch"
 patch -d "$source_dir" -p1 -f -i "$shared_folder_patch"
 patch -d "$source_dir" -p1 -f -i "$strchrnul_patch"
+verify_file_sha "Venus blob alignment patch" "$venus_alignment_patch" "$venus_alignment_patch_sha256"
+patch -d "$source_dir" -p1 -f -i "$venus_alignment_patch"
+verify_file_sha "Venus HVF mapping patch" "$venus_hvf_patch" "$venus_hvf_patch_sha256"
+patch -d "$source_dir" -p1 -f -i "$venus_hvf_patch"
 
-virgl_root="$dependency_root/virglrenderer/$virgl_version"
 angle_root="$dependency_root/angle/$angle_version"
 epoxy_root="$dependency_root/libepoxy/$epoxy_version"
 glib_root="$dependency_root/$PINNED_GLIB_ROOT"
@@ -370,7 +368,7 @@ zstd_root="$dependency_root/$PINNED_ZSTD_ROOT"
 lz4_root="$dependency_root/$PINNED_LZ4_ROOT"
 xz_root="$dependency_root/$PINNED_XZ_ROOT"
 for directory in \
-  "$virgl_root" "$angle_root" "$epoxy_root" \
+  "$angle_root" "$epoxy_root" \
   "$glib_root" "$pixman_root" "$slirp_root" "$sdl2_root" "$sdl3_root" \
   "$gettext_root" "$pcre2_root" "$zstd_root" "$lz4_root" "$xz_root"; do
   [[ -d $directory && ! -L $directory ]] || die "missing extracted dependency: $directory"
@@ -378,8 +376,6 @@ done
 
 # Bottle pkg-config files contain Homebrew relocation placeholders. Point only
 # this private build at the verified extracted headers and libraries.
-sed -i '' "s|@@HOMEBREW_CELLAR@@/virglrenderer/$virgl_version|$virgl_root|g" \
-  "$virgl_root/lib/pkgconfig/virglrenderer.pc"
 sed -i '' "s|@@HOMEBREW_CELLAR@@/libepoxy/$epoxy_version|$epoxy_root|g" \
   "$epoxy_root/lib/pkgconfig/epoxy.pc"
 for pc_file in "$angle_root"/lib/pkgconfig/*.pc; do
@@ -417,6 +413,30 @@ ninja="$tool_root/ninja-$ninja_version.data/scripts/ninja"
 [[ -f $ninja && ! -L $ninja ]] || die "pinned Ninja wheel is missing its executable"
 chmod 0755 "$ninja"
 
+if [[ -n $archive_cache ]]; then
+  python3 - "$native_dir/venus-sources.json" "$archive_cache" "$archive_dir" <<'PY'
+import json
+from pathlib import Path
+import shutil
+import sys
+manifest, cache, output = map(Path, sys.argv[1:])
+for entry in json.loads(manifest.read_text()).values():
+    source = cache / entry['archive']
+    if not source.is_file() or source.is_symlink():
+        raise SystemExit(f'missing cached Venus source: {source.name}')
+    shutil.copyfile(source, output / source.name)
+PY
+fi
+bash "$native_dir/build-venus-runtime.sh" "$work_dir/venus" "$archive_dir" \
+  "$angle_root" "$epoxy_root" "$ninja"
+virgl_root="$work_dir/venus/install"
+mkdir -p "$virgl_root/bin"
+cc -O2 -Wl,-headerpad_max_install_names -mmacosx-version-min="$macos_deployment_target" \
+  -I"$work_dir/venus/sources/vulkan-headers/include" \
+  "$native_dir/venus-probe.c" \
+  "$virgl_root/lib/libvulkan.1.dylib" \
+  -o "$virgl_root/bin/venus-probe"
+
 pkg_config_libdir="$virgl_root/lib/pkgconfig:$epoxy_root/lib/pkgconfig:$angle_root/lib/pkgconfig:$glib_root/lib/pkgconfig:$pixman_root/lib/pkgconfig:$slirp_root/lib/pkgconfig:$sdl2_root/lib/pkgconfig:$pcre2_root/lib/pkgconfig"
 private_libraries="$virgl_root/lib:$epoxy_root/lib:$angle_root/lib:$glib_root/lib:$pixman_root/lib:$slirp_root/lib:$sdl2_root/lib:$gettext_root/lib:$pcre2_root/lib"
 
@@ -436,7 +456,7 @@ require_private_pkg_version glib-2.0 2.88.3
 require_private_pkg_version pixman-1 0.46.4
 require_private_pkg_version slirp 4.9.4
 require_private_pkg_version sdl2 2.32.70
-require_private_pkg_version virglrenderer 1.2.0
+require_private_pkg_version virglrenderer 1.3.0
 require_private_pkg_version epoxy 1.5.11
 
 build_dir="$source_dir/build"
@@ -531,6 +551,7 @@ description=$(file -b "$qemu_binary")
 log "Relocating, capability-gating, signing, and publishing the runtime"
 "$prepare_runtime" \
   --source-qemu "$qemu_binary" \
+  --venus-prefix "$work_dir/venus/install" \
   --archive-dir "$archive_dir"
 
 log "Pinned patched runtime is ready; scratch source and archives will now be removed"

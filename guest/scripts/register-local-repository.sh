@@ -83,9 +83,10 @@ repo_dir="$root/usr/share/my-omarchy/repo"
 shopt -s nullglob
 archives=("$repo_dir"/*.pkg.tar.zst)
 shopt -u nullglob
-expected_archive_count=6
+expected_archive_count=7
 (( ${#archives[@]} == expected_archive_count )) ||
   fail "local repository expected $expected_archive_count package archive(s), found ${#archives[@]}"
+[[ ${archives[*]} == *'/vulkan-virtio-'* ]] || fail "factory repository is missing patched Venus"
 [[ ${archives[*]} == *'/my-omarchy-runtime-'* ]] || fail "local repository is missing the Omarchy runtime"
 [[ ${archives[*]} == *'/my-omarchy-mise-'* ]] || fail "factory repository is missing pinned mise"
 [[ ${archives[*]} == *'/my-omarchy-ttfx-'* ]] || fail "factory repository is missing pinned ttfx"
@@ -114,6 +115,10 @@ mapfile -t database_entries < <(
 (( ${#database_entries[@]} == expected_archive_count )) ||
   fail "local repository database has an unexpected entry count"
 for entry in "${database_entries[@]}"; do
+  # Mesa uses pacman's epoch field; only Venus adds an epoch-bearing entry.
+  if [[ $entry =~ ^vulkan-virtio-1:[0-9]+\.[0-9]+\.[0-9]+-[0-9.]+$ ]]; then
+    continue
+  fi
   [[ $entry =~ ^[A-Za-z0-9@._+-]+$ && $entry != .* ]] || fail "unsafe local repository entry: $entry"
 done
 tar \

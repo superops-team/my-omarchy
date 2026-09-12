@@ -100,7 +100,7 @@ case " $* " in
     ;;
   *' -machine virt -netdev help '*) printf '%s\n' user ;;
   *' -machine virt -audiodev help '*) printf '%s\n' sdl ;;
-  *' -device virtio-gpu-gl-pci,help '*) printf '%s\n' 'romfile=<str>' ;;
+  *' -device virtio-gpu-gl-pci,help '*) printf '%s\n' 'romfile=<str>' 'venus=<bool>' 'blob=<bool>' ;;
   *' -machine virt,gic-version=3,virtualization=on '*' -qmp stdio '*)
     exit "${FAKE_QEMU_NESTED_STATUS:-0}"
     ;;
@@ -301,6 +301,25 @@ printf 'factory\n' >"$guest/rootfs.ext4"
 
 launcher="$resources/scripts/run-qemu-gpu.sh"
 persistent_root="$test_root/persistent"
+/bin/cp "$macos_dir/MoltenVK_icd.json" "$resources/scripts/MoltenVK_icd.json"
+cat >"$resources/runtime/bin/venus-probe" <<'SH'
+#!/bin/bash
+[[ $VK_DRIVER_FILES == */scripts/MoltenVK_icd.json ]] || exit 90
+[[ -z ${VK_ICD_FILENAMES:-} && -z ${VK_INSTANCE_LAYERS:-} ]] || exit 91
+exit "${FAKE_VENUS_STATUS:-1}"
+SH
+chmod 755 "$resources/runtime/bin/venus-probe"
+for probe_status in 0 1; do
+  output=$(env PATH="$shim_dir:/usr/bin:/bin:/usr/sbin:/sbin" \
+    OMARCHY_QEMU_GPU_INSPECT_ONLY=1 FAKE_VENUS_STATUS="$probe_status" \
+    VK_ICD_FILENAMES=/invalid VK_INSTANCE_LAYERS=invalid "$launcher" "$guest" 2>&1)
+  if [[ $probe_status == 0 ]]; then
+    assert_contains "$output" 'Vulkan acceleration enabled'
+  else
+    assert_not_contains "$output" 'venus=true'
+    assert_contains "$output" 'keeping VirGL desktop rendering'
+  fi
+done
 
 # Exercise the repo-local development path, where release-time launch.plist is
 # absent and the launcher validates build-spec.json directly.
@@ -455,6 +474,10 @@ assert_contains "$disabled_qemu" \
   'virtserialport,bus=omarchy-serial.0,nr=3,chardev=omarchy-authentication-bridge,name=team.superops.myomarchy.authentication'
 assert_contains "$(<"$test_root/disabled/storage.log")" select-existing
 assert_contains "$(<"$test_root/disabled/storage.log")" create
+
+assert_not_contains "$disabled_qemu" 'venus=true'
+run_scenario venus-enabled 0 '' FAKE_VENUS_STATUS=0
+assert_contains "$(<"$test_root/venus-enabled/qemu.log")" 'blob=true,venus=true,hostmem=1G'
 
 run_scenario nested-fallback 0 '' FAKE_QEMU_NESTED_STATUS=1
 nested_fallback_qemu=$(<"$test_root/nested-fallback/qemu.log")

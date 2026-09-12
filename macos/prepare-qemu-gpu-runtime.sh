@@ -4,18 +4,19 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: macos/prepare-qemu-gpu-runtime.sh --source-qemu PATH [--archive-dir DIR]
+Usage: macos/prepare-qemu-gpu-runtime.sh --source-qemu PATH --venus-prefix DIR [--archive-dir DIR]
 
 Stage, relocate, validate, and ad-hoc sign the source-built QEMU runtime at:
   macos/.build/qemu-gpu-runtime
 
-The complete runtime closure comes from checksum-pinned arm64_sequoia bottles;
+The runtime closure uses pinned source builds and arm64_sequoia bottles;
 it never reads or bundles libraries from the build machine's Homebrew prefix.
 With --archive-dir, reuse pinned archives from DIR after verifying every hash.
 EOF
 }
 
 source_qemu=
+venus_prefix=
 archive_cache=
 while (($#)); do
   case "$1" in
@@ -23,6 +24,12 @@ while (($#)); do
       (($# >= 2)) || { usage >&2; exit 64; }
       [[ -z $source_qemu ]] || { usage >&2; exit 64; }
       source_qemu=$2
+      shift 2
+      ;;
+    --venus-prefix)
+      (($# >= 2)) || { usage >&2; exit 64; }
+      [[ -z $venus_prefix ]] || { usage >&2; exit 64; }
+      venus_prefix=$2
       shift 2
       ;;
     --archive-dir)
@@ -50,11 +57,6 @@ pinned_bottles="$native_dir/pinned-runtime-bottles.sh"
 dependency_bundler="$native_dir/bundle-macho-dependencies.sh"
 compatibility_verifier="$native_dir/verify-macos-compatibility.sh"
 runtime_manifest="$native_dir/runtime-files.txt"
-
-virgl_version=1.0.33
-virgl_archive_name=virglrenderer-1.0.33.arm64_sequoia.bottle.tar.gz
-virgl_url="https://github.com/startergo/homebrew-virglrenderer/releases/download/v1.0.33/$virgl_archive_name"
-virgl_sha256=26ad3e927d300587024cd92276d38bf813f6228d130a1800c97f1c18688b34ba
 
 angle_version=1.0.15
 angle_archive_name=angle-1.0.15.arm64_sequoia.bottle.tar.gz
@@ -91,6 +93,11 @@ macos_major=$(sw_vers -productVersion | awk -F. '{ print $1 }')
 [[ $macos_major =~ ^[0-9]+$ ]] || die "could not determine the macOS version"
 ((macos_major >= 15)) || die "the pinned arm64_sequoia bottles require macOS 15 or newer"
 [[ -n $source_qemu ]] || die "--source-qemu is required"
+[[ $venus_prefix == /* && -d $venus_prefix && ! -L $venus_prefix ]] || \
+  die "--venus-prefix must name the source-built Venus installation"
+for library in libvirglrenderer.1.dylib libMoltenVK.dylib libvulkan.1.dylib; do
+  [[ -f $venus_prefix/lib/$library ]] || die "Venus installation is missing $library"
+done
 [[ $source_qemu == /* ]] || die "--source-qemu must be an absolute path"
 [[ -f $source_qemu && ! -L $source_qemu && -x $source_qemu ]] || \
   die "--source-qemu must name a regular executable: $source_qemu"
@@ -185,15 +192,11 @@ obtain_and_verify() {
   install -m 0644 "$cached" "$output"
 }
 
-virgl_archive="$archive_dir/$virgl_archive_name"
 angle_archive="$archive_dir/$angle_archive_name"
 epoxy_archive="$archive_dir/$epoxy_archive_name"
-obtain_and_verify "virglrenderer $virgl_version" "$virgl_url" "$virgl_sha256" "$virgl_archive"
 obtain_and_verify "ANGLE $angle_version" "$angle_url" "$angle_sha256" "$angle_archive"
 obtain_and_verify "libepoxy $epoxy_version" "$epoxy_url" "$epoxy_sha256" "$epoxy_archive"
 
-pinned_bottle_validate_archive \
-  "virglrenderer $virgl_version" "$virgl_archive" "virglrenderer/$virgl_version"
 pinned_bottle_validate_archive \
   "ANGLE $angle_version" "$angle_archive" "angle/$angle_version"
 pinned_bottle_validate_archive \
@@ -206,24 +209,25 @@ while IFS=$'\t' read -r formula version archive_name archive_root archive_sha; d
   pinned_bottle_validate_archive "$formula $version" "$archive" "$archive_root"
 done < <(pinned_core_bottle_manifest)
 
-virgl_member="virglrenderer/$virgl_version/lib/libvirglrenderer.1.dylib"
 epoxy_member="libepoxy/$epoxy_version/lib/libepoxy.0.dylib"
 egl_member="angle/$angle_version/lib/libEGL.dylib"
 gles_member="angle/$angle_version/lib/libGLESv2.dylib"
-pinned_bottle_require_regular_member \
-  "virglrenderer $virgl_version" "$virgl_archive" "$virgl_member"
 pinned_bottle_require_regular_member \
   "libepoxy $epoxy_version" "$epoxy_archive" "$epoxy_member"
 pinned_bottle_require_regular_member "ANGLE $angle_version" "$angle_archive" "$egl_member"
 pinned_bottle_require_regular_member "ANGLE $angle_version" "$angle_archive" "$gles_member"
 
-tar -xzf "$virgl_archive" -C "$extract_dir" "$virgl_member"
 tar -xzf "$epoxy_archive" -C "$extract_dir" "$epoxy_member"
 tar -xzf "$angle_archive" -C "$extract_dir" "$egl_member" "$gles_member"
 
 install -m 0755 "$source_qemu" "$staged_runtime/bin/qemu-system-aarch64"
-install -m 0755 "$extract_dir/$virgl_member" \
+install -m 0755 "$venus_prefix/bin/venus-probe" "$staged_runtime/bin/venus-probe"
+install -m 0755 "$venus_prefix/lib/libvirglrenderer.1.dylib" \
   "$staged_runtime/lib/libvirglrenderer.1.dylib"
+install -m 0755 "$venus_prefix/lib/libMoltenVK.dylib" \
+  "$staged_runtime/lib/libMoltenVK.dylib"
+install -m 0755 "$venus_prefix/lib/libvulkan.1.dylib" \
+  "$staged_runtime/lib/libvulkan.1.dylib"
 install -m 0755 "$extract_dir/$epoxy_member" "$staged_runtime/lib/libepoxy.0.dylib"
 install -m 0755 "$extract_dir/$egl_member" "$staged_runtime/lib/libEGL.dylib"
 install -m 0755 "$extract_dir/$gles_member" "$staged_runtime/lib/libGLESv2.dylib"
@@ -268,6 +272,7 @@ for library in "$staged_runtime/lib"/*.dylib; do
   codesign --force --sign - "$library"
 done
 codesign --force --sign - "$staged_runtime/bin/zstd"
+codesign --force --sign - "$staged_runtime/bin/venus-probe"
 codesign --force --sign - --entitlements "$entitlements" \
   "$staged_runtime/bin/qemu-system-aarch64"
 

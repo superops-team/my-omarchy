@@ -258,6 +258,11 @@ python3 "$guest_dir/scripts/apply-omarchy-backports.py" --root "$root" --spec "$
   --work "$work" \
   --spec "$spec" \
   --pacman-config "$pacman_config"
+bash "$guest_dir/scripts/register-patched-mesa-venus.sh" \
+  --root "$root" \
+  --work "$work" \
+  --spec "$spec" \
+  --pacman-config "$pacman_config"
 "$guest_dir/scripts/register-local-repository.sh" --root "$root" --spec "$spec"
 arch-chroot "$root" /usr/local/lib/my-omarchy/finalize-rootfs
 arch-chroot "$root" pacman -Q | LC_ALL=C sort >"$root/usr/share/my-omarchy/packages.lock.txt"

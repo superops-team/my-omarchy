@@ -103,6 +103,10 @@ def component_files(root: Path, component: str) -> list[Path]:
     if component == "runtime":
         paths = [
             root / "macos/build-qemu-gpu-runtime.sh",
+            root / "macos/build-venus-runtime.sh",
+            root / "macos/venus-sources.json",
+            root / "macos/venus-probe.c",
+            root / "macos/Tests/venus-socket.test.py",
             root / "macos/bundle-macho-dependencies.sh",
             root / "macos/pinned-runtime-bottles.sh",
             root / "macos/prepare-qemu-gpu-runtime.sh",

@@ -180,6 +180,21 @@ if [[ $gpu_help == *'romfile=<str>'* ]]; then
   gpu_device+=',romfile='
 fi
 
+unset VK_ICD_FILENAMES VK_ADD_DRIVER_FILES VK_INSTANCE_LAYERS VK_LAYER_PATH VK_ADD_LAYER_PATH
+unset VK_DRIVER_FILES VK_LOADER_DRIVERS_SELECT VK_LOADER_DRIVERS_DISABLE
+unset DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH DYLD_INSERT_LIBRARIES
+export VK_DRIVER_FILES="$script_dir/MoltenVK_icd.json"
+export VK_LOADER_LAYERS_DISABLE='~all~'
+export MVK_CONFIG_LOG_LEVEL=1
+if [[ $gpu_help == *'venus=<bool>'* && $gpu_help == *'blob=<bool>'* &&
+      -x $resources_dir/runtime/bin/venus-probe && -f $VK_DRIVER_FILES ]] &&
+    "$resources_dir/runtime/bin/venus-probe" >&2; then
+  gpu_device+=',blob=true,venus=true,hostmem=1G'
+  printf '[graphics] Vulkan acceleration enabled: Venus / MoltenVK / Metal\n' >&2
+else
+  printf '[graphics] Vulkan acceleration unavailable; keeping VirGL desktop rendering\n' >&2
+fi
+
 # Release apps carry the output of this strict validator in their signed
 # resources, so a clean Mac does not need Python. Repo-local development
 # bundles can still validate directly when no launch configuration is present.
@@ -439,6 +454,10 @@ graphics = {
     "display": "cocoa",
     "guestRenderer": "virgl",
     "hostRenderer": "angle-metal",
+    "vulkanGuestRenderer": "venus",
+    "vulkanHostRenderer": "moltenvk-metal",
+    "blobAlignment": 16384,
+    "hostMemoryMiB": 1024,
 }
 network = {
     "device": "virtio-net-pci",
@@ -570,6 +589,7 @@ supply_chain_keys = {
     "archLinuxArmPackagesCommit",
     "archLinuxArmPackagesRepository",
     "hyprland",
+    "mesaVenus",
     "mise",
     "omarchyPackagesCommit",
     "omarchyPackagesRepository",
@@ -586,6 +606,11 @@ if (
     or supply_chain.get("archLinuxArmPackagesCommit") != "0b5418fc3f62860b191cd872cb2f933f9fc77841"
 ):
     fail("ARM package supply chain is not pinned")
+venus_identity = hashlib.sha256(
+    json.dumps(supply_chain.get("mesaVenus"), ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("utf-8")
+).hexdigest()
+if venus_identity != "f776921c9bd8a803bcc78edd81a22004b1f19300558c0f3ac4b9ab6d672b9988":
+    fail("Venus component is not the reviewed 16K-aligned Mesa build")
 hyprland = exact_keys(
     supply_chain.get("hyprland"),
     {

@@ -158,7 +158,10 @@ class BuildCacheTests(unittest.TestCase):
         manifest = REPOSITORY / "macos/runtime-files.txt"
         expected = frozenset(manifest.read_text(encoding="ascii").splitlines())
         self.assertEqual(expected, build_cache.RUNTIME_FILES)
-        self.assertEqual(16, len(expected))
+        self.assertEqual(19, len(expected))
+        self.assertIn("bin/venus-probe", expected)
+        self.assertIn("lib/libMoltenVK.dylib", expected)
+        self.assertIn("lib/libvulkan.1.dylib", expected)
         self.assertIn("bin/qemu-system-aarch64", expected)
         self.assertIn("bin/zstd", expected)
         self.assertIn("lib/libSDL3.dylib", expected)
@@ -175,6 +178,31 @@ class BuildCacheTests(unittest.TestCase):
                 invalid.write_text(contents, encoding="ascii")
                 with self.assertRaises(RuntimeError):
                     build_cache.read_runtime_manifest(invalid)
+
+    def test_venus_hvf_patch_is_pinned_and_disables_only_unsupported_mapping(self) -> None:
+        patch = REPOSITORY / 'macos/patches/qemu-venus-hvf-mapping.patch'
+        builder = (REPOSITORY / 'macos/build-qemu-gpu-runtime.sh').read_text()
+        digest = hashlib.sha256(patch.read_bytes()).hexdigest()
+        self.assertIn(f'venus_hvf_patch_sha256={digest}', builder)
+        self.assertIn('"$venus_hvf_patch" "$venus_hvf_patch_sha256"', builder)
+        self.assertIn('patch -d "$source_dir" -p1 -f -i "$venus_hvf_patch"', builder)
+        self.assertIn(patch, build_cache.component_files(REPOSITORY, 'runtime'))
+        lines = patch.read_text().splitlines()
+        start = lines.index(' #define VIRGL_HAS_MAP_FIXED \\')
+        definition = '\n'.join(line[1:] for line in lines[start:start + 4]
+                               if not line.startswith('-'))
+        for modern, windows, darwin, expected in (
+            (1, 0, 1, 'disabled'), (1, 1, 0, 'disabled'),
+            (1, 0, 0, 'enabled'), (0, 0, 0, 'disabled'),
+        ):
+            with self.subTest(modern=modern, windows=windows, darwin=darwin):
+                source = (f'#define VIRGL_CHECK_VERSION(a,b,c) {modern}\n'
+                          '#define IS_ENABLED(x) x\n'
+                          f'#define CONFIG_WIN32 {windows}\n#define CONFIG_DARWIN {darwin}\n'
+                          + definition + '\n#if VIRGL_HAS_MAP_FIXED\nenabled\n#else\ndisabled\n#endif\n')
+                result = subprocess.run(['cc', '-E', '-P', '-x', 'c', '-'],
+                                        input=source, text=True, capture_output=True, check=True)
+                self.assertEqual(expected, result.stdout.strip())
 
     def test_guest_fingerprint_tracks_build_inputs_but_not_documentation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -1,0 +1,18 @@
+--- a/hw/display/virtio-gpu-virgl.c
++++ b/hw/display/virtio-gpu-virgl.c
+@@ -41,8 +41,14 @@
+      VIRGL_VERSION_MICRO >= (micro))
+ #endif
+ 
++/*
++ * HVF keeps the physical backing of an existing guest mapping. Replacing the
++ * host pages with MAP_FIXED does not update it. Use the MemoryRegion map/unmap
++ * path on Darwin so HVF observes each Venus blob's actual backing pages.
++ */
+ #define VIRGL_HAS_MAP_FIXED \
+-    (VIRGL_CHECK_VERSION(1, 3, 0) && !IS_ENABLED(CONFIG_WIN32))
++    (VIRGL_CHECK_VERSION(1, 3, 0) && !IS_ENABLED(CONFIG_WIN32) && \
++     !IS_ENABLED(CONFIG_DARWIN))
+ 
+ struct virtio_gpu_virgl_resource {
+     struct virtio_gpu_simple_resource base;

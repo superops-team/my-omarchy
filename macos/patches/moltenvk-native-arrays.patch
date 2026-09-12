@@ -1,0 +1,5 @@
+--- a/MoltenVKShaderConverter/MoltenVKShaderConverter/SPIRVToMSLConverter.cpp
++++ b/MoltenVKShaderConverter/MoltenVKShaderConverter/SPIRVToMSLConverter.cpp
+@@ -84,0 +85,2 @@
++	// Struct array members must match function parameters instead of spvUnsafeArray.
++	mslOptions.force_native_arrays = true;

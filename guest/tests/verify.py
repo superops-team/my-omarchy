@@ -838,6 +838,38 @@ def main() -> None:
         in restore_hook,
         "pre-refresh hook restores the complete My Omarchy pacman files",
     )
+    build = read(GUEST / "build.sh")
+    venus = spec["supplyChain"]["mesaVenus"]
+    venus_patch = GUEST / venus["patch"]
+    check(
+        hashlib.sha256(venus_patch.read_bytes()).hexdigest() == venus["patchSha256"]
+        and venus["version"] == "26.2.2",
+        "Venus source patch is pinned to the guest Mesa version",
+    )
+    venus_build = read(GUEST / "scripts/register-patched-mesa-venus.sh")
+    check(
+        '"$package/usr/share/drirc.d/' not in venus_build
+        and '"$package/usr/lib/libvulkan_virtio.so"' in venus_build
+        and '"$package/usr/share/vulkan/icd.d/virtio_icd.aarch64.json"' in venus_build,
+        "Venus package leaves Mesa-owned shared drirc defaults untouched",
+    )
+    check(
+        "register-patched-mesa-venus.sh" in build
+        and build.index("register-patched-mesa-venus.sh") < build.index("register-local-repository.sh")
+        and "-Dvulkan-drivers=virtio" in venus_build
+        and "--wrap-mode=nodownload" in venus_build
+        and "Mesa source digest mismatch" in venus_build
+        and "Mesa patch digest mismatch" in venus_build
+        and "-Qkk vulkan-virtio" in venus_build,
+        "Guest image builds and registers the verified Venus package before its local repository",
+    )
+    check(
+        spec["runtime"]["graphics"]["vulkanGuestRenderer"] == "venus"
+        and spec["runtime"]["graphics"]["vulkanHostRenderer"] == "moltenvk-metal"
+        and spec["runtime"]["graphics"]["blobAlignment"] == 16384
+        and spec["runtime"]["graphics"]["hostMemoryMiB"] == 1024,
+        "Venus graphics contract retains Apple Silicon memory alignment",
+    )
     local_repository = read(GUEST / "scripts/register-local-repository.sh")
     check(
         'install -m 0644 "$pacman_conf" "$root/usr/share/my-omarchy/pacman.conf"'
@@ -847,7 +879,7 @@ def main() -> None:
         "pacman recovery files snapshot the final local-repository configuration",
     )
     check(
-        "expected_archive_count=6" in local_repository
+        "expected_archive_count=7" in local_repository
         and "factory repository is missing pinned ttfx" in local_repository
         and "factory repository is missing pinned yay" in local_repository
         and "factory repository is missing patched Hyprland" in local_repository
