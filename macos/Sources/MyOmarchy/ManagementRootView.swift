@@ -14,7 +14,7 @@ struct ManagementRootView: View {
             .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 260)
             .accessibilityLabel(ManagementLocalization.string("navigation.sidebar"))
         } detail: {
-            ManagementPagePlaceholder(page: navigation.selection)
+            destinationView
                 .searchable(
                     text: $searchText,
                     placement: .toolbar,
@@ -41,6 +41,16 @@ struct ManagementRootView: View {
     private var searchResults: [ManagementDestination] {
         let locale = Locale.current.identifier.hasPrefix("zh") ? "zh-Hans" : "en"
         return ManagementSearch.results(for: searchText, locale: locale)
+    }
+
+    @ViewBuilder
+    private var destinationView: some View {
+        switch navigation.selection {
+        case .overview:
+            OverviewView(viewModel: viewModel)
+        case .virtualMachine, .integrations, .permissions, .diagnostics:
+            ManagementPagePlaceholder(page: navigation.selection)
+        }
     }
 }
 

@@ -26,6 +26,9 @@ struct ManagementStateTests {
         #expect(state.startupStage == .preflight)
         #expect(state.operation == .launch)
         #expect(state.sessionID == session)
+        let launcherAccepted = state.apply(.launcherStarted(session: session))
+        #expect(launcherAccepted)
+        #expect(state.startupStage == .launcherRunning)
         let readyAccepted = state.apply(.virtualMachineReady(session: session))
         #expect(readyAccepted)
         #expect(state.lifecycle == .running)
@@ -100,5 +103,21 @@ struct ManagementStateTests {
         #expect(exitAccepted)
         #expect(state.lifecycle == .launching)
         #expect(state.sessionID == restartSession)
+    }
+
+    @Test("force stop becomes available only after the graceful stop timeout")
+    func forceStopRequiresTimeout() {
+        let session = UUID()
+        var state = ManagementState()
+        _ = state.apply(.launchRequested(session: session))
+        _ = state.apply(.virtualMachineReady(session: session))
+        _ = state.apply(.stopRequested(session: session))
+
+        #expect(!state.forceStopAvailable)
+        #expect(!ManagementCommandPolicy.allows(.forceStop, in: state))
+        let timeoutAccepted = state.apply(.gracefulStopTimedOut(session: session))
+        #expect(timeoutAccepted)
+        #expect(state.forceStopAvailable)
+        #expect(ManagementCommandPolicy.allows(.forceStop, in: state))
     }
 }

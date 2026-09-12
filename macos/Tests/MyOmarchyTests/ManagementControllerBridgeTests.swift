@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import Testing
 @testable import MyOmarchy
@@ -55,6 +56,31 @@ struct ManagementControllerBridgeTests {
         #expect(viewModel.state.lifecycle == .stopping)
     }
 
+    @Test("view model commands are handled by the application controller")
+    func viewModelCommandsReachController() {
+        var activated: [Int32] = []
+        let viewModel = ManagementViewModel { _ in }
+        let controller = VMApplicationController(
+            launcherURL: URL(fileURLWithPath: "/usr/bin/false"),
+            initialArguments: [],
+            managementViewModel: viewModel,
+            windowActivator: VirtualMachineWindowActivator(
+                processExists: { $0 == 4242 },
+                activate: { activated.append($0); return true }
+            )
+        )
+        let session = UUID()
+        _ = controller.recordManagementEvent(.launchRequested(session: session))
+        _ = controller.connectManagementRuntime(
+            qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock",
+            processIdentifier: 4242
+        )
+        _ = controller.recordManagementEvent(.virtualMachineReady(session: session))
+
+        #expect(viewModel.send(.openVirtualMachine))
+        #expect(activated == [4242])
+    }
+
     @Test("failed graceful shutdown leaves the VM running")
     func failedGracefulShutdownDoesNotAdvanceState() {
         let viewModel = ManagementViewModel { _ in }
@@ -78,6 +104,40 @@ struct ManagementControllerBridgeTests {
             try controller.requestGracefulStop()
         }
         #expect(viewModel.state.lifecycle == .running)
+    }
+
+    @Test("safe stop keeps the management app alive and exposes force stop only after timeout")
+    func safeStopStaysInManagementApp() throws {
+        let supervisor = RecordingProcessSupervisor()
+        let timeout = LockedTimeoutAction()
+        let viewModel = ManagementViewModel { _ in }
+        let controller = VMApplicationController(
+            launcherURL: URL(fileURLWithPath: "/usr/bin/false"),
+            initialArguments: [],
+            baseEnvironment: [:],
+            supervisor: supervisor,
+            managementViewModel: viewModel,
+            runtimeControllerFactory: { _ in VMRuntimeController { _ in } },
+            scheduleGracefulStopTimeout: { timeout.set($0) }
+        )
+        let session = UUID()
+        try controller.launchPreparedVirtualMachine(session: session)
+        _ = controller.connectManagementRuntime(
+            qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock",
+            processIdentifier: 4242
+        )
+        _ = controller.recordManagementEvent(.virtualMachineReady(session: session))
+
+        #expect(try controller.requestGracefulStop())
+        #expect(!viewModel.state.forceStopAvailable)
+        timeout.run()
+        #expect(viewModel.state.forceStopAvailable)
+        #expect(viewModel.send(.forceStop))
+        #expect(supervisor.forwardedSignals == [SIGKILL])
+
+        supervisor.completeCurrentLaunch(status: 137)
+        #expect(viewModel.state.lifecycle == .idle)
+        #expect(controller.exitStatus == 0)
     }
 
     @Test("restart enters restarting before the child exits")
@@ -123,6 +183,7 @@ struct ManagementControllerBridgeTests {
 
         try controller.launchPreparedVirtualMachine(session: session)
         #expect(supervisor.startCount == 1)
+        #expect(viewModel.state.startupStage == .launcherRunning)
         _ = controller.connectManagementRuntime(
             qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock",
             processIdentifier: 4242
@@ -144,9 +205,29 @@ struct ManagementControllerBridgeTests {
     }
 }
 
+private final class LockedTimeoutAction: @unchecked Sendable {
+    private let lock = NSLock()
+    private var action: (@MainActor @Sendable () -> Void)?
+
+    func set(_ action: @escaping @MainActor @Sendable () -> Void) {
+        lock.lock()
+        self.action = action
+        lock.unlock()
+    }
+
+    @MainActor
+    func run() {
+        lock.lock()
+        let action = self.action
+        lock.unlock()
+        action?()
+    }
+}
+
 private final class RecordingProcessSupervisor: QEMUGPUProcessSupervising, @unchecked Sendable {
     private(set) var startCount = 0
     private var completion: (@MainActor @Sendable (Int32) -> Void)?
+    private(set) var forwardedSignals: [Int32] = []
 
     var recentStandardError = ""
     var recentDiagnosticsLogPath: String?
@@ -162,7 +243,9 @@ private final class RecordingProcessSupervisor: QEMUGPUProcessSupervising, @unch
         self.completion = completion
     }
 
-    func forward(signal: Int32) {}
+    func forward(signal: Int32) {
+        forwardedSignals.append(signal)
+    }
 
     @MainActor
     func completeCurrentLaunch(status: Int32) {

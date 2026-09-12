@@ -63,6 +63,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private let managementViewModel: ManagementViewModel
     private let runtimeControllerFactory: (String) -> VMRuntimeController
     private let windowActivator: VirtualMachineWindowActivator
+    private let scheduleGracefulStopTimeout: @Sendable (@escaping @MainActor @Sendable () -> Void) -> Void
     private var startMenuWindow: StartMenuWindow?
     private var volumeObserver: NSObjectProtocol?
     private var hostPowerObserver: HostPowerNotificationObserver?
@@ -109,7 +110,10 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         runtimeControllerFactory: @escaping (String) -> VMRuntimeController = {
             VMRuntimeController(socketPath: $0)
         },
-        windowActivator: VirtualMachineWindowActivator = VirtualMachineWindowActivator()
+        windowActivator: VirtualMachineWindowActivator = VirtualMachineWindowActivator(),
+        scheduleGracefulStopTimeout: @escaping @Sendable (@escaping @MainActor @Sendable () -> Void) -> Void = { action in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: action)
+        }
     ) {
         self.launcherURL = launcherURL
         self.initialArguments = initialArguments
@@ -128,6 +132,11 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         self.managementViewModel = managementViewModel ?? ManagementViewModel { _ in }
         self.runtimeControllerFactory = runtimeControllerFactory
         self.windowActivator = windowActivator
+        self.scheduleGracefulStopTimeout = scheduleGracefulStopTimeout
+        super.init()
+        self.managementViewModel.connect { [weak self] command in
+            self?.performManagementCommand(command)
+        }
     }
 
     @discardableResult
@@ -160,7 +169,14 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         guard let session = activeManagementSession,
               let activeRuntimeController else { return false }
         try activeRuntimeController.requestGracefulShutdown()
-        return recordManagementEvent(.stopRequested(session: session))
+        let accepted = recordManagementEvent(.stopRequested(session: session))
+        if accepted {
+            scheduleGracefulStopTimeout { [weak self] in
+                guard let self, self.activeManagementSession == session else { return }
+                _ = self.recordManagementEvent(.gracefulStopTimedOut(session: session))
+            }
+        }
+        return accepted
     }
 
     @discardableResult
@@ -175,6 +191,27 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
 
     func launchPreparedVirtualMachine(session: UUID) throws {
         try launch(arguments: launchArguments(), managementSession: session)
+    }
+
+    private func performManagementCommand(_ command: ManagementCommand) {
+        do {
+            switch command {
+            case .launch:
+                startVirtualMachine()
+            case .openVirtualMachine:
+                _ = openVirtualMachineWindow()
+            case .stop:
+                _ = try requestGracefulStop()
+            case .forceStop:
+                supervisor.forward(signal: SIGKILL)
+            case .restart:
+                _ = try requestGracefulRestart(nextSession: UUID())
+            case .resetStorage:
+                resetVirtualMachine()
+            }
+        } catch {
+            fputs("my-omarchy: management command failed: \(error.localizedDescription)\n", stderr)
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -566,6 +603,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             throw error
         }
         childRunning = true
+        _ = recordManagementEvent(.launcherStarted(session: managementSession))
     }
 
     private func virtualMachineDidStart(
@@ -918,12 +956,15 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         activeRuntimeController = nil
         activeQEMUProcessIdentifier = nil
         var restartSession: UUID?
+        var completedManagementStop = false
         if let managementSession = activeManagementSession {
             let wasRestarting = managementViewModel.state.lifecycle == .restarting
+            let wasStopping = managementViewModel.state.lifecycle == .stopping
             activeManagementSession = nil
             let accepted = recordManagementEvent(
                 .childExited(session: managementSession, status: status)
             )
+            completedManagementStop = accepted && wasStopping
             if accepted,
                wasRestarting,
                managementViewModel.state.lifecycle == .launching {
@@ -948,6 +989,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         lifecycle.childExited()
         if applicationTerminationPending {
             NSApp.reply(toApplicationShouldTerminate: true)
+        } else if completedManagementStop {
+            virtualMachineReachedStart = false
         } else if let restartSession {
             virtualMachineReachedStart = false
             do {

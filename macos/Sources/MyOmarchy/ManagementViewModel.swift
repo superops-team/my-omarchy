@@ -4,15 +4,19 @@ import Combine
 final class ManagementViewModel: ObservableObject {
     @Published private(set) var state = ManagementState()
 
-    private let perform: (ManagementCommand) -> Void
+    private var perform: (ManagementCommand) -> Void
 
     init(perform: @escaping (ManagementCommand) -> Void) {
         self.perform = perform
     }
 
+    func connect(perform: @escaping (ManagementCommand) -> Void) {
+        self.perform = perform
+    }
+
     @discardableResult
     func send(_ command: ManagementCommand) -> Bool {
-        guard ManagementCommandPolicy.allows(command, while: state.lifecycle) else {
+        guard ManagementCommandPolicy.allows(command, in: state) else {
             return false
         }
         perform(command)

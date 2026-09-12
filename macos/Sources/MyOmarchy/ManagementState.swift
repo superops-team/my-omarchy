@@ -33,9 +33,11 @@ enum ManagementOperation: Equatable {
 
 enum ManagementEvent: Equatable {
     case launchRequested(session: UUID)
+    case launcherStarted(session: UUID)
     case virtualMachineReady(session: UUID)
     case stopRequested(session: UUID)
     case restartRequested(session: UUID, nextSession: UUID)
+    case gracefulStopTimedOut(session: UUID)
     case childExited(session: UUID, status: Int32)
 }
 
@@ -46,6 +48,7 @@ struct ManagementState: Equatable {
     private(set) var operation: ManagementOperation = .none
     private(set) var sessionID: UUID?
     private(set) var lastExitStatus: Int32?
+    private(set) var forceStopAvailable = false
     private var pendingRestartSession: UUID?
 
     @discardableResult
@@ -57,6 +60,10 @@ struct ManagementState: Equatable {
             startupStage = .preflight
             operation = .launch
             lastExitStatus = nil
+            forceStopAvailable = false
+        case .launcherStarted(let session)
+            where lifecycle == .launching && sessionID == session:
+            startupStage = .launcherRunning
         case .virtualMachineReady(let session)
             where lifecycle == .launching && sessionID == session:
             lifecycle = .running
@@ -67,17 +74,23 @@ struct ManagementState: Equatable {
             where lifecycle == .running && sessionID == session:
             lifecycle = .stopping
             operation = .stop
+            forceStopAvailable = false
         case .restartRequested(let session, let nextSession)
             where lifecycle == .running && sessionID == session:
             lifecycle = .restarting
             operation = .restart
             pendingRestartSession = nextSession
+            forceStopAvailable = false
+        case .gracefulStopTimedOut(let session)
+            where lifecycle == .stopping && sessionID == session:
+            forceStopAvailable = true
         case .childExited(let session, _)
             where lifecycle == .stopping && sessionID == session:
             lifecycle = .idle
             startupStage = .exited
             operation = .none
             sessionID = nil
+            forceStopAvailable = false
         case .childExited(let session, let status)
             where lifecycle == .launching && sessionID == session:
             lifecycle = .failed
