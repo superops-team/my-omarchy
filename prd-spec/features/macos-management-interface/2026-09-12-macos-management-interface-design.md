@@ -453,3 +453,369 @@ SwiftUI 负责：
 10. 浅色、深色、高对比度、Reduce Motion、键盘和 VoiceOver 验证通过。
 11. 未实现的诊断、升级、备份和恢复能力不出现在可操作界面中。
 12. 现有功能测试、`make full-check` 和 Apple Silicon 真机验收全部通过后，旧 `StartMenuWindow` 才可删除。
+
+## 15. 实施计划
+
+实施采用纵向切片和 TDD，每个切片先补失败测试，再实现最小行为，最后运行该切片的定向测试。以下提交边界是推荐顺序；实现中若同一测试资产必须与相邻切片原子落地，可以合并相邻提交，但不得打乱依赖关系或跳过验证门。
+
+### Task 0：验证双进程窗口与 Swift Package 资源前置条件
+
+**目标**：在大量 UI 开发前证明 AppKit 管理进程可以保持 `.regular`，QEMU Cocoa 窗口仍能正常显示、接收输入并由 launcher 按 PID 激活，同时用户只看到一个不歧义的 My Omarchy Dock 主入口；验证 SwiftUI 和本地化资源可以通过当前 Swift Package、`build-app.sh` 和 App bundle 路径加载。
+
+**涉及文件**：
+
+- `macos/Package.swift`
+- `macos/build-app.sh`
+- `macos/Sources/MyOmarchy/ApplicationPresentation.swift`
+- `macos/patches/qemu-cocoa-product-identity.patch`
+- `macos/Tests/MyOmarchyTests/ApplicationPresentationTests.swift`
+- 新增最小 SwiftUI/资源探针及其测试；探针验证完成后删除或演进为正式组件
+
+**步骤**：
+
+1. 增加失败合同测试，要求运行期 activation policy 为 `.regular`，应用菜单包含“打开 My Omarchy”，Dock reopen 只恢复同一窗口。
+2. 增加最小 `NSHostingView` 编译测试和英文/简体中文资源读取测试。
+3. 构建 ad-hoc App，验证 Swift Package 资源 bundle 被复制到 `Bundle.module` 期望的位置；必要时修改 `build-app.sh` 显式安装并签名资源 bundle。
+4. 运行真实 VM spike，记录 launcher PID、QEMU PID、Dock 项数量、两个窗口的激活与键盘输入结果。
+5. 若 QEMU 继续作为 foreground app 会产生两个同名 Dock 项，则调整 Cocoa patch，使 QEMU 保持无 Dock 的窗口进程，同时验证全屏、Command/Super 捕获、菜单和退出行为没有回归。
+6. 为最终选择添加 Cocoa 合同测试，禁止后续构建重新引入第二个 Dock 主入口。
+
+**验证**：
+
+```bash
+cd macos
+swift test --disable-sandbox --filter ApplicationPresentationTests
+swift test --disable-sandbox --filter ManagementResourceTests
+cd ..
+make app
+```
+
+真机记录必须包含：单一主 Dock 入口、管理窗口关闭/恢复、QEMU 窗口激活、普通窗口与全屏、Command/Super 输入。任一项失败则暂停后续任务并修订本设计，不绕过该前置条件。
+
+**提交**：`test: prove management window process model`
+
+### Task 1：建立统一状态快照、session 隔离和命令门控
+
+**目标**：先建立不依赖视图的领域合同，使 AppKit 控制器和 SwiftUI 只通过一份状态与命令协议交互。
+
+**新增文件**：
+
+- `macos/Sources/MyOmarchy/ManagementState.swift`
+- `macos/Sources/MyOmarchy/ManagementCommand.swift`
+- `macos/Sources/MyOmarchy/ManagementViewModel.swift`
+- `macos/Tests/MyOmarchyTests/ManagementStateTests.swift`
+- `macos/Tests/MyOmarchyTests/ManagementCommandTests.swift`
+
+**修改文件**：
+
+- `macos/Sources/MyOmarchy/VMApplicationController.swift`
+
+**步骤**：
+
+1. 用表驱动测试定义 `idle -> launching -> running -> stopping -> idle`、`running -> restarting -> launching` 和错误迁移。
+2. 定义 `ManagementSnapshot`，包含 UI session、readiness、生命周期、启动阶段、配置、权限、集成状态、当前操作和最近失败。
+3. 定义带 session 的事件；测试旧 session 事件、重复 ready 和退出后的迟到事件均被忽略。
+4. 定义语义化 `ManagementCommand` 和互斥规则；测试连续启动、重置与启动并发、停止期间重启均被门控。
+5. 实现 `@MainActor` 的 `ManagementViewModel`，只转发命令和发布快照，不持有 Process、QMP 或存储对象。
+6. 让 `VMApplicationController` 创建初始快照并通过一个窄发布接口更新状态；暂不切换用户可见窗口。
+
+**验证**：
+
+```bash
+cd macos
+swift test --disable-sandbox --filter ManagementStateTests
+swift test --disable-sandbox --filter ManagementCommandTests
+swift test --disable-sandbox --filter QEMUGPULauncherTests
+```
+
+**提交**：`feat: add management state and command contracts`
+
+### Task 2：增加运行控制、QEMU 身份和窗口激活能力
+
+**目标**：在接入按钮前提供经过测试的安全停止、重启编排和“打开现有虚拟机”能力，禁止通过信号猜测或重复启动实现。
+
+**新增文件**：
+
+- `macos/Sources/MyOmarchy/VMRuntimeController.swift`
+- `macos/Sources/MyOmarchy/VirtualMachineWindowActivator.swift`
+- `macos/Tests/MyOmarchyTests/VMRuntimeControllerTests.swift`
+- `macos/Tests/MyOmarchyTests/VirtualMachineWindowActivatorTests.swift`
+
+**修改文件**：
+
+- `macos/run-qemu-gpu.sh`
+- `macos/Sources/MyOmarchy/QEMUGPULauncher.swift`
+- `macos/Sources/MyOmarchy/QMPConnection.swift`（仅在需要提取通用测试 seam 时修改）
+- `macos/Sources/MyOmarchy/VMApplicationController.swift`
+- `macos/Tests/MyOmarchyTests/QEMUGPULauncherTests.swift`
+
+**步骤**：
+
+1. 扩展 launcher-owned ready 行，以严格格式同时报告 QMP socket 和 QEMU PID；解析器拒绝相对路径、越界 PID、残缺行和用户输出中的 lookalike。
+2. 让 `LaunchEvent.virtualMachineReady` 携带 QMP socket 与 QEMU PID，并由控制器保存到当前 session。
+3. 用 socket fixture 为 `system_powerdown`、超时、QMP 错误和连接断开写失败测试，实现独立 `VMRuntimeController`。
+4. 安全停止只发送一次 `system_powerdown` 并等待现有 child exit 回调；超时后状态转为需要确认的强制停止，不自动发 SIGKILL。
+5. 重启设置 restart intent，只有旧 child 确认退出后才创建新 session 并重新 launch。
+6. `VirtualMachineWindowActivator` 校验 PID 属于当前已知 QEMU 实例，再调用 `NSRunningApplication` 激活；不存在或 PID 已复用时返回可显示错误，不启动新 VM。
+7. 保持 host-sleep QMP pause ownership 不变，运行控制与睡眠控制不得互相 `cont` 或复用持有中的连接。
+
+**验证**：
+
+```bash
+cd macos
+swift test --disable-sandbox --filter VMRuntimeControllerTests
+swift test --disable-sandbox --filter VirtualMachineWindowActivatorTests
+swift test --disable-sandbox --filter QEMUGPULauncherTests
+swift test --disable-sandbox --filter VMHostSleepControllerTests
+```
+
+**提交**：`feat: add safe VM runtime controls`
+
+### Task 3：创建 AppKit 管理窗口、SwiftUI 外壳和本地化基础
+
+**目标**：建立唯一管理窗口、五页导航、搜索与中英文资源，但先使用受控 fixture 展示页面，不立即删除旧窗口。
+
+**新增文件**：
+
+- `macos/Sources/MyOmarchy/ManagementWindow.swift`
+- `macos/Sources/MyOmarchy/ManagementRootView.swift`
+- `macos/Sources/MyOmarchy/ManagementNavigation.swift`
+- `macos/Sources/MyOmarchy/ManagementSearch.swift`
+- `macos/Sources/MyOmarchy/Resources/en.lproj/Localizable.strings` 或验证后的 String Catalog
+- `macos/Sources/MyOmarchy/Resources/zh-Hans.lproj/Localizable.strings` 或验证后的 String Catalog
+- `macos/Tests/MyOmarchyTests/ManagementNavigationTests.swift`
+- `macos/Tests/MyOmarchyTests/ManagementLocalizationTests.swift`
+- `macos/Tests/MyOmarchyTests/ManagementWindowTests.swift`
+
+**修改文件**：
+
+- `macos/Package.swift`
+- `macos/build-app.sh`
+- `macos/Sources/MyOmarchy/ApplicationPresentation.swift`
+- `macos/Tests/MyOmarchyTests/ApplicationPresentationTests.swift`
+
+**步骤**：
+
+1. 测试五个稳定页面 ID、默认概览、最后页面恢复和搜索索引到页面/设置锚点的映射。
+2. 创建 `ManagementWindow`，以约 `860 x 620 pt` 默认尺寸和合理最小尺寸承载 `NSHostingView<ManagementRootView>`。
+3. `windowShouldClose` 只隐藏窗口；`applicationShouldHandleReopen`、Dock 激活和“打开 My Omarchy”菜单恢复同一实例。
+4. 实现原生 `NavigationSplitView`/sidebar 语义、搜索跳转和空白页面骨架。
+5. 接入跟随系统 App 语言的英文与简体中文资源；测试全部 key 两种语言齐全，参数化文案不以字符串拼接实现。
+6. 验证浅色、深色和提高对比度下不强制旧 Tokyo Night appearance。
+
+**验证**：
+
+```bash
+cd macos
+swift test --disable-sandbox --filter ManagementNavigationTests
+swift test --disable-sandbox --filter ManagementLocalizationTests
+swift test --disable-sandbox --filter ManagementWindowTests
+swift test --disable-sandbox --filter ApplicationPresentationTests
+```
+
+**提交**：`feat: add localized SwiftUI management shell`
+
+### Task 4：实现概览页和生命周期闭环
+
+**目标**：用真实状态替换启动按钮流程，覆盖首次 readiness、启动、运行、停止、重启和失败，不显示虚假进度。
+
+**新增文件**：
+
+- `macos/Sources/MyOmarchy/OverviewView.swift`
+- `macos/Sources/MyOmarchy/ManagementStatusPresentation.swift`
+- `macos/Tests/MyOmarchyTests/OverviewPresentationTests.swift`
+
+**修改文件**：
+
+- `macos/Sources/MyOmarchy/VMApplicationController.swift`
+- `macos/Sources/MyOmarchy/ManagementRootView.swift`
+- 本地化资源
+
+**步骤**：
+
+1. 用状态矩阵测试 idle、launching、running、stopping、restarting 和 failure 下的标题、主按钮、次要按钮及 enabled 状态。
+2. readiness 只展示现有可观测项：权限、存储/资源预检、launcher 运行、QEMU/QMP ready 和退出结果。
+3. 接入启动、打开 VM、安全停止和重启命令；连续操作由 Task 1 的命令门控拒绝。
+4. 启动失败作为持久状态卡保留；新 session 成功或用户明确关闭才清除。
+5. 运行时长从控制器确认 ready 的单调时间计算，不依赖视图计时作为生命周期事实。
+6. 停止超时后显示独立强制停止确认；确认前不得发送破坏性信号。
+
+**验证**：
+
+```bash
+cd macos
+swift test --disable-sandbox --filter OverviewPresentationTests
+swift test --disable-sandbox --filter ManagementStateTests
+swift test --disable-sandbox --filter VMRuntimeControllerTests
+```
+
+**提交**：`feat: add VM lifecycle overview`
+
+### Task 5：迁移虚拟机页面和危险操作适配器
+
+**目标**：迁移启动模式、资源档位、存储位置、容量与 Factory Reset，保持现有数据安全合同。
+
+**新增文件**：
+
+- `macos/Sources/MyOmarchy/VirtualMachineView.swift`
+- `macos/Sources/MyOmarchy/ManagementAppKitPresenter.swift`
+- `macos/Tests/MyOmarchyTests/VirtualMachinePresentationTests.swift`
+- `macos/Tests/MyOmarchyTests/ManagementAppKitPresenterTests.swift`
+
+**修改文件**：
+
+- `macos/Sources/MyOmarchy/VMApplicationController.swift`
+- `macos/Sources/MyOmarchy/StartMenuWindow.swift`（提取可复用确认组件，尚不删除）
+- `macos/Tests/MyOmarchyTests/StartMenuWindowWidthTests.swift`
+- 本地化资源
+
+**步骤**：
+
+1. 测试三类生效策略：立即生效、下次启动生效、停止后可修改。
+2. 迁移 immersive/windowed 和 automatic/low-resource 控件，运行时禁用并显示准确原因。
+3. 展示存储路径、卷状态、逻辑容量和 allocated bytes；长路径可访问且不会撑破布局。
+4. 通过 AppKit presenter 复用 `NSOpenPanel`、存储校验、打开目录和 boot recovery sheet。
+5. 复用 typed reset prompt；确认仍严格匹配 `My Omarchy`，环境覆盖或目标身份不安全时不可重置。
+6. 保留现有 reset、storage marker、external volume 和 boot recovery 测试。
+
+**验证**：
+
+```bash
+cd macos
+swift test --disable-sandbox --filter VirtualMachinePresentationTests
+swift test --disable-sandbox --filter ManagementAppKitPresenterTests
+swift test --disable-sandbox --filter StorageLocationTests
+swift test --disable-sandbox --filter StartMenuWindowWidthTests
+```
+
+**提交**：`feat: migrate virtual machine settings`
+
+### Task 6：迁移集成与权限页面
+
+**目标**：迁移共享目录、端口转发、音频摘要、剪贴板、摄像头和三项权限，准确表达配置与当前运行状态。
+
+**新增文件**：
+
+- `macos/Sources/MyOmarchy/IntegrationsView.swift`
+- `macos/Sources/MyOmarchy/PermissionsView.swift`
+- `macos/Sources/MyOmarchy/IntegrationPresentation.swift`
+- `macos/Tests/MyOmarchyTests/IntegrationPresentationTests.swift`
+- `macos/Tests/MyOmarchyTests/PermissionsPresentationTests.swift`
+
+**修改文件**：
+
+- `macos/Sources/MyOmarchy/VMApplicationController.swift`
+- `macos/Sources/MyOmarchy/PortForwardingEditor.swift`
+- `macos/Sources/MyOmarchy/PermissionWindowRestorer.swift`
+- 本地化资源
+
+**步骤**：
+
+1. 测试 shared-folder 未选择、关闭、启用、路径失效，以及端口 0/1/N 条规则的展示。
+2. 集成页区分“当前运行配置”和“下次启动配置”；首版音频只读显示解析后的有效路由，不增加设备选择能力。
+3. 通过 AppKit presenter 复用共享目录选择和现有端口编辑器；保存失败就地呈现。
+4. 测试辅助功能、麦克风、摄像头四态和允许动作；可选权限拒绝不阻止启动。
+5. App 激活后刷新权限快照；系统设置往返只恢复同一管理窗口。
+6. 为剪贴板、摄像头和音频 bridge 仅展示可证明的状态，未知时显示“状态未知”而非“运行中”。
+
+**验证**：
+
+```bash
+cd macos
+swift test --disable-sandbox --filter IntegrationPresentationTests
+swift test --disable-sandbox --filter PermissionsPresentationTests
+swift test --disable-sandbox --filter SharedFolderTests
+swift test --disable-sandbox --filter PortForwardingTests
+swift test --disable-sandbox --filter AudioDevicesTests
+```
+
+**提交**：`feat: migrate integrations and permissions`
+
+### Task 7：实现真实能力边界内的诊断页
+
+**目标**：只暴露现有诊断日志、最近错误和脱敏摘要，不提前实现或伪造诊断规范中的未来能力。
+
+**新增文件**：
+
+- `macos/Sources/MyOmarchy/DiagnosticsView.swift`
+- `macos/Sources/MyOmarchy/DiagnosticSummary.swift`
+- `macos/Tests/MyOmarchyTests/DiagnosticSummaryTests.swift`
+- `macos/Tests/MyOmarchyTests/DiagnosticsPresentationTests.swift`
+
+**修改文件**：
+
+- `macos/Sources/MyOmarchy/QEMUGPULauncher.swift`
+- `macos/Sources/MyOmarchy/VMApplicationController.swift`
+- 本地化资源
+
+**步骤**：
+
+1. 以现有 `recentDiagnosticsLogPath`、`recentStandardError` 和当前 snapshot 为白名单输入生成短摘要。
+2. 测试摘要不包含注册 secret 值、HOME 原值、共享目录原值、环境变量值或 stderr 中的 token。
+3. 提供打开日志目录和复制脱敏摘要；日志不存在或目录不可访问时显示降级，不阻止停止和退出。
+4. 未实现的 zip 导出、`MYO-*` code、完整事件链和高级恢复动作不出现在 SwiftUI 树和搜索索引中。
+5. 最近错误在新 session 成功前保持可见；未知错误不默认建议重装。
+
+**验证**：
+
+```bash
+cd macos
+swift test --disable-sandbox --filter DiagnosticSummaryTests
+swift test --disable-sandbox --filter DiagnosticsPresentationTests
+swift test --disable-sandbox --filter QEMUGPULauncherTests
+```
+
+**提交**：`feat: add safe management diagnostics`
+
+### Task 8：切换唯一入口、删除旧窗口并完成全链路验证
+
+**目标**：在功能等价和自动化验证通过后切换生产入口，删除旧 UI 业务逻辑，更新文档并完成 Apple Silicon 真机验收。
+
+**删除文件**：
+
+- `macos/Sources/MyOmarchy/StartMenuWindow.swift`
+- 被新测试完整替代的 `StartMenu*` UI 测试；安全策略测试必须迁移而不是删除覆盖
+
+**修改文件**：
+
+- `macos/Sources/MyOmarchy/main.swift`
+- `macos/Sources/MyOmarchy/VMApplicationController.swift`
+- `macos/Sources/MyOmarchy/ApplicationPresentation.swift`
+- `macos/Package.swift`
+- `macos/build-app.sh`
+- `README.md`
+- `macos/README.md`
+- `macos/Tests/MyOmarchyTests/` 中相关合同测试
+
+**步骤**：
+
+1. 将 `applicationDidFinishLaunching` 切换为创建唯一 `ManagementWindow`；同一构建不再存在旧启动菜单入口。
+2. 迁移剩余 reset、boot recovery、权限和窗口测试，删除只验证旧 Tokyo Night 控件外观的测试。
+3. 删除 `StartMenuWindow` 和不再使用的自定义控件，确认不存在重复 preference store 或业务闭包。
+4. 更新 README 的启动、运行期窗口、权限、共享、端口、诊断和中英文说明。
+5. 运行完整 Swift、shell、Python、格式、secret 和供应链检查。
+6. 构建并打开 ad-hoc App，在 Apple Silicon 真机执行设计文档 13.3 的全部场景并保存结果。
+7. 用 Accessibility Inspector 或等价系统工具检查五页、状态公告、键盘顺序和中英文长文本。
+
+**自动化验证**：
+
+```bash
+cd macos
+swift test --disable-sandbox
+cd ..
+make full-check
+make app
+git diff --check
+```
+
+**真机验收**：
+
+- 只出现一个 My Omarchy 主 Dock 入口；
+- 管理窗口和 VM 窗口并存，可互相激活；
+- 关闭管理窗口不停止 VM，Dock 和 App 菜单恢复同一窗口；
+- 启动、打开 VM、安全停止、重启不产生第二个 QEMU；
+- 权限往返、共享目录、端口转发、音频、摄像头和剪贴板行为与现有版本一致；
+- 外置卷断开、睡眠/唤醒失败和启动失败不触发自动 Reset；
+- 英文、简体中文、浅色、深色、高对比度、Reduce Motion、键盘和 VoiceOver 通过。
+
+**提交**：`feat: replace start menu with management interface`
