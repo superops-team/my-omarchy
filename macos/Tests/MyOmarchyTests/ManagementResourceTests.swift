@@ -20,4 +20,40 @@ struct ManagementResourceTests {
         #expect(try ManagementLocalization.text("navigation.overview", locale: "en") == "Overview")
         #expect(try ManagementLocalization.text("navigation.overview", locale: "zh-Hans") == "概览")
     }
+
+    @Test("the management shell has complete English and Simplified Chinese copy")
+    func localizedShellCopyIsComplete() throws {
+        let keys = [
+            "navigation.overview",
+            "navigation.virtual-machine",
+            "navigation.integrations",
+            "navigation.permissions",
+            "navigation.diagnostics",
+            "navigation.sidebar",
+            "search.prompt",
+            "page.placeholder",
+            "search.lifecycle",
+            "search.launch_mode",
+            "search.resources",
+            "search.storage",
+            "search.shared_folder",
+            "search.port_forwarding",
+            "search.audio",
+            "search.clipboard",
+            "search.camera",
+            "search.accessibility_permission",
+            "search.microphone_permission",
+            "search.camera_permission",
+            "search.recent_error",
+            "search.launch_log",
+        ]
+
+        for locale in ["en", "zh-Hans"] {
+            for key in keys {
+                let value = try ManagementLocalization.text(key, locale: locale)
+                #expect(!value.isEmpty)
+                #expect(value != key)
+            }
+        }
+    }
 }

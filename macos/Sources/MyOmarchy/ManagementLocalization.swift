@@ -6,6 +6,11 @@ enum ManagementLocalizationError: Error {
 }
 
 enum ManagementLocalization {
+    static func string(_ key: String) -> String {
+        let bundle = packagedResourceBundle ?? Bundle.module
+        return bundle.localizedString(forKey: key, value: key, table: nil)
+    }
+
     static func text(_ key: String, locale: String) throws -> String {
         let bundle = packagedResourceBundle ?? Bundle.module
         guard let path = bundle.path(
