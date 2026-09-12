@@ -48,27 +48,15 @@ struct ManagementRootView: View {
         switch navigation.selection {
         case .overview:
             OverviewView(viewModel: viewModel)
-        case .virtualMachine, .integrations, .permissions, .diagnostics:
-            ManagementPagePlaceholder(page: navigation.selection)
+        case .virtualMachine:
+            VirtualMachineView(viewModel: viewModel)
+        case .integrations:
+            IntegrationsView(viewModel: viewModel)
+        case .permissions:
+            PermissionsView(viewModel: viewModel)
+        case .diagnostics:
+            DiagnosticsView(viewModel: viewModel)
         }
-    }
-}
-
-private struct ManagementPagePlaceholder: View {
-    let page: ManagementPage
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Label(page.title, systemImage: page.systemImage)
-                .font(.largeTitle.bold())
-                .accessibilityAddTraits(.isHeader)
-            Text(ManagementLocalization.string("page.placeholder"))
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(32)
-        .navigationTitle(page.title)
     }
 }
 

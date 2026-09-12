@@ -3,6 +3,7 @@ import Combine
 @MainActor
 final class ManagementViewModel: ObservableObject {
     @Published private(set) var state = ManagementState()
+    @Published private(set) var details = ManagementDetails()
 
     private var perform: (ManagementCommand) -> Void
 
@@ -26,5 +27,9 @@ final class ManagementViewModel: ObservableObject {
     @discardableResult
     func publish(event: ManagementEvent) -> Bool {
         state.apply(event)
+    }
+
+    func publish(details: ManagementDetails) {
+        self.details = details
     }
 }

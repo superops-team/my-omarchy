@@ -140,6 +140,42 @@ struct ManagementControllerBridgeTests {
         #expect(controller.exitStatus == 0)
     }
 
+    @Test("controller publishes and persists virtual machine settings")
+    func virtualMachineSettingsBridge() {
+        let suiteName = "ManagementControllerBridgeTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let fullscreenStore = FullscreenPreferenceStore(defaults: defaults)
+        let resourceStore = VMResourceProfilePreferenceStore(defaults: defaults)
+        let viewModel = ManagementViewModel { _ in }
+        let controller = VMApplicationController(
+            launcherURL: URL(fileURLWithPath: "/usr/bin/false"),
+            initialArguments: [],
+            baseEnvironment: [:],
+            fullscreenPreferenceStore: fullscreenStore,
+            resourceProfilePreferenceStore: resourceStore,
+            bundledMetrics: nil,
+            managementViewModel: viewModel
+        )
+
+        controller.refreshManagementDetails()
+        #expect(viewModel.details.isImmersive)
+        #expect(viewModel.details.resourcePreference == .automatic)
+        #expect(viewModel.send(.setImmersive(false)))
+        #expect(viewModel.send(.setResourceProfile(.lowResource)))
+        #expect(!fullscreenStore.load().isImmersive)
+        #expect(resourceStore.load() == .lowResource)
+        #expect(!viewModel.details.isImmersive)
+        #expect(viewModel.details.resourcePreference == .lowResource)
+
+        let session = UUID()
+        _ = controller.recordManagementEvent(.launchRequested(session: session))
+        #expect(!viewModel.send(.setImmersive(true)))
+        #expect(!viewModel.send(.setResourceProfile(.automatic)))
+        #expect(!fullscreenStore.load().isImmersive)
+        #expect(resourceStore.load() == .lowResource)
+    }
+
     @Test("restart enters restarting before the child exits")
     func restartWaitsForExit() throws {
         let viewModel = ManagementViewModel { _ in }

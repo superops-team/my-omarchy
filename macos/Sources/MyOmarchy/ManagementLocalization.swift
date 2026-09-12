@@ -6,12 +6,7 @@ enum ManagementLocalizationError: Error {
 }
 
 enum ManagementLocalization {
-    static func string(_ key: String) -> String {
-        let bundle = packagedResourceBundle ?? Bundle.module
-        return bundle.localizedString(forKey: key, value: key, table: nil)
-    }
-
-    static func text(_ key: String, locale: String) throws -> String {
+    static func strings(locale: String) throws -> [String: String] {
         let bundle = packagedResourceBundle ?? Bundle.module
         guard let path = bundle.path(
             forResource: "Localizable",
@@ -21,6 +16,16 @@ enum ManagementLocalization {
         ), let strings = NSDictionary(contentsOfFile: path) as? [String: String] else {
             throw ManagementLocalizationError.missingLocalization(locale)
         }
+        return strings
+    }
+
+    static func string(_ key: String) -> String {
+        let bundle = packagedResourceBundle ?? Bundle.module
+        return bundle.localizedString(forKey: key, value: key, table: nil)
+    }
+
+    static func text(_ key: String, locale: String) throws -> String {
+        let strings = try strings(locale: locale)
         guard let value = strings[key] else {
             throw ManagementLocalizationError.missingKey(key, localization: locale)
         }

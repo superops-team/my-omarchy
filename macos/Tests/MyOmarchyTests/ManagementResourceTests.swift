@@ -82,4 +82,14 @@ struct ManagementResourceTests {
             }
         }
     }
+
+    @Test("English and Simplified Chinese expose the same non-empty keys")
+    func localizationCatalogsMatch() throws {
+        let english = try ManagementLocalization.strings(locale: "en")
+        let chinese = try ManagementLocalization.strings(locale: "zh-Hans")
+
+        #expect(Set(english.keys) == Set(chinese.keys))
+        #expect(english.values.allSatisfy { !$0.isEmpty })
+        #expect(chinese.values.allSatisfy { !$0.isEmpty })
+    }
 }

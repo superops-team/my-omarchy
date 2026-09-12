@@ -65,6 +65,10 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private let windowActivator: VirtualMachineWindowActivator
     private let scheduleGracefulStopTimeout: @Sendable (@escaping @MainActor @Sendable () -> Void) -> Void
     private var startMenuWindow: StartMenuWindow?
+    private var managementWindow: ManagementWindow?
+    private lazy var managementPresenter = ManagementAppKitPresenter { [weak self] in
+        self?.managementWindow?.window ?? self?.startMenuWindow?.window
+    }
     private var volumeObserver: NSObjectProtocol?
     private var hostPowerObserver: HostPowerNotificationObserver?
     private let hostSleepCoordinator = VMHostSleepCoordinator()
@@ -145,6 +149,9 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         if accepted, case .launchRequested(let session) = event {
             activeManagementSession = session
         }
+        if accepted {
+            refreshManagementDetails()
+        }
         return accepted
     }
 
@@ -193,6 +200,67 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         try launch(arguments: launchArguments(), managementSession: session)
     }
 
+    func refreshManagementDetails() {
+        let audioPreferences = preferenceStore.load()
+        let sharedFolder = sharedFolderMenuState()
+        let recentError = managementViewModel.state.lifecycle == .failed
+            ? DiagnosticSummary.safeError(
+                supervisor.recentStandardError,
+                homeDirectory: Self.homeDirectory,
+                sharedFolderPath: sharedFolder.path
+            )
+            : nil
+        managementViewModel.publish(details: ManagementDetails(
+            isImmersive: fullscreenPreferenceStore.load().isImmersive,
+            resourcePreference: resourceProfilePreferenceStore.load(),
+            storage: storageLocationMenuState(),
+            reclaimableStorage: QEMUGPUStorageSpaceEstimate.formattedReclaimableSpace(
+                environment: baseEnvironment,
+                bundleIdentity: bundledMetrics?.identity,
+                preference: storageLocationStore.load()
+            ),
+            sharedFolder: sharedFolder,
+            portMappings: portForwardingStore.load(),
+            audioOutput: Self.audioRouteName(audioPreferences.output),
+            audioInput: Self.audioRouteName(audioPreferences.input),
+            accessibility: AXIsProcessTrusted() ? .authorized : .unavailable,
+            microphone: Self.managementPermission(MicrophonePreflight.authorizationState()),
+            camera: Self.managementPermission(CameraPreflight.authorizationState()),
+            recentDiagnosticsLogPath: supervisor.recentDiagnosticsLogPath,
+            recentErrorSummary: recentError,
+            canResetStorage: initialArguments.first != QEMUGPUStorageOption.ephemeral.rawValue
+        ))
+    }
+
+    private static func audioRouteName(_ route: AudioRouteSelection) -> String {
+        switch route {
+        case .systemDefault: "System Default"
+        case .device(_, let lastKnownName): lastKnownName
+        }
+    }
+
+    private static func managementPermission(
+        _ state: MicrophoneAuthorizationState
+    ) -> ManagementPermissionState {
+        switch state {
+        case .authorized: .authorized
+        case .notDetermined: .notDetermined
+        case .denied: .denied
+        case .restricted: .restricted
+        }
+    }
+
+    private static func managementPermission(
+        _ state: CameraAuthorizationState
+    ) -> ManagementPermissionState {
+        switch state {
+        case .authorized: .authorized
+        case .notDetermined: .notDetermined
+        case .denied: .denied
+        case .restricted: .restricted
+        }
+    }
+
     private func performManagementCommand(_ command: ManagementCommand) {
         do {
             switch command {
@@ -207,11 +275,167 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             case .restart:
                 _ = try requestGracefulRestart(nextSession: UUID())
             case .resetStorage:
-                resetVirtualMachine()
+                confirmAndResetVirtualMachine()
+            case .setImmersive(let isImmersive):
+                fullscreenPreferenceStore.save(
+                    FullscreenPreferences(isImmersive: isImmersive)
+                )
+                refreshManagementDetails()
+            case .setResourceProfile(let preference):
+                resourceProfilePreferenceStore.save(preference)
+                refreshManagementDetails()
+            case .chooseStorageLocation:
+                presentStorageLocationPicker()
+            case .openStorageLocation:
+                openStorageLocationInFinder()
+            case .chooseSharedFolder:
+                presentSharedFolderPicker()
+            case .editPortForwarding:
+                presentPortForwardingEditor()
+            case .requestAccessibility:
+                requestOptionalAccessibilityPermission()
+                refreshManagementDetails()
+            case .requestMicrophone:
+                MicrophonePreflight.requestAccess { [weak self] _ in
+                    DispatchQueue.main.async { self?.refreshManagementDetails() }
+                }
+            case .requestCamera:
+                CameraPreflight.requestAccess { [weak self] _ in
+                    DispatchQueue.main.async { self?.refreshManagementDetails() }
+                }
+            case .openMicrophoneSettings:
+                openPrivacySettings(pane: "Privacy_Microphone")
+            case .openCameraSettings:
+                openPrivacySettings(pane: "Privacy_Camera")
+            case .openDiagnosticsLog:
+                openDiagnosticsLogFolder()
+            case .copyDiagnosticSummary:
+                copyDiagnosticSummary()
+            case .useDefaultStorageLocation:
+                useDefaultStorageLocation()
+                refreshManagementDetails()
+            case .setSharedFolderEnabled(let enabled):
+                setSharedFolderEnabled(enabled)
+                refreshManagementDetails()
             }
         } catch {
             fputs("my-omarchy: management command failed: \(error.localizedDescription)\n", stderr)
         }
+    }
+
+    private func presentStorageLocationPicker() {
+        let current = storageLocationMenuState().containerPath.map {
+            URL(fileURLWithPath: $0, isDirectory: true)
+        }
+        guard let selected = managementPresenter.chooseDirectory(
+            title: "Choose where to keep the Omarchy VM",
+            message: "Choose an empty folder, or one My Omarchy already uses. The drive must be APFS.",
+            prompt: "Use Folder",
+            initialURL: current
+        ) else { return }
+        if let problem = validateStorageLocation(selected.path) {
+            managementPresenter.showWarning(
+                title: "That folder can’t hold the Omarchy VM",
+                detail: problem
+            )
+            return
+        }
+        let destination = StorageLocationPolicy.stateRoot(forContainer: selected.path)
+        guard managementPresenter.confirm(
+            title: "Keep the Omarchy VM here?",
+            detail: "My Omarchy will use \(destination) from the next launch. Your current VM is not moved.",
+            actionTitle: "Use This Folder"
+        ) else { return }
+        if let problem = chooseStorageLocation(selected.path) {
+            managementPresenter.showWarning(
+                title: "That folder can’t hold the Omarchy VM",
+                detail: problem
+            )
+        }
+        refreshManagementDetails()
+    }
+
+    private func openStorageLocationInFinder() {
+        guard let url = QEMUGPUStorageSpaceEstimate.dataDirectoryURL(
+            environment: baseEnvironment,
+            preference: storageLocationStore.load()
+        ) else { return }
+        if !FileManager.default.fileExists(atPath: url.path) {
+            guard storageLocationMenuState().isDefault else {
+                managementPresenter.showWarning(
+                    title: "Couldn’t open the data directory",
+                    detail: "Reconnect the drive that holds the selected folder."
+                )
+                return
+            }
+            try? FileManager.default.createDirectory(
+                at: url,
+                withIntermediateDirectories: false,
+                attributes: [.posixPermissions: 0o700]
+            )
+        }
+        _ = managementPresenter.open(url)
+    }
+
+    private func presentSharedFolderPicker() {
+        let current = sharedFolderMenuState().path.map {
+            URL(fileURLWithPath: $0, isDirectory: true)
+        }
+        guard let selected = managementPresenter.chooseDirectory(
+            title: "Choose a folder to share with Omarchy",
+            message: "Omarchy can read and change everything inside this folder.",
+            prompt: "Share",
+            initialURL: current
+        ) else { return }
+        if let problem = chooseSharedFolder(selected.path) {
+            managementPresenter.showWarning(title: "That folder can’t be shared", detail: problem)
+        }
+        refreshManagementDetails()
+    }
+
+    private func presentPortForwardingEditor() {
+        managementPresenter.editPortForwarding(
+            mappings: portForwardingStore.load(),
+            save: { [weak self] mappings in self?.savePortForwarding(mappings) },
+            didClose: { [weak self] in self?.refreshManagementDetails() }
+        )
+    }
+
+    private func confirmAndResetVirtualMachine() {
+        var detail = "This permanently erases apps, files, accounts, and settings in this virtual machine. This cannot be undone or recovered."
+        if let estimate = managementViewModel.details.reclaimableStorage {
+            detail += " Resetting may free up to \(estimate) of disk space."
+        }
+        managementPresenter.confirmFactoryReset(detail: detail) { [weak self] confirmed in
+            guard confirmed else { return }
+            self?.resetVirtualMachine()
+        }
+    }
+
+    private func openPrivacySettings(pane: String) {
+        guard let url = URL(
+            string: "x-apple.systempreferences:com.apple.preference.security?\(pane)"
+        ) else { return }
+        _ = managementPresenter.open(url)
+    }
+
+    private func openDiagnosticsLogFolder() {
+        guard let path = supervisor.recentDiagnosticsLogPath else { return }
+        _ = managementPresenter.open(
+            URL(fileURLWithPath: path).deletingLastPathComponent()
+        )
+    }
+
+    private func copyDiagnosticSummary() {
+        let summary = DiagnosticSummary.make(
+            lifecycle: managementViewModel.state.lifecycle,
+            startupStage: managementViewModel.state.startupStage,
+            rawError: managementViewModel.details.recentErrorSummary,
+            homeDirectory: Self.homeDirectory,
+            sharedFolderPath: managementViewModel.details.sharedFolder.path
+        )
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(summary, forType: .string)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
