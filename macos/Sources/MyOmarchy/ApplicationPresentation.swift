@@ -17,39 +17,51 @@ enum ApplicationPresentation {
         let applicationMenu = NSMenu(title: applicationName)
         applicationItem.submenu = applicationMenu
         applicationMenu.addItem(
-            withTitle: "About \(applicationName)",
+            withTitle: String(
+                format: ManagementLocalization.string("menu.about"),
+                applicationName
+            ),
             action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
             keyEquivalent: ""
         )
         applicationMenu.addItem(.separator())
         applicationMenu.addItem(
-            withTitle: "Open \(applicationName)",
+            withTitle: String(
+                format: ManagementLocalization.string("menu.open"),
+                applicationName
+            ),
             action: openManagementWindowAction,
             keyEquivalent: "0"
         )
         applicationMenu.addItem(.separator())
         applicationMenu.addItem(
-            withTitle: "Hide \(applicationName)",
+            withTitle: String(
+                format: ManagementLocalization.string("menu.hide"),
+                applicationName
+            ),
             action: #selector(NSApplication.hide(_:)),
             keyEquivalent: "h"
         )
         applicationMenu.addItem(
-            withTitle: "Quit \(applicationName)",
+            withTitle: String(
+                format: ManagementLocalization.string("menu.quit"),
+                applicationName
+            ),
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         )
 
         let windowItem = NSMenuItem()
         mainMenu.addItem(windowItem)
-        let windowMenu = NSMenu(title: "Window")
+        let windowMenu = NSMenu(title: ManagementLocalization.string("menu.window"))
         windowItem.submenu = windowMenu
         windowMenu.addItem(
-            withTitle: "Close Window",
+            withTitle: ManagementLocalization.string("menu.close_window"),
             action: #selector(NSWindow.performClose(_:)),
             keyEquivalent: "w"
         )
         windowMenu.addItem(
-            withTitle: "Minimize",
+            withTitle: ManagementLocalization.string("menu.minimize"),
             action: #selector(NSWindow.performMiniaturize(_:)),
             keyEquivalent: "m"
         )

@@ -12,6 +12,7 @@ struct ManagementWindowTests {
         defer { windowController.window.close() }
 
         #expect(windowController.window.contentLayoutRect.size == NSSize(width: 860, height: 620))
+        #expect(windowController.window.title == "My Omarchy")
         #expect(windowController.window.minSize == NSSize(width: 720, height: 520))
         #expect(windowController.window.styleMask.contains(.resizable))
         #expect(windowController.window.appearance == nil)

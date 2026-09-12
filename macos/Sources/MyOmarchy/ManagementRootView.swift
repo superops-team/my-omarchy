@@ -39,8 +39,7 @@ struct ManagementRootView: View {
     }
 
     private var searchResults: [ManagementDestination] {
-        let locale = Locale.current.identifier.hasPrefix("zh") ? "zh-Hans" : "en"
-        return ManagementSearch.results(for: searchText, locale: locale)
+        ManagementSearch.results(for: searchText, locale: ManagementLocalization.currentLocale)
     }
 
     @ViewBuilder

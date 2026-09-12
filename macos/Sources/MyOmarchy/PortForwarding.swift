@@ -161,7 +161,7 @@ enum PortForwardAvailabilityError: LocalizedError, Equatable {
 }
 
 /// Converts QEMU's authoritative host-forward bind failure into a recovery
-/// message that keeps the start menu open after the small preflight race.
+/// message that keeps the management window open after the small preflight race.
 enum PortForwardStartupFailure {
     private static let qemuBindFailure = "could not set up host forwarding rule"
 

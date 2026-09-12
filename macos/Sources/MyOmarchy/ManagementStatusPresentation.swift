@@ -49,7 +49,7 @@ struct OverviewPresentation: Equatable {
                 statusKey: "overview.status.restarting",
                 stageKey: stageKey(for: state.startupStage),
                 primaryCommand: nil,
-                secondaryCommands: [],
+                secondaryCommands: state.forceStopAvailable ? [.forceStop] : [],
                 isBusy: true,
                 lastExitStatus: nil
             )

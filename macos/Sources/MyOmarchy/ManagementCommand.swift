@@ -54,8 +54,10 @@ enum ManagementCommandPolicy {
     }
 
     static func allows(_ command: ManagementCommand, in state: ManagementState) -> Bool {
+        guard state.operation == .none || command == .forceStop else { return false }
         if command == .forceStop {
-            return state.lifecycle == .stopping && state.forceStopAvailable
+            return (state.lifecycle == .stopping || state.lifecycle == .restarting)
+                && state.forceStopAvailable
         }
         return allows(command, while: state.lifecycle)
     }

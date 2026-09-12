@@ -259,7 +259,7 @@ struct VMRunLifecycleTests {
         #expect(!decision.reportsBootRecoveryFailure)
     }
 
-    @Test("an incompatible saved VM stays on the start menu for reset")
+    @Test("an incompatible saved VM stays in management for reset")
     func incompatibleWorkspaceOffersReset() {
         let decision = VMExitPresentationDecision.make(
             status: VMExitPresentationDecision.incompatibleWorkspaceStatus,
@@ -298,7 +298,7 @@ struct VMRunLifecycleTests {
         #expect(!whileStopping.requiresBootRecoveryConsent)
     }
 
-    @Test("a failed boot recovery stays on the start menu with a specific error")
+    @Test("a failed boot recovery stays in management with a specific error")
     func bootRecoveryFailureIsSpecific() {
         let failed = VMExitPresentationDecision.make(
             status: VMExitPresentationDecision.bootRecoveryFailedStatus,

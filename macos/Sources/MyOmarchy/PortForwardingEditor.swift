@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-/// A fixed-size editor keeps a growing forwarding list out of the launch menu.
+/// A fixed-size editor keeps a growing forwarding list out of the management page.
 /// Rows scroll independently once they no longer fit in the sheet.
 @MainActor
 final class PortForwardingEditor: NSObject, NSWindowDelegate, NSTextFieldDelegate {

@@ -6,6 +6,14 @@ enum ManagementLocalizationError: Error {
 }
 
 enum ManagementLocalization {
+    static var currentLocale: String {
+        let bundle = packagedResourceBundle ?? Bundle.module
+        let preferred = bundle.preferredLocalizations.first
+            ?? Bundle.main.preferredLocalizations.first
+            ?? "en"
+        return preferred.hasPrefix("zh") ? "zh-Hans" : "en"
+    }
+
     static func strings(locale: String) throws -> [String: String] {
         let bundle = packagedResourceBundle ?? Bundle.module
         guard let path = bundle.path(

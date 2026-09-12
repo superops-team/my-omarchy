@@ -64,10 +64,9 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private let runtimeControllerFactory: (String) -> VMRuntimeController
     private let windowActivator: VirtualMachineWindowActivator
     private let scheduleGracefulStopTimeout: @Sendable (@escaping @MainActor @Sendable () -> Void) -> Void
-    private var startMenuWindow: StartMenuWindow?
-    private var managementWindow: ManagementWindow?
+    private(set) var managementWindow: ManagementWindow?
     private lazy var managementPresenter = ManagementAppKitPresenter { [weak self] in
-        self?.managementWindow?.window ?? self?.startMenuWindow?.window
+        self?.managementWindow?.window
     }
     private var volumeObserver: NSObjectProtocol?
     private var hostPowerObserver: HostPowerNotificationObserver?
@@ -86,6 +85,10 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private var activeManagementSession: UUID?
     private var activeRuntimeController: VMRuntimeController?
     private var activeQEMUProcessIdentifier: Int32?
+    private var activeSharedFolderPath: String?
+    private var activePortMappings: [PortForwardMapping] = []
+    private var pendingInitialReset: Bool
+    private var virtualMachineReadyDate: Date?
 
     /// True while a modal alert this controller opened itself (rather than
     /// AppKit) is on screen awaiting a click. `finish()`'s watchdog checks
@@ -137,6 +140,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         self.runtimeControllerFactory = runtimeControllerFactory
         self.windowActivator = windowActivator
         self.scheduleGracefulStopTimeout = scheduleGracefulStopTimeout
+        pendingInitialReset = initialArguments.first == QEMUGPUStorageOption.resetStorage.rawValue
+            || initialArguments.first == QEMUGPUStorageOption.resetStorageOnly.rawValue
         super.init()
         self.managementViewModel.connect { [weak self] command in
             self?.performManagementCommand(command)
@@ -191,9 +196,16 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         guard let session = activeManagementSession,
               let activeRuntimeController else { return false }
         try activeRuntimeController.requestGracefulShutdown()
-        return recordManagementEvent(
+        let accepted = recordManagementEvent(
             .restartRequested(session: session, nextSession: nextSession)
         )
+        if accepted {
+            scheduleGracefulStopTimeout { [weak self] in
+                guard let self, self.activeManagementSession == session else { return }
+                _ = self.recordManagementEvent(.gracefulStopTimedOut(session: session))
+            }
+        }
+        return accepted
     }
 
     func launchPreparedVirtualMachine(session: UUID) throws {
@@ -202,25 +214,38 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
 
     func refreshManagementDetails() {
         let audioPreferences = preferenceStore.load()
+        let resourcePreference = resourceProfilePreferenceStore.load()
+        let effectiveResourceProfile = VMResourceLaunchConfiguration.make(
+            baseEnvironment: [:],
+            preference: resourcePreference
+        ).profile
         let sharedFolder = sharedFolderMenuState()
+        let rawError = managementViewModel.state.lastFailureSummary
+            ?? supervisor.recentStandardError
         let recentError = managementViewModel.state.lifecycle == .failed
             ? DiagnosticSummary.safeError(
-                supervisor.recentStandardError,
+                rawError,
                 homeDirectory: Self.homeDirectory,
                 sharedFolderPath: sharedFolder.path
             )
             : nil
         managementViewModel.publish(details: ManagementDetails(
             isImmersive: fullscreenPreferenceStore.load().isImmersive,
-            resourcePreference: resourceProfilePreferenceStore.load(),
+            resourcePreference: resourcePreference,
+            effectiveResourceProfile: effectiveResourceProfile,
             storage: storageLocationMenuState(),
             reclaimableStorage: QEMUGPUStorageSpaceEstimate.formattedReclaimableSpace(
                 environment: baseEnvironment,
                 bundleIdentity: bundledMetrics?.identity,
                 preference: storageLocationStore.load()
             ),
+            logicalDiskSize: bundledMetrics.map {
+                StorageLocationPolicy.format(bytes: $0.workingDiskBytes)
+            },
             sharedFolder: sharedFolder,
             portMappings: portForwardingStore.load(),
+            activeSharedFolderPath: activeSharedFolderPath,
+            activePortMappings: activePortMappings,
             audioOutput: Self.audioRouteName(audioPreferences.output),
             audioInput: Self.audioRouteName(audioPreferences.input),
             accessibility: AXIsProcessTrusted() ? .authorized : .unavailable,
@@ -228,13 +253,14 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             camera: Self.managementPermission(CameraPreflight.authorizationState()),
             recentDiagnosticsLogPath: supervisor.recentDiagnosticsLogPath,
             recentErrorSummary: recentError,
-            canResetStorage: initialArguments.first != QEMUGPUStorageOption.ephemeral.rawValue
+            canResetStorage: initialArguments.first != QEMUGPUStorageOption.ephemeral.rawValue,
+            readyDate: virtualMachineReadyDate
         ))
     }
 
     private static func audioRouteName(_ route: AudioRouteSelection) -> String {
         switch route {
-        case .systemDefault: "System Default"
+        case .systemDefault: ManagementLocalization.string("integration.audio.system_default")
         case .device(_, let lastKnownName): lastKnownName
         }
     }
@@ -275,6 +301,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             case .restart:
                 _ = try requestGracefulRestart(nextSession: UUID())
             case .resetStorage:
+                guard recordManagementEvent(.resetRequested) else { return }
                 confirmAndResetVirtualMachine()
             case .setImmersive(let isImmersive):
                 fullscreenPreferenceStore.save(
@@ -328,27 +355,30 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             URL(fileURLWithPath: $0, isDirectory: true)
         }
         guard let selected = managementPresenter.chooseDirectory(
-            title: "Choose where to keep the Omarchy VM",
-            message: "Choose an empty folder, or one My Omarchy already uses. The drive must be APFS.",
-            prompt: "Use Folder",
+            title: ManagementLocalization.string("storage.picker.title"),
+            message: ManagementLocalization.string("storage.picker.message"),
+            prompt: ManagementLocalization.string("storage.picker.action"),
             initialURL: current
         ) else { return }
         if let problem = validateStorageLocation(selected.path) {
             managementPresenter.showWarning(
-                title: "That folder can’t hold the Omarchy VM",
+                title: ManagementLocalization.string("storage.invalid.title"),
                 detail: problem
             )
             return
         }
         let destination = StorageLocationPolicy.stateRoot(forContainer: selected.path)
         guard managementPresenter.confirm(
-            title: "Keep the Omarchy VM here?",
-            detail: "My Omarchy will use \(destination) from the next launch. Your current VM is not moved.",
-            actionTitle: "Use This Folder"
+            title: ManagementLocalization.string("storage.confirm.title"),
+            detail: String(
+                format: ManagementLocalization.string("storage.confirm.detail"),
+                destination
+            ),
+            actionTitle: ManagementLocalization.string("storage.confirm.action")
         ) else { return }
         if let problem = chooseStorageLocation(selected.path) {
             managementPresenter.showWarning(
-                title: "That folder can’t hold the Omarchy VM",
+                title: ManagementLocalization.string("storage.invalid.title"),
                 detail: problem
             )
         }
@@ -363,8 +393,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         if !FileManager.default.fileExists(atPath: url.path) {
             guard storageLocationMenuState().isDefault else {
                 managementPresenter.showWarning(
-                    title: "Couldn’t open the data directory",
-                    detail: "Reconnect the drive that holds the selected folder."
+                    title: ManagementLocalization.string("storage.open_failed.title"),
+                    detail: ManagementLocalization.string("storage.open_failed.detail")
                 )
                 return
             }
@@ -382,13 +412,16 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             URL(fileURLWithPath: $0, isDirectory: true)
         }
         guard let selected = managementPresenter.chooseDirectory(
-            title: "Choose a folder to share with Omarchy",
-            message: "Omarchy can read and change everything inside this folder.",
-            prompt: "Share",
+            title: ManagementLocalization.string("shared_folder.picker.title"),
+            message: ManagementLocalization.string("shared_folder.picker.message"),
+            prompt: ManagementLocalization.string("shared_folder.picker.action"),
             initialURL: current
         ) else { return }
         if let problem = chooseSharedFolder(selected.path) {
-            managementPresenter.showWarning(title: "That folder can’t be shared", detail: problem)
+            managementPresenter.showWarning(
+                title: ManagementLocalization.string("shared_folder.invalid.title"),
+                detail: problem
+            )
         }
         refreshManagementDetails()
     }
@@ -402,13 +435,20 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     }
 
     private func confirmAndResetVirtualMachine() {
-        var detail = "This permanently erases apps, files, accounts, and settings in this virtual machine. This cannot be undone or recovered."
+        var detail = ManagementLocalization.string("reset.confirm.detail")
         if let estimate = managementViewModel.details.reclaimableStorage {
-            detail += " Resetting may free up to \(estimate) of disk space."
+            detail += " " + String(
+                format: ManagementLocalization.string("reset.confirm.space"),
+                estimate
+            )
         }
         managementPresenter.confirmFactoryReset(detail: detail) { [weak self] confirmed in
-            guard confirmed else { return }
-            self?.resetVirtualMachine()
+            guard let self else { return }
+            guard confirmed else {
+                _ = self.recordManagementEvent(.resetCancelled)
+                return
+            }
+            self.resetVirtualMachine()
         }
     }
 
@@ -441,108 +481,38 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         observeVolumeUnmounts()
         observeHostPowerEvents()
-        showStartMenu()
+        showManagementWindow()
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
-        startMenuWindow?.applicationDidBecomeActive()
+        refreshManagementDetails()
     }
 
-    private func showStartMenu() {
-        let resetOptions = [
-            QEMUGPUStorageOption.resetStorage.rawValue,
-            QEMUGPUStorageOption.resetStorageOnly.rawValue,
-        ]
-        let initialResetRequested = initialArguments.first.map(resetOptions.contains) ?? false
-        let canResetStorage = initialArguments.first != QEMUGPUStorageOption.ephemeral.rawValue
-        let startMenu = StartMenuWindow(
-            accessibilityStatus: { AXIsProcessTrusted() },
-            microphoneStatus: { MicrophonePreflight.authorizationState() },
-            cameraStatus: { CameraPreflight.authorizationState() },
-            requestAccessibility: { [weak self] in
-                self?.requestOptionalAccessibilityPermission()
-            },
-            requestMicrophone: { completion in
-                MicrophonePreflight.requestAccess(completion: completion)
-            },
-            requestCamera: { completion in
-                CameraPreflight.requestAccess(completion: completion)
-            },
-            canResetStorage: canResetStorage,
-            storageLocation: { [weak self] in
-                guard canResetStorage, let self else { return nil }
-                return QEMUGPUStorageSpaceEstimate.dataDirectoryDisplayPath(
-                    environment: self.baseEnvironment,
-                    preference: self.storageLocationStore.load()
-                )
-            },
-            storageLocationURL: { [weak self] in
-                guard canResetStorage, let self else { return nil }
-                return QEMUGPUStorageSpaceEstimate.dataDirectoryURL(
-                    environment: self.baseEnvironment,
-                    preference: self.storageLocationStore.load()
-                )
-            },
-            storageSpaceEstimate: { [weak self] in
-                guard let self else { return nil }
-                return QEMUGPUStorageSpaceEstimate.formattedReclaimableSpace(
-                    environment: self.baseEnvironment,
-                    bundleIdentity: self.bundledMetrics?.identity,
-                    preference: self.storageLocationStore.load()
-                )
-            },
-            storageLocationStatus: { [weak self] in
-                self?.storageLocationMenuState() ?? .defaultLocation
-            },
-            validateStorageLocation: { [weak self] path in
-                self?.validateStorageLocation(path)
-            },
-            chooseStorageLocation: { [weak self] path in
-                self?.chooseStorageLocation(path)
-            },
-            useDefaultStorageLocation: { [weak self] in
-                self?.useDefaultStorageLocation()
-            },
-            resetStorage: { [weak self] in
-                self?.resetVirtualMachine()
-            },
-            sharedFolderStatus: { [weak self] in
-                self?.sharedFolderMenuState() ?? SharedFolderMenuState.disabled
-            },
-            chooseSharedFolder: { [weak self] path in
-                self?.chooseSharedFolder(path)
-            },
-            setSharedFolderEnabled: { [weak self] enabled in
-                self?.setSharedFolderEnabled(enabled)
-            },
-            portForwardingStatus: { [weak self] in
-                self?.portForwardingStore.load() ?? []
-            },
-            savePortForwarding: { [weak self] mappings in
-                self?.savePortForwarding(mappings)
-            },
-            immersiveMode: { [weak self] in
-                self?.fullscreenPreferenceStore.load().isImmersive ?? true
-            },
-            setImmersiveMode: { [weak self] isImmersive in
-                self?.fullscreenPreferenceStore.save(
-                    FullscreenPreferences(isImmersive: isImmersive)
-                )
-            },
-            resourceProfilePreference: { [weak self] in
-                self?.resourceProfilePreferenceStore.load() ?? .automatic
-            },
-            setResourceProfilePreference: { [weak self] preference in
-                self?.resourceProfilePreferenceStore.save(preference)
-            },
-            launch: { [weak self] in
-                self?.startVirtualMachine()
-            }
-        )
-        startMenuWindow = startMenu
-        startMenu.show()
-        if initialResetRequested {
-            startMenu.promptForReset()
+    func applicationShouldHandleReopen(
+        _ sender: NSApplication,
+        hasVisibleWindows flag: Bool
+    ) -> Bool {
+        showManagementWindow()
+        return true
+    }
+
+    @objc func openManagementWindow(_ sender: Any?) {
+        showManagementWindow()
+    }
+
+    private func showManagementWindow() {
+        if managementWindow == nil {
+            managementWindow = ManagementWindow(
+                viewModel: managementViewModel,
+                navigation: ManagementNavigation()
+            )
+        }
+        refreshManagementDetails()
+        managementWindow?.show()
+
+        if pendingInitialReset {
+            pendingInitialReset = false
+            _ = managementViewModel.send(.resetStorage)
         }
     }
 
@@ -570,7 +540,6 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             // Switching to the default is an acceptable way to start a VM, so
             // both `.available` and `.switchedToDefault` proceed here.
             guard resolveStorageLocationAvailability() != .cancelled else {
-                startMenuWindow?.launchDidAbort()
                 return
             }
             var approvedBootRecovery = allowBootRecovery
@@ -588,11 +557,14 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 switch BootRecoveryLaunchGate.decide(
                     preflight: preflight,
                     confirm: { [weak self] in
-                        self?.startMenuWindow?.confirmBootRecovery() ?? false
+                        self?.managementPresenter.confirm(
+                            title: ManagementRecoveryPresentation.bootRecoveryConfirmationTitle,
+                            detail: ManagementRecoveryPresentation.bootRecoveryConfirmationDetail,
+                            actionTitle: ManagementLocalization.string("recovery.boot.action")
+                        ) ?? false
                     }
                 ) {
                 case .cancel:
-                    startMenuWindow?.launchDidAbort()
                     return
                 case .launch(let allowBootRecovery):
                     approvedBootRecovery = allowBootRecovery
@@ -639,21 +611,25 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         // so the reset is abandoned and they get an accurate confirmation the
         // next time they ask for one.
         guard resolveStorageLocationAvailability() == .available else {
-            startMenuWindow?.resetDidAbort()
+            _ = recordManagementEvent(.resetFinished(status: 1))
             return
         }
         do {
             let context = childLaunchContext()
-            guard context.storageUnavailableReason == nil else {
-                startMenuWindow?.resetDidFinish(
-                    errorMessage: context.storageUnavailableReason
+            if let reason = context.storageUnavailableReason {
+                managementPresenter.showWarning(
+                    title: ManagementLocalization.string("reset.failed.title"),
+                    detail: reason
                 )
+                _ = recordManagementEvent(.resetFinished(status: 1))
                 return
             }
-            guard context.resourceUnavailableReason == nil else {
-                startMenuWindow?.resetDidFinish(
-                    errorMessage: context.resourceUnavailableReason
+            if let reason = context.resourceUnavailableReason {
+                managementPresenter.showWarning(
+                    title: ManagementLocalization.string("reset.failed.title"),
+                    detail: reason
                 )
+                _ = recordManagementEvent(.resetFinished(status: 1))
                 return
             }
             activeStateRoot = context.stateRoot
@@ -666,7 +642,11 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             }
             childRunning = true
         } catch {
-            startMenuWindow?.resetDidFinish(errorMessage: error.localizedDescription)
+            managementPresenter.showWarning(
+                title: ManagementLocalization.string("reset.failed.title"),
+                detail: error.localizedDescription
+            )
+            _ = recordManagementEvent(.resetFinished(status: 1))
         }
     }
 
@@ -677,17 +657,23 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         hostSleepCoordinator.disconnect()
         let wasStopping = lifecycle.isStopping
         lifecycle.childExited()
+        _ = recordManagementEvent(.resetFinished(status: status))
         if applicationTerminationPending {
             NSApp.reply(toApplicationShouldTerminate: true)
         } else if wasStopping {
             finish(status: status)
         } else if status == 0 {
-            startMenuWindow?.resetDidFinish(errorMessage: nil)
+            managementPresenter.showInformation(
+                title: ManagementLocalization.string("reset.success.title"),
+                detail: ManagementLocalization.string("reset.success.detail")
+            )
         } else {
-            startMenuWindow?.resetDidFinish(
-                errorMessage: "The VM disk could not be reset. Try again, or reinstall the latest My Omarchy app."
+            managementPresenter.showWarning(
+                title: ManagementLocalization.string("reset.failed.title"),
+                detail: ManagementLocalization.string("reset.failed.detail")
             )
         }
+        refreshManagementDetails()
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -820,6 +806,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             ) { [weak self] status in
                 self?.childDidExit(status: status)
             }
+            activeSharedFolderPath = environment[SharedFolderPolicy.environmentKey]
+            activePortMappings = context.portForwardMappings
         } catch {
             activeLaunchAllowedBootRecovery = false
             activeManagementSession = nil
@@ -852,12 +840,12 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             return
         }
         virtualMachineReachedStart = true
+        virtualMachineReadyDate = Date()
         if let activeManagementSession {
             _ = recordManagementEvent(.virtualMachineReady(session: activeManagementSession))
         }
         NSApp.setActivationPolicy(ApplicationPresentation.runningActivationPolicy)
-        startMenuWindow?.dismiss()
-        startMenuWindow = nil
+        refreshManagementDetails()
     }
 
     private func failHostSleepControlSetup(detail: String) {
@@ -1179,6 +1167,9 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         childRunning = false
         activeRuntimeController = nil
         activeQEMUProcessIdentifier = nil
+        virtualMachineReadyDate = nil
+        activeSharedFolderPath = nil
+        activePortMappings = []
         var restartSession: UUID?
         var completedManagementStop = false
         if let managementSession = activeManagementSession {
@@ -1225,31 +1216,36 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 )
             } catch {
                 fputs("my-omarchy: restart failed: \(error.localizedDescription)\n", stderr)
+                _ = recordManagementEvent(
+                    .launchFailed(message: error.localizedDescription)
+                )
             }
         } else if let hostSleepControlFailure {
-            startMenuWindow?.launchDidFail(
-                errorMessage: launchFailureMessage(
-                    hostSleepControlFailure,
-                    diagnosticsLogPath: diagnosticsLogPath
+            managementPresenter.showWarning(
+                title: "Safe Mac sleep is unavailable",
+                detail: launchFailureMessage(
+                    hostSleepControlFailure, diagnosticsLogPath: diagnosticsLogPath
                 )
             )
         } else {
             if presentation.showsStartupFailure,
-               let startMenuWindow,
                let portFailure = PortForwardStartupFailure.message(
                    standardError: recentStandardError,
                    mappings: portForwardingStore.load()
                ) {
-                startMenuWindow.launchDidFail(
-                    errorMessage: launchFailureMessage(
-                        portFailure,
-                        diagnosticsLogPath: diagnosticsLogPath
+                managementPresenter.showWarning(
+                    title: "My Omarchy couldn’t start",
+                    detail: launchFailureMessage(
+                        portFailure, diagnosticsLogPath: diagnosticsLogPath
                     )
                 )
                 return
             }
             if presentation.requiresWorkspaceReset {
-                startMenuWindow?.launchRequiresReset()
+                managementPresenter.showWarning(
+                    title: "Reset Omarchy to continue",
+                    detail: ManagementRecoveryPresentation.incompatibleWorkspaceDetail
+                )
                 return
             }
             switch BootRecoveryChildExitGate.decide(
@@ -1257,9 +1253,10 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 launchWasAuthorized: launchAllowedBootRecovery
             ) {
             case .reportFailure:
-                startMenuWindow?.launchDidFail(
-                    errorMessage: launchFailureMessage(
-                        "My Omarchy could not complete the one-time boot-file pairing. The saved VM was not reset or upgraded. You can safely try again.",
+                managementPresenter.showWarning(
+                    title: "My Omarchy couldn’t prepare the saved VM",
+                    detail: launchFailureMessage(
+                        "The saved VM was not reset or upgraded. You can safely try again.",
                         diagnosticsLogPath: diagnosticsLogPath
                     )
                 )
@@ -1268,11 +1265,15 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 switch BootRecoveryLaunchGate.decide(
                     preflight: .requiresConfirmation,
                     confirm: { [weak self] in
-                        self?.startMenuWindow?.confirmBootRecovery() ?? false
+                        self?.managementPresenter.confirm(
+                            title: ManagementRecoveryPresentation.bootRecoveryConfirmationTitle,
+                            detail: ManagementRecoveryPresentation.bootRecoveryConfirmationDetail,
+                            actionTitle: ManagementLocalization.string("recovery.boot.action")
+                        ) ?? false
                     }
                 ) {
                 case .cancel:
-                    startMenuWindow?.launchDidAbort()
+                    break
                 case .launch:
                     // Retry the same configured workspace directly. Re-running
                     // availability resolution here could offer to switch from
@@ -1292,34 +1293,28 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 break
             }
             if presentation.showsStartupFailure {
-                startMenuWindow?.dismiss()
-                startMenuWindow = nil
-                let alert = NSAlert()
-                alert.alertStyle = .critical
-                alert.messageText = "My Omarchy couldn’t start"
-                alert.informativeText = launchFailureMessage(
-                    "The app’s virtual machine stopped during startup. Reinstall the latest Omarchy app and try again.",
-                    diagnosticsLogPath: diagnosticsLogPath
+                managementPresenter.showWarning(
+                    title: "My Omarchy couldn’t start",
+                    detail: launchFailureMessage(
+                        "The virtual machine stopped during startup. Review Diagnostics and try again.",
+                        diagnosticsLogPath: diagnosticsLogPath
+                    )
                 )
-                alert.addButton(withTitle: "Close")
-                alert.runModal()
             }
-            finish(status: status)
+            refreshManagementDetails()
         }
     }
 
     private func failLaunch(_ error: Error) {
         fputs("my-omarchy: \(error.localizedDescription)\n", stderr)
-        guard let startMenuWindow else {
-            finish(status: 1)
-            return
-        }
-        startMenuWindow.launchDidFail(
-            errorMessage: launchFailureMessage(
-                error.localizedDescription,
-                diagnosticsLogPath: supervisor.recentDiagnosticsLogPath
+        _ = recordManagementEvent(.launchFailed(message: error.localizedDescription))
+        managementPresenter.showWarning(
+            title: "My Omarchy couldn’t start",
+            detail: launchFailureMessage(
+                error.localizedDescription, diagnosticsLogPath: supervisor.recentDiagnosticsLogPath
             )
         )
+        refreshManagementDetails()
     }
 
     private func launchFailureMessage(
@@ -1329,7 +1324,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         guard let diagnosticsLogPath, !diagnosticsLogPath.isEmpty else {
             return message
         }
-        return "\(message)\n\nDiagnostic log: \(diagnosticsLogPath)"
+        let filename = URL(fileURLWithPath: diagnosticsLogPath).lastPathComponent
+        return "\(message)\n\nDiagnostic log: \(filename)"
     }
 
     private func finish(status: Int32) {

@@ -78,7 +78,7 @@ enum SharedFolderPolicyError: LocalizedError, Equatable {
     }
 }
 
-/// Mirrors the launcher script's own checks so the start menu can explain a
+/// Mirrors the launcher script's own checks so management can explain a
 /// rejected folder before QEMU ever sees it. The guest gains full read/write
 /// access as the Mac user, so whole-home and system trees stay off limits.
 enum SharedFolderPolicy {
@@ -178,7 +178,7 @@ struct SharedFolderLaunchConfiguration: Equatable {
     }
 }
 
-/// What the start menu shows for the share row.
+/// What the management interface shows for the share row.
 struct SharedFolderMenuState: Equatable {
     let path: String?
     let displayPath: String?

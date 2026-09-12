@@ -80,6 +80,18 @@ struct ManagementStateTests {
         #expect(state.sessionID == retrySession)
     }
 
+    @Test("a preflight failure stays visible until another launch starts")
+    func preflightFailurePersists() {
+        var state = ManagementState()
+        let failureAccepted = state.apply(.launchFailed(message: "Storage is unavailable"))
+        #expect(failureAccepted)
+        #expect(state.lifecycle == .failed)
+        #expect(state.lastFailureSummary == "Storage is unavailable")
+
+        _ = state.apply(.launchRequested(session: UUID()))
+        #expect(state.lastFailureSummary == nil)
+    }
+
     @Test("restart waits for the running child to exit before creating a new session")
     func restartIsSequential() {
         let runningSession = UUID()
@@ -119,5 +131,58 @@ struct ManagementStateTests {
         #expect(timeoutAccepted)
         #expect(state.forceStopAvailable)
         #expect(ManagementCommandPolicy.allows(.forceStop, in: state))
+    }
+
+    @Test("restart exposes force stop only after its graceful shutdown times out")
+    func restartForceStopRequiresTimeout() {
+        let session = UUID()
+        var state = ManagementState()
+        _ = state.apply(.launchRequested(session: session))
+        _ = state.apply(.virtualMachineReady(session: session))
+        _ = state.apply(.restartRequested(session: session, nextSession: UUID()))
+
+        #expect(!ManagementCommandPolicy.allows(.forceStop, in: state))
+        let timeoutAccepted = state.apply(.gracefulStopTimedOut(session: session))
+        #expect(timeoutAccepted)
+        #expect(ManagementCommandPolicy.allows(.forceStop, in: state))
+    }
+
+    @Test("reset blocks other mutating commands until it finishes")
+    func resetIsMutuallyExclusive() {
+        var state = ManagementState()
+        let requestAccepted = state.apply(.resetRequested)
+        #expect(requestAccepted)
+        #expect(state.operation == .resetStorage)
+        #expect(!ManagementCommandPolicy.allows(.launch, in: state))
+        #expect(!ManagementCommandPolicy.allows(.resetStorage, in: state))
+        let finishAccepted = state.apply(.resetFinished(status: 0))
+        #expect(finishAccepted)
+        #expect(state.lifecycle == .idle)
+        #expect(state.operation == .none)
+        #expect(ManagementCommandPolicy.allows(.launch, in: state))
+    }
+
+    @Test("successful reset clears a previous launch failure")
+    func successfulResetClearsFailure() {
+        var state = ManagementState()
+        _ = state.apply(.launchFailed(message: "Old failure"))
+        _ = state.apply(.resetRequested)
+        _ = state.apply(.resetFinished(status: 0))
+
+        #expect(state.lifecycle == .idle)
+        #expect(state.lastFailureSummary == nil)
+        #expect(state.lastExitStatus == nil)
+    }
+
+    @Test("cancelling reset preserves the previous failure")
+    func cancelledResetPreservesFailure() {
+        var state = ManagementState()
+        _ = state.apply(.launchFailed(message: "Old failure"))
+        _ = state.apply(.resetRequested)
+        _ = state.apply(.resetCancelled)
+
+        #expect(state.lifecycle == .failed)
+        #expect(state.operation == .none)
+        #expect(state.lastFailureSummary == "Old failure")
     }
 }

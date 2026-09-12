@@ -18,7 +18,6 @@ struct OverviewView: View {
             .frame(maxWidth: 720, alignment: .leading)
             .padding(32)
         }
-        .navigationTitle(ManagementLocalization.string("navigation.overview"))
         .confirmationDialog(
             ManagementLocalization.string("overview.force_stop.title"),
             isPresented: $confirmsForceStop,
@@ -77,6 +76,17 @@ struct OverviewView: View {
                     .textSelection(.enabled)
                 }
 
+                if let readyDate = viewModel.details.readyDate {
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        Text(
+                            ManagementLocalization.string("overview.runtime")
+                                + " "
+                                + runtimeDescription(from: readyDate, to: context.date)
+                        )
+                        .foregroundStyle(.secondary)
+                    }
+                }
+
                 actionRow
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -97,7 +107,10 @@ struct OverviewView: View {
                     .keyboardShortcut(.defaultAction)
                 }
 
-                ForEach(presentation.secondaryCommands, id: \.self) { command in
+                ForEach(
+                    Array(presentation.secondaryCommands.enumerated()),
+                    id: \.offset
+                ) { _, command in
                     Button(command.title) {
                         if command == .forceStop {
                             confirmsForceStop = true
@@ -116,19 +129,53 @@ struct OverviewView: View {
             Text(ManagementLocalization.string("overview.preparation.title"))
                 .font(.headline)
             Label(
-                ManagementLocalization.string("overview.preparation.permissions"),
-                systemImage: "checkmark.shield"
+                preparationPermissionsText,
+                systemImage: permissionsReady ? "checkmark.shield.fill" : "exclamationmark.shield"
             )
             Label(
                 ManagementLocalization.string("overview.preparation.configuration"),
-                systemImage: "slider.horizontal.3"
+                systemImage: configurationReady ? "checkmark.circle.fill" : "exclamationmark.circle"
             )
             Label(
-                ManagementLocalization.string("overview.preparation.launch"),
-                systemImage: "play.circle"
+                launchPreparationText,
+                systemImage: viewModel.state.startupStage == .qemuReady
+                    ? "checkmark.circle.fill"
+                    : "play.circle"
             )
         }
         .foregroundStyle(.secondary)
+    }
+
+    private var permissionsReady: Bool {
+        viewModel.details.accessibility == .authorized
+            && viewModel.details.microphone != .restricted
+            && viewModel.details.camera != .restricted
+    }
+
+    private var configurationReady: Bool {
+        viewModel.details.storage.problem == nil
+            && viewModel.details.effectiveResourceProfile != nil
+    }
+
+    private var preparationPermissionsText: String {
+        permissionsReady
+            ? ManagementLocalization.string("overview.preparation.permissions_ready")
+            : ManagementLocalization.string("overview.preparation.permissions_limited")
+    }
+
+    private var launchPreparationText: String {
+        switch viewModel.state.startupStage {
+        case .none: ManagementLocalization.string("overview.preparation.launch_waiting")
+        case .preflight: ManagementLocalization.string("overview.stage.preflight")
+        case .launcherRunning: ManagementLocalization.string("overview.stage.launcher_running")
+        case .qemuReady: ManagementLocalization.string("overview.stage.qemu_ready")
+        case .exited: ManagementLocalization.string("overview.stage.exited")
+        }
+    }
+
+    private func runtimeDescription(from start: Date, to end: Date) -> String {
+        let seconds = max(0, Int(end.timeIntervalSince(start)))
+        return String(format: "%02d:%02d:%02d", seconds / 3600, (seconds / 60) % 60, seconds % 60)
     }
 
     private var statusSymbol: String {
@@ -159,6 +206,12 @@ private extension ManagementCommand {
         case .forceStop: ManagementLocalization.string("command.force_stop")
         case .restart: ManagementLocalization.string("command.restart")
         case .resetStorage: ManagementLocalization.string("command.reset_storage")
+        case .setImmersive, .setResourceProfile, .chooseStorageLocation,
+             .useDefaultStorageLocation, .openStorageLocation, .chooseSharedFolder,
+             .setSharedFolderEnabled, .editPortForwarding, .requestAccessibility,
+             .requestMicrophone, .requestCamera, .openMicrophoneSettings,
+             .openCameraSettings, .openDiagnosticsLog, .copyDiagnosticSummary:
+            ""
         }
     }
 }

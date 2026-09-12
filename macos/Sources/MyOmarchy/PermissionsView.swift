@@ -28,7 +28,6 @@ struct PermissionsView: View {
             )
         }
         .formStyle(.grouped)
-        .navigationTitle(ManagementLocalization.string("navigation.permissions"))
     }
 
     private func permissionRow(

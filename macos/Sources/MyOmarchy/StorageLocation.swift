@@ -153,7 +153,7 @@ struct StorageLocationResolution: Equatable {
     var spaceWarning: String?
 }
 
-/// Mirrors the launcher's own state-root checks so the start menu can explain a
+/// Mirrors the launcher's own state-root checks so management can explain a
 /// rejected folder before QEMU ever sees it, and adds the two guards the shell
 /// library cannot express cheaply: the filesystem must be APFS, and a new VM
 /// must have room for the factory image. An existing VM is launched from its
@@ -438,7 +438,7 @@ struct StorageLocationLaunchConfiguration: Equatable {
     }
 }
 
-/// What the start menu shows for the data-location row.
+/// What the management interface shows for the data-location row.
 struct StorageLocationMenuState: Equatable {
     let containerPath: String?
     let stateRoot: String?

@@ -11,18 +11,20 @@ struct IntegrationPresentation: Equatable {
             sharedFolderStatusKey: statusKey(
                 configured: details.sharedFolder.isEnabled
                     && details.sharedFolder.problem == nil,
-                isRunning: isRunning
+                matchesActive: isRunning
+                    && details.sharedFolder.path == details.activeSharedFolderPath
             ),
             portStatusKey: statusKey(
                 configured: !details.portMappings.isEmpty,
-                isRunning: isRunning
+                matchesActive: isRunning
+                    && details.portMappings == details.activePortMappings
             )
         )
     }
 
-    private static func statusKey(configured: Bool, isRunning: Bool) -> String {
+    private static func statusKey(configured: Bool, matchesActive: Bool) -> String {
         guard configured else { return "integration.status.not_configured" }
-        return isRunning
+        return matchesActive
             ? "integration.status.running"
             : "integration.status.configured_next_launch"
     }

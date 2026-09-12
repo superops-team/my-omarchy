@@ -18,8 +18,14 @@ struct IntegrationPresentationTests {
         #expect(stopped.sharedFolderStatusKey == "integration.status.configured_next_launch")
         #expect(stopped.portStatusKey == "integration.status.configured_next_launch")
 
+        details.activeSharedFolderPath = "/Users/test/Shared"
+        details.activePortMappings = details.portMappings
         let running = IntegrationPresentation.make(details: details, lifecycle: .running)
         #expect(running.sharedFolderStatusKey == "integration.status.running")
         #expect(running.portStatusKey == "integration.status.running")
+
+        details.portMappings = [.init(hostPort: 8080, guestPort: 80, protocol: .tcp)]
+        let changed = IntegrationPresentation.make(details: details, lifecycle: .running)
+        #expect(changed.portStatusKey == "integration.status.configured_next_launch")
     }
 }

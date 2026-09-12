@@ -41,20 +41,20 @@ struct ApplicationPresentationTests {
 
         let appMenu = try #require(application.mainMenu?.items.first?.submenu)
         let quit = try #require(appMenu.items.first(where: {
-            $0.title == "Quit My Omarchy"
+            $0.action == #selector(NSApplication.terminate(_:))
         }))
         #expect(quit.keyEquivalent == "q")
         #expect(quit.action == #selector(NSApplication.terminate(_:)))
 
         let open = try #require(appMenu.items.first(where: {
-            $0.title == "Open My Omarchy"
+            $0.action == ApplicationPresentation.openManagementWindowAction
         }))
         #expect(open.keyEquivalent == "0")
         #expect(open.action == ApplicationPresentation.openManagementWindowAction)
 
         let windowMenu = try #require(application.windowsMenu)
         let close = try #require(windowMenu.items.first(where: {
-            $0.title == "Close Window"
+            $0.action == #selector(NSWindow.performClose(_:))
         }))
         #expect(close.keyEquivalent == "w")
         #expect(close.action == #selector(NSWindow.performClose(_:)))

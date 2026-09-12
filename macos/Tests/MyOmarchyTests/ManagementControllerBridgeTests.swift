@@ -236,6 +236,36 @@ struct ManagementControllerBridgeTests {
         #expect(viewModel.state.sessionID == nextSession)
     }
 
+    @Test("a restart relaunch failure becomes a visible failed session")
+    func restartRelaunchFailureIsVisible() throws {
+        let supervisor = RecordingProcessSupervisor()
+        supervisor.failureOnStart = 2
+        let viewModel = ManagementViewModel { _ in }
+        let controller = VMApplicationController(
+            launcherURL: URL(fileURLWithPath: "/usr/bin/false"),
+            initialArguments: [],
+            baseEnvironment: [:],
+            supervisor: supervisor,
+            managementViewModel: viewModel,
+            runtimeControllerFactory: { _ in VMRuntimeController { _ in } }
+        )
+        let session = UUID()
+        let nextSession = UUID()
+
+        try controller.launchPreparedVirtualMachine(session: session)
+        _ = controller.connectManagementRuntime(
+            qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock",
+            processIdentifier: 4242
+        )
+        _ = controller.recordManagementEvent(.virtualMachineReady(session: session))
+        _ = try controller.requestGracefulRestart(nextSession: nextSession)
+        supervisor.completeCurrentLaunch(status: 0)
+
+        #expect(viewModel.state.lifecycle == .failed)
+        #expect(viewModel.state.sessionID == nextSession)
+        #expect(viewModel.state.lastFailureSummary == "expected relaunch failure")
+    }
+
     private enum ControlError: Error {
         case expected
     }
@@ -262,6 +292,7 @@ private final class LockedTimeoutAction: @unchecked Sendable {
 
 private final class RecordingProcessSupervisor: QEMUGPUProcessSupervising, @unchecked Sendable {
     private(set) var startCount = 0
+    var failureOnStart: Int?
     private var completion: (@MainActor @Sendable (Int32) -> Void)?
     private(set) var forwardedSignals: [Int32] = []
 
@@ -276,6 +307,9 @@ private final class RecordingProcessSupervisor: QEMUGPUProcessSupervising, @unch
         completion: @escaping @MainActor @Sendable (Int32) -> Void
     ) throws {
         startCount += 1
+        if startCount == failureOnStart {
+            throw RecordingError.expectedRelaunchFailure
+        }
         self.completion = completion
     }
 
@@ -288,5 +322,11 @@ private final class RecordingProcessSupervisor: QEMUGPUProcessSupervising, @unch
         let completion = self.completion
         self.completion = nil
         completion?(status)
+    }
+
+    private enum RecordingError: LocalizedError {
+        case expectedRelaunchFailure
+
+        var errorDescription: String? { "expected relaunch failure" }
     }
 }

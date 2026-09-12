@@ -52,6 +52,19 @@ final class ManagementAppKitPresenter {
         }
     }
 
+    func showInformation(title: String, detail: String) {
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = title
+        alert.informativeText = detail
+        alert.addButton(withTitle: "OK")
+        if let parentWindow = parentWindow() {
+            alert.beginSheetModal(for: parentWindow)
+        } else {
+            alert.runModal()
+        }
+    }
+
     func confirmFactoryReset(detail: String, completion: @escaping (Bool) -> Void) {
         guard let parentWindow = parentWindow() else {
             completion(false)

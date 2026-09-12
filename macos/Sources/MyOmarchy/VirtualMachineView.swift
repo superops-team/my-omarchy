@@ -37,6 +37,16 @@ struct VirtualMachineView: View {
                         .tag(VMResourceProfilePreference.lowResource)
                 }
                 .disabled(!presentation.canEditResources)
+                if let profile = viewModel.details.effectiveResourceProfile {
+                    LabeledContent(
+                        ManagementLocalization.string("virtual_machine.resources.effective"),
+                        value: String(
+                            format: ManagementLocalization.string("virtual_machine.resources.summary"),
+                            profile.vcpuCount,
+                            profile.memoryMiB
+                        )
+                    )
+                }
                 Text(ManagementLocalization.string("setting.next_launch"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -54,6 +64,9 @@ struct VirtualMachineView: View {
                 }
                 if let reclaimable = viewModel.details.reclaimableStorage {
                     LabeledContent(ManagementLocalization.string("virtual_machine.storage.allocated"), value: reclaimable)
+                }
+                if let logicalDiskSize = viewModel.details.logicalDiskSize {
+                    LabeledContent(ManagementLocalization.string("virtual_machine.storage.logical"), value: logicalDiskSize)
                 }
                 if let problem = viewModel.details.storage.problem {
                     Label(problem, systemImage: "exclamationmark.triangle")
@@ -96,7 +109,6 @@ struct VirtualMachineView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle(ManagementLocalization.string("navigation.virtual-machine"))
     }
 
     private var storagePath: String {

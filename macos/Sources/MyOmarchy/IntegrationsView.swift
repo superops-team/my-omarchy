@@ -51,7 +51,6 @@ struct IntegrationsView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle(ManagementLocalization.string("navigation.integrations"))
     }
 
     private var sharedFolderBinding: Binding<Bool> {
@@ -66,8 +65,6 @@ struct IntegrationsView: View {
     }
 
     private var runtimeStatus: String {
-        viewModel.state.lifecycle == .running
-            ? ManagementLocalization.string("integration.status.running")
-            : ManagementLocalization.string("integration.status.unknown")
+        ManagementLocalization.string("integration.status.unknown")
     }
 }

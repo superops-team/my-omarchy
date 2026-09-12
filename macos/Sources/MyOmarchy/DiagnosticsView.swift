@@ -45,6 +45,5 @@ struct DiagnosticsView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle(ManagementLocalization.string("navigation.diagnostics"))
     }
 }

@@ -9,7 +9,7 @@ import Foundation
 /// Sparse files are the requirement that cannot be relaxed: on exFAT the same
 /// `truncate` allocates the whole working size up front, so a 24 GiB disk costs
 /// 24 GiB immediately instead of growing with use. Locking is why network
-/// volumes are refused. Only local APFS provides both, so the start menu turns
+/// volumes are refused. Only local APFS provides both, so management turns
 /// anything else away before QEMU is ever started.
 struct VolumeCapabilities: Equatable {
     var typeName: String

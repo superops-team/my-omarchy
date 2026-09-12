@@ -166,10 +166,28 @@ be published only through
 [My Omarchy Releases](https://github.com/superops-team/my-omarchy/releases).
 The remaining launch description documents the current implementation baseline.
 
-Every launch begins at the start menu. While that menu is open, My Omarchy behaves like a regular Mac app with standard Quit, Close Window, and Minimize commands; after the VM starts, that native app chrome steps aside for Omarchy. **Immersive** is on by default, so Omarchy opens Full Screen with the Mac menu bar and Dock hidden. Turn it off to open a resizable window; if you later enter Full Screen, the Mac menu bar and Dock remain available at the screen edges. Whenever the Omarchy window is focused, Command belongs to the guest as Super in either mode; Accessibility permission lets system shortcuts such as Command-Space reach it before macOS. Microphone and camera access are optional. The launcher chooses a lightweight resource profile from the Mac's memory and active CPU count before QEMU starts: 8 GiB Macs use 4 vCPUs and 2560 MiB RAM, 16-23 GiB Macs use 4 vCPUs and 4096 MiB RAM, and larger Macs use 6 vCPUs and 4096 MiB RAM while reserving 2 CPUs for macOS. The first launch takes longer while the app prepares Linux and starts Omarchy's account provisioning.
+Every launch opens a native five-page management window: **Overview**,
+**Virtual Machine**, **Integrations**, **Permissions**, and **Diagnostics**. Start,
+open, safely stop, or restart the VM from Overview. The management window stays
+available while Omarchy runs; closing it only hides it, and the Dock icon or
+**Open My Omarchy** (`Command-0`) restores the same window.
+
+**Immersive** is on by default, so Omarchy opens Full Screen with the Mac menu
+bar and Dock hidden. Change the launch mode under Virtual Machine to use a
+resizable window on the next launch. Whenever the Omarchy window is focused,
+Command belongs to the guest as Super in either mode; Accessibility permission
+lets system shortcuts such as Command-Space reach it before macOS. Microphone
+and camera access are optional. The launcher chooses a lightweight resource
+profile from the Mac's memory and active CPU count before QEMU starts: 8 GiB
+Macs use 4 vCPUs and 2560 MiB RAM, 16-23 GiB Macs use 4 vCPUs and 4096 MiB RAM,
+and larger Macs use 6 vCPUs and 4096 MiB RAM while reserving 2 CPUs for macOS.
+The first launch takes longer while the app prepares Linux and starts Omarchy's
+account provisioning. The management UI follows the macOS App language and
+ships in English and Simplified Chinese.
 
 Restarting from inside Omarchy reboots the guest in the same My Omarchy app.
-Shutting down Omarchy closes the app and leaves it closed.
+Shutting down the guest leaves the management app open so it can be started
+again. Explicitly quitting My Omarchy still coordinates app and VM termination.
 
 ## 1Password
 
@@ -186,7 +204,7 @@ After signing in, use these global shortcuts:
 
 ## Camera sharing
 
-Choose **Allow…** next to **Camera access** on the start menu to make the Mac's
+Use **Permissions → Camera** in the management window to make the Mac's
 FaceTime HD camera available in Omarchy as **Mac Camera**. The bridge publishes a
 standard Linux V4L2 camera at `/dev/video42`, so browser calls and Linux camera
 apps can use it without special configuration. Capture is on demand: the Mac
@@ -203,8 +221,8 @@ something is copied.
 
 ## Sharing a folder with the Mac
 
-Folder sharing is off until you pick a folder. Use **Choose…** next to
-**Shared folder** on the start menu to select one Mac folder; Omarchy links it
+Folder sharing is off until you pick a folder. Use **Integrations → Shared Mac
+folder** to select one Mac folder; Omarchy links it
 into its home under the same name (`~/Work` on the Mac becomes `~/Work` in
 Omarchy) with full read and write access, so choose a folder you intend Linux
 software to modify. The whole home folder, `~/Library`, and system directories
@@ -217,7 +235,7 @@ entry's normal Unix permission bits deciding whether they can modify it.
 
 ## Forwarding ports to Omarchy
 
-Use **Configure…** next to **Port forwarding** on the start menu to map a Mac
+Use **Integrations → Port forwarding** in the management window to map a Mac
 localhost port to a service port in Omarchy. Each mapping can use TCP or UDP;
 the same Mac port may be used once for each protocol. Forwarded ports bind only
 to `127.0.0.1`, so other devices on the network cannot connect to them. The
@@ -334,7 +352,7 @@ disk and the exact kernel, initramfs, and base command line that were paired
 with that disk. A newer app's bundled factory image is used only to create a
 new VM, after a confirmed **Reset Omarchy**, or for an ephemeral launch.
 Before Reset is enabled, the confirmation sheet requires typing `My Omarchy`
-exactly; cancelling the sheet returns to the start menu without changing the VM.
+exactly; cancelling the sheet returns to the management window without changing the VM.
 
 VMs created before paired boot files were introduced are preserved too. On the
 first launch that needs them, My Omarchy explains the transition in a
@@ -343,7 +361,7 @@ one-time recovery boot: it mounts the saved disk read-only, copies the installed
 kernel and initramfs from `/boot` into private VM storage, validates them, and
 then shuts the recovery boot down. It does not start the saved userspace with
 the newer app's kernel, reset the VM, or upgrade Omarchy. Cancel returns to the
-start menu. Reset is still required when the saved storage or boot format
+management window. Reset is still required when the saved storage or boot format
 itself cannot be safely read.
 
 Use Omarchy's built-in updater for the updates it supports inside this ARM
@@ -403,7 +421,7 @@ host allocated bytes must be measured before and after guest `fstrim`.
 
 ### Choosing where the VM lives
 
-**Change…** on the start menu's **VM Location** row moves the VM to any folder
+**Virtual Machine → Storage → Choose…** moves the VM to any folder
 you pick, including one on an external drive. Omarchy uses exactly the folder
 you choose — it never creates a folder inside it on your behalf.
 
@@ -426,7 +444,7 @@ you choose — it never creates a folder inside it on your behalf.
 - **If the drive is not connected, Omarchy will not quietly use the default VM
   instead.** Launching offers to switch back to the default folder; resetting
   refuses outright, so a reset can never erase a workspace other than the one
-  you confirmed. Opening the folder from the start menu will not recreate it on
+  you confirmed. Opening the folder from the management window will not recreate it on
   your startup disk either.
 
 ## Development requirements

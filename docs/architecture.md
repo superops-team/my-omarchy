@@ -2,13 +2,13 @@
 
 My Omarchy packages three pieces into one macOS app:
 
-1. A small Swift/AppKit launcher for the macOS side.
+1. An AppKit lifecycle controller with SwiftUI management pages for the macOS side.
 2. A patched QEMU runtime that creates and runs the virtual machine.
 3. An ARM64 Arch Linux image containing pinned upstream Omarchy source.
 
 ```text
 My Omarchy.app
-└── Swift/AppKit launcher
+└── AppKit lifecycle + SwiftUI management window
     └── QEMU + Apple Hypervisor Framework
         └── project-built ARM64 Linux image
             └── Omarchy desktop
@@ -16,9 +16,11 @@ My Omarchy.app
 
 ## What happens when the app opens
 
-The Swift launcher presents a start menu on every app open. It reports optional
-macOS Accessibility, Microphone, and Camera permission state, handles confirmed factory
-resets, startup, shutdown, and host audio devices. It prepares a writable copy
+The Swift launcher presents one persistent five-page management window on every
+app open. It reports optional macOS Accessibility, Microphone, and Camera
+permission state, handles confirmed factory resets, startup, shutdown, restart,
+and host audio devices. Closing the window hides it without stopping the VM;
+Dock reopen and the application menu restore the same window. It prepares a writable copy
 of the Linux disk and starts QEMU. QEMU's Cocoa input layer uses the shared
 Accessibility grant to capture system-wide Command chords and deliver Command
 as guest Super. Swift does not replace QEMU or run the Omarchy desktop itself.
@@ -107,7 +109,7 @@ login or screen-unlock flows, cannot bind approval to the exact sudo command
 because PAM does not expose it, and is not a general guest-to-host approval
 service.
 
-When a folder is chosen on the start menu, QEMU exports it over virtio-9p with
+When a folder is chosen on the Integrations page, QEMU exports it over virtio-9p with
 `security_model=none`, so every host file operation runs as the Mac user and
 the Mac keeps real modes and ownership. A small QEMU patch adds
 `guest_owner_uid`/`guest_owner_gid` fsdev options that report the Mac user's
@@ -192,7 +194,7 @@ explicitly confirmed reset, or in ephemeral mode. New and reset VMs atomically
 stage the current factory's boot kit with the new writable disk. A compatible
 legacy identity-keyed disk can be migrated into the single workspace without
 discarding its contents. If several recognized legacy disks exist, normal
-launch stops at the start menu; confirmed reset safely removes them before
+launch stops in the management window; confirmed reset safely removes them before
 publishing one fresh workspace. Unrecognized host files are always left
 untouched.
 
@@ -212,7 +214,7 @@ and boot ABI, then stores it atomically for subsequent launches. Cancel does
 not start recovery, reset the VM, or alter its disk contents. Unsupported
 storage or boot ABIs still require a confirmed reset.
 
-The workspace does not have to live in Application Support. The start menu can
+The workspace does not have to live in Application Support. The Virtual Machine page can
 put it in any folder the user picks, including one on an external drive, and the
 launcher receives that choice as `OMARCHY_QEMU_GPU_STATE_ROOT`. The chosen
 folder is used as-is: it is never restructured with a folder created inside

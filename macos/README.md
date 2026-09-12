@@ -65,9 +65,9 @@ disk.
 
 Schema-2 disks created before boot kits use a one-time preserving migration.
 The first launcher pass reports that consent is required and exits before QEMU
-starts. The start menu then explains that the disk and data stay intact, the
-new factory is ignored for this VM, and the operation neither resets nor
-upgrades Omarchy. **Cancel** returns to the menu; **Continue** authorizes only
+starts. The management window then explains that the disk and data stay intact,
+the new factory is ignored for this VM, and the operation neither resets nor
+upgrades Omarchy. **Cancel** returns to management; **Continue** authorizes only
 that retry. The recovery-capable initramfs then attaches the old disk read-only,
 exports its installed `/boot/Image`, `/boot/initramfs-linux.img`, and recorded
 base command line over a private 9p share, and powers off without entering the
@@ -78,7 +78,7 @@ That destructive flow keeps **Reset** disabled until the user types
 `My Omarchy` exactly in a native sheet. Cancelling or dismissing the sheet
 returns control without invoking the storage reset.
 
-The start menu can move that workspace to any APFS folder the user picks; the
+The management window's Virtual Machine page can use any APFS folder the user picks; the
 folder is used exactly as chosen, never with a folder created inside it — a
 folder with other files already in it, or a drive's top level, is refused
 instead of restructured. The choice is stored in `UserDefaults` and published
