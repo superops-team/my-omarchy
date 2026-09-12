@@ -88,6 +88,7 @@ test: verify-identity
 	@$(ROOT)/macos/Tests/qemu-port-forwarding.test.sh
 	@$(ROOT)/macos/Tests/run-qemu-ssh-contract.test.sh
 	@$(ROOT)/macos/Tests/qemu-power-actions.test.sh
+	@PYTHONDONTWRITEBYTECODE=1 python3 "$(ROOT)/macos/Tests/venus-source-pins.test.py"
 	@$(ROOT)/macos/Tests/qemu-persistent-storage.test.sh
 	@PYTHONDONTWRITEBYTECODE=1 python3 "$(ROOT)/macos/Tests/resize-vm-disk.test.py"
 

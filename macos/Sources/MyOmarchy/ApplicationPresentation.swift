@@ -3,7 +3,8 @@ import AppKit
 @MainActor
 enum ApplicationPresentation {
     static let prelaunchActivationPolicy = NSApplication.ActivationPolicy.regular
-    static let runningActivationPolicy = NSApplication.ActivationPolicy.accessory
+    static let runningActivationPolicy = NSApplication.ActivationPolicy.regular
+    static let openManagementWindowAction = NSSelectorFromString("openManagementWindow:")
 
     static func installMainMenu(
         in application: NSApplication,
@@ -19,6 +20,12 @@ enum ApplicationPresentation {
             withTitle: "About \(applicationName)",
             action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
             keyEquivalent: ""
+        )
+        applicationMenu.addItem(.separator())
+        applicationMenu.addItem(
+            withTitle: "Open \(applicationName)",
+            action: openManagementWindowAction,
+            keyEquivalent: "0"
         )
         applicationMenu.addItem(.separator())
         applicationMenu.addItem(

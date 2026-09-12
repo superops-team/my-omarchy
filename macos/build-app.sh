@@ -47,6 +47,7 @@ done
 macos_dir=$(cd "$(dirname "$0")" && pwd)
 repo_dir=$(cd "$macos_dir/.." && pwd -P)
 helper="$macos_dir/.build/release/my-omarchy"
+resource_bundle="$macos_dir/.build/release/MyOmarchy_MyOmarchy.bundle"
 legacy_apps=(
   "$repo_dir/dist/My Omarchy.app"
   "$repo_dir/dist/Try ""Omarchy.app"
@@ -130,6 +131,10 @@ export SWIFT_MODULECACHE_PATH="$module_cache/swift"
 export CLANG_MODULE_CACHE_PATH="$module_cache/clang"
 export MACOSX_DEPLOYMENT_TARGET=15.0
 swift build --disable-sandbox -c release -debug-info-format none
+[[ -d $resource_bundle && ! -L $resource_bundle ]] || {
+  echo "build-app: localized resource bundle is missing or unsafe" >&2
+  exit 1
+}
 
 rm -rf "$iconset"
 rm -f "$generated_icon"
@@ -169,6 +174,7 @@ mkdir -p \
   "$contents/Resources/runtime/bin" \
   "$contents/Resources/scripts"
 install -m 0755 "$helper" "$contents/MacOS/my-omarchy"
+ditto "$resource_bundle" "$contents/Resources/MyOmarchy_MyOmarchy.bundle"
 install -m 0644 "$macos_dir/Info.plist" "$contents/Info.plist"
 install -m 0644 "$generated_icon" "$contents/Resources/MyOmarchy.icns"
 ditto "$runtime_source" "$contents/Resources/runtime"

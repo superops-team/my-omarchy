@@ -136,6 +136,14 @@ class BuildCacheTests(unittest.TestCase):
             build_script,
         )
         self.assertIn(
+            'resource_bundle="$macos_dir/.build/release/MyOmarchy_MyOmarchy.bundle"',
+            build_script,
+        )
+        self.assertIn(
+            'ditto "$resource_bundle" "$contents/Resources/MyOmarchy_MyOmarchy.bundle"',
+            build_script,
+        )
+        self.assertIn(
             'legacy_apps=(',
             build_script,
         )

@@ -1,7 +1,7 @@
 {
   "virglrenderer": {
-    "url": "https://gitlab.freedesktop.org/virgl/virglrenderer/-/archive/1.3.0/virglrenderer-1.3.0.tar.gz?ref_type=tags",
-    "sha256": "56170f8caa1bb642a2624b649e3bcca095ec2834814e5c308efc8a85a709e4ce",
+    "url": "https://gitlab.freedesktop.org/virgl/virglrenderer/-/archive/ca50e008863837e094747a69974dde3ae148aeaa/virglrenderer-ca50e008863837e094747a69974dde3ae148aeaa.tar.gz",
+    "sha256": "e7c512469a207444103ead88a8992a7077173e21771623845d4567f8128b5dc1",
     "archive": "virglrenderer-1.3.0.tar.gz"
   },
   "darwin-patches": {

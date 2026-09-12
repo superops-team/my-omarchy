@@ -3,10 +3,10 @@ Subject: [PATCH] cocoa: present the VM as My Omarchy on macOS
 
 Applies after startergo/homebrew-qemu-virgl-kosmickrisp v1.0.27.
 
-QEMU owns the visible Cocoa window, so macOS gives its process the Dock entry
-instead of the accessory launcher app. Publish the product process name before
-NSApplication is created, load the signed app icon from the enclosing bundle,
-and use the product name in QEMU's Cocoa window and application menu.
+QEMU owns the visible Cocoa window, but the launcher remains the product's
+single Dock application and management entry point. Publish the product process
+name, keep QEMU as an accessory application, load the signed app icon from the
+enclosing bundle, and use the product name in QEMU's Cocoa window and menu.
 
 diff --git a/ui/cocoa.m b/ui/cocoa.m
 --- a/ui/cocoa.m
@@ -29,7 +29,7 @@ diff --git a/ui/cocoa.m b/ui/cocoa.m
      else
          [[self window] setTitle:@"QEMU"];
      [self unhideCursor];
-@@ -1327,7 +1327,9 @@
+@@ -1327,9 +1327,12 @@
          }
          [window setAcceptsMouseMovedEvents:YES];
          [window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
@@ -38,8 +38,12 @@ diff --git a/ui/cocoa.m b/ui/cocoa.m
 +            ? [NSString stringWithUTF8String:qemu_name]
 +            : @"QEMU"];
          [window setContentView:cocoaView];
-         [window makeKeyAndOrderFront:self];
+-        [window makeKeyAndOrderFront:self];
++        [window orderFrontRegardless];
++        [window makeKeyWindow];
          [window center];
+ 
+         /* Careful: Cocoa has a concept of a main window and a key window. */
 @@ -1651,7 +1653,7 @@
  {
      NSAlert *alert = [NSAlert new];
@@ -125,12 +129,13 @@ diff --git a/ui/cocoa.m b/ui/cocoa.m
  }
  
  static void cocoa_display_init(DisplayState *ds, DisplayOptions *opts)
-@@ -2436,7 +2458,9 @@
-     ProcessSerialNumber psn = { 0, kCurrentProcess };
-     TransformProcessType(&psn, kProcessTransformToForegroundApplication);
- 
+@@ -2436,7 +2458,7 @@
+-    ProcessSerialNumber psn = { 0, kCurrentProcess };
+-    TransformProcessType(&psn, kProcessTransformToForegroundApplication);
+-
 +    [[NSProcessInfo processInfo] setProcessName:@"My Omarchy"];
      [QemuApplication sharedApplication];
++    [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
 +    cocoa_set_product_icon();
  
      dcl.con = qemu_console_lookup_default();

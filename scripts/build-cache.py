@@ -409,6 +409,7 @@ def validate_app(root: Path, previous: dict[str, Any] | None) -> dict[str, Any]:
     app = root / "dist/app.noindex/My Omarchy.app"
     required = [
         app / "Contents/MacOS/my-omarchy",
+        app / "Contents/Resources/MyOmarchy_MyOmarchy.bundle/Info.plist",
         app / "Contents/Resources/MyOmarchy.icns",
         app / "Contents/Resources/runtime/bin/My Omarchy",
         app / "Contents/Resources/guest/rootfs.ext4.zst",

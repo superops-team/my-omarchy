@@ -22,6 +22,7 @@ class HostIdentityTests(unittest.TestCase):
         self.assertEqual(macos["executableName"], info["CFBundleExecutable"])
         self.assertEqual(macos["bundleIdentifier"], info["CFBundleIdentifier"])
         self.assertEqual("MyOmarchy.icns", info["CFBundleIconFile"])
+        self.assertFalse(info.get("LSUIElement", False))
         for key in (
             "NSDesktopFolderUsageDescription",
             "NSDocumentsFolderUsageDescription",
@@ -39,7 +40,9 @@ class HostIdentityTests(unittest.TestCase):
 
         self.assertIn('name: "MyOmarchy"', package)
         self.assertIn('.executable(name: "my-omarchy", targets: ["MyOmarchy"])', package)
-        self.assertIn('.executableTarget(name: "MyOmarchy")', package)
+        self.assertIn('.executableTarget(', package)
+        self.assertIn('name: "MyOmarchy"', package)
+        self.assertIn('resources: [.process("Resources")]', package)
         self.assertIn('url: "https://github.com/swiftlang/swift-testing.git"', package)
         self.assertIn('.product(name: "Testing", package: "swift-testing")', package)
         predecessor_module = "OmarchyVM" + "Helper"
@@ -62,6 +65,7 @@ class HostIdentityTests(unittest.TestCase):
         self.assertIn('generated_icon="$macos_dir/.build/MyOmarchy.icns"', build_app)
         self.assertIn('install -m 0755 "$helper" "$contents/MacOS/my-omarchy"', build_app)
         self.assertIn('install -m 0644 "$generated_icon" "$contents/Resources/MyOmarchy.icns"', build_app)
+        self.assertIn('ditto "$resource_bundle" "$contents/Resources/MyOmarchy_MyOmarchy.bundle"', build_app)
         self.assertIn('--identifier team.superops.myomarchy', build_app)
         predecessor_bundle_id = "dev." + "try" + "omarchy.native"
         self.assertNotIn(predecessor_bundle_id, build_app)

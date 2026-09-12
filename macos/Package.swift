@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "MyOmarchy",
+    defaultLocalization: "en",
     platforms: [.macOS(.v15)],
     products: [
         .executable(name: "my-omarchy", targets: ["MyOmarchy"]),
@@ -11,7 +12,10 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-testing.git", exact: "0.12.0"),
     ],
     targets: [
-        .executableTarget(name: "MyOmarchy"),
+        .executableTarget(
+            name: "MyOmarchy",
+            resources: [.process("Resources")]
+        ),
         .testTarget(
             name: "MyOmarchyTests",
             dependencies: [
