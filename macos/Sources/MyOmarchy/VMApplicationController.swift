@@ -60,6 +60,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private let volumeRootDetector: VolumeRootDetecting
     private let deviceProvider: HostAudioDeviceProviding
     private let bundledMetrics: BundledGuestMetrics?
+    private let managementViewModel: ManagementViewModel
     private var startMenuWindow: StartMenuWindow?
     private var volumeObserver: NSObjectProtocol?
     private var hostPowerObserver: HostPowerNotificationObserver?
@@ -75,6 +76,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private var virtualMachineReachedStart = false
     private var activeLaunchAllowedBootRecovery = false
     private var pendingHostSleepControlFailure: String?
+    private var activeManagementSession: UUID?
 
     /// True while a modal alert this controller opened itself (rather than
     /// AppKit) is on screen awaiting a click. `finish()`'s watchdog checks
@@ -98,7 +100,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         volumeProbe: VolumeProbing = URLVolumeProbe(),
         volumeRootDetector: VolumeRootDetecting = FileManagerVolumeRootDetector(),
         deviceProvider: HostAudioDeviceProviding = CoreAudioHostAudioDeviceProvider(),
-        bundledMetrics: BundledGuestMetrics? = QEMUGPUStorageSpaceEstimate.bundledMetrics()
+        bundledMetrics: BundledGuestMetrics? = QEMUGPUStorageSpaceEstimate.bundledMetrics(),
+        managementViewModel: ManagementViewModel? = nil
     ) {
         self.launcherURL = launcherURL
         self.initialArguments = initialArguments
@@ -114,6 +117,12 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         self.volumeRootDetector = volumeRootDetector
         self.deviceProvider = deviceProvider
         self.bundledMetrics = bundledMetrics
+        self.managementViewModel = managementViewModel ?? ManagementViewModel { _ in }
+    }
+
+    @discardableResult
+    func recordManagementEvent(_ event: ManagementEvent) -> Bool {
+        managementViewModel.publish(event: event)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -468,6 +477,9 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         }
 
         activeLaunchAllowedBootRecovery = allowBootRecovery
+        let managementSession = UUID()
+        activeManagementSession = managementSession
+        _ = recordManagementEvent(.launchRequested(session: managementSession))
         do {
             try supervisor.start(
                 executableURL: launcherURL,
@@ -484,6 +496,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             }
         } catch {
             activeLaunchAllowedBootRecovery = false
+            activeManagementSession = nil
+            _ = recordManagementEvent(.childExited(session: managementSession, status: 1))
             throw error
         }
         childRunning = true
@@ -503,6 +517,9 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             return
         }
         virtualMachineReachedStart = true
+        if let activeManagementSession {
+            _ = recordManagementEvent(.virtualMachineReady(session: activeManagementSession))
+        }
         NSApp.setActivationPolicy(ApplicationPresentation.runningActivationPolicy)
         startMenuWindow?.dismiss()
         startMenuWindow = nil
@@ -825,6 +842,12 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private func childDidExit(status: Int32) {
         guard childRunning else { return }
         childRunning = false
+        if let managementSession = activeManagementSession {
+            activeManagementSession = nil
+            _ = recordManagementEvent(
+                .childExited(session: managementSession, status: status)
+            )
+        }
         let launchAllowedBootRecovery = activeLaunchAllowedBootRecovery
         activeLaunchAllowedBootRecovery = false
         cancelHostWakeRetry()
