@@ -10,6 +10,8 @@ struct ManagementCommandTests {
         #expect(!ManagementCommandPolicy.allows(.resetStorage, while: .running))
         #expect(ManagementCommandPolicy.allows(.stop, while: .running))
         #expect(ManagementCommandPolicy.allows(.restart, while: .running))
+        #expect(ManagementCommandPolicy.allows(.openVirtualMachine, while: .running))
+        #expect(!ManagementCommandPolicy.allows(.openVirtualMachine, while: .idle))
         #expect(!ManagementCommandPolicy.allows(.restart, while: .stopping))
         #expect(ManagementCommandPolicy.allows(.launch, while: .failed))
     }

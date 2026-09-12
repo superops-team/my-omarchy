@@ -1,5 +1,6 @@
 enum ManagementCommand: Equatable {
     case launch
+    case openVirtualMachine
     case stop
     case restart
     case resetStorage
@@ -14,6 +15,8 @@ enum ManagementCommandPolicy {
         case (.launch, .idle), (.launch, .failed):
             true
         case (.stop, .running), (.restart, .running):
+            true
+        case (.openVirtualMachine, .running):
             true
         case (.resetStorage, .idle), (.resetStorage, .failed):
             true

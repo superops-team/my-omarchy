@@ -49,7 +49,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private let launcherURL: URL
     private let initialArguments: [String]
     private let baseEnvironment: [String: String]
-    private let supervisor: QEMUGPUProcessSupervisor
+    private let supervisor: any QEMUGPUProcessSupervising
     private let preferenceStore: AudioRoutingPreferenceStore
     private let sharedFolderStore: SharedFolderPreferenceStore
     private let portForwardingStore: PortForwardingPreferenceStore
@@ -61,6 +61,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private let deviceProvider: HostAudioDeviceProviding
     private let bundledMetrics: BundledGuestMetrics?
     private let managementViewModel: ManagementViewModel
+    private let runtimeControllerFactory: (String) -> VMRuntimeController
+    private let windowActivator: VirtualMachineWindowActivator
     private var startMenuWindow: StartMenuWindow?
     private var volumeObserver: NSObjectProtocol?
     private var hostPowerObserver: HostPowerNotificationObserver?
@@ -77,6 +79,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private var activeLaunchAllowedBootRecovery = false
     private var pendingHostSleepControlFailure: String?
     private var activeManagementSession: UUID?
+    private var activeRuntimeController: VMRuntimeController?
+    private var activeQEMUProcessIdentifier: Int32?
 
     /// True while a modal alert this controller opened itself (rather than
     /// AppKit) is on screen awaiting a click. `finish()`'s watchdog checks
@@ -90,7 +94,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         launcherURL: URL,
         initialArguments: [String],
         baseEnvironment: [String: String] = ProcessInfo.processInfo.environment,
-        supervisor: QEMUGPUProcessSupervisor = QEMUGPUProcessSupervisor(),
+        supervisor: any QEMUGPUProcessSupervising = QEMUGPUProcessSupervisor(),
         preferenceStore: AudioRoutingPreferenceStore = AudioRoutingPreferenceStore(),
         sharedFolderStore: SharedFolderPreferenceStore = SharedFolderPreferenceStore(),
         portForwardingStore: PortForwardingPreferenceStore = PortForwardingPreferenceStore(),
@@ -101,7 +105,11 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         volumeRootDetector: VolumeRootDetecting = FileManagerVolumeRootDetector(),
         deviceProvider: HostAudioDeviceProviding = CoreAudioHostAudioDeviceProvider(),
         bundledMetrics: BundledGuestMetrics? = QEMUGPUStorageSpaceEstimate.bundledMetrics(),
-        managementViewModel: ManagementViewModel? = nil
+        managementViewModel: ManagementViewModel? = nil,
+        runtimeControllerFactory: @escaping (String) -> VMRuntimeController = {
+            VMRuntimeController(socketPath: $0)
+        },
+        windowActivator: VirtualMachineWindowActivator = VirtualMachineWindowActivator()
     ) {
         self.launcherURL = launcherURL
         self.initialArguments = initialArguments
@@ -118,11 +126,55 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         self.deviceProvider = deviceProvider
         self.bundledMetrics = bundledMetrics
         self.managementViewModel = managementViewModel ?? ManagementViewModel { _ in }
+        self.runtimeControllerFactory = runtimeControllerFactory
+        self.windowActivator = windowActivator
     }
 
     @discardableResult
     func recordManagementEvent(_ event: ManagementEvent) -> Bool {
-        managementViewModel.publish(event: event)
+        let accepted = managementViewModel.publish(event: event)
+        if accepted, case .launchRequested(let session) = event {
+            activeManagementSession = session
+        }
+        return accepted
+    }
+
+    @discardableResult
+    func connectManagementRuntime(
+        qmpSocketPath: String,
+        processIdentifier: Int32
+    ) -> Bool {
+        guard processIdentifier > 1 else { return false }
+        activeRuntimeController = runtimeControllerFactory(qmpSocketPath)
+        activeQEMUProcessIdentifier = processIdentifier
+        return true
+    }
+
+    func openVirtualMachineWindow() -> Bool {
+        guard let activeQEMUProcessIdentifier else { return false }
+        return windowActivator.activate(processIdentifier: activeQEMUProcessIdentifier)
+    }
+
+    @discardableResult
+    func requestGracefulStop() throws -> Bool {
+        guard let session = activeManagementSession,
+              let activeRuntimeController else { return false }
+        try activeRuntimeController.requestGracefulShutdown()
+        return recordManagementEvent(.stopRequested(session: session))
+    }
+
+    @discardableResult
+    func requestGracefulRestart(nextSession: UUID) throws -> Bool {
+        guard let session = activeManagementSession,
+              let activeRuntimeController else { return false }
+        try activeRuntimeController.requestGracefulShutdown()
+        return recordManagementEvent(
+            .restartRequested(session: session, nextSession: nextSession)
+        )
+    }
+
+    func launchPreparedVirtualMachine(session: UUID) throws {
+        try launch(arguments: launchArguments(), managementSession: session)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -459,7 +511,12 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         )
     }
 
-    private func launch(arguments: [String], allowBootRecovery: Bool = false) throws {
+    private func launch(
+        arguments: [String],
+        allowBootRecovery: Bool = false,
+        managementSession requestedManagementSession: UUID? = nil,
+        launchRequestAlreadyPublished: Bool = false
+    ) throws {
         let context = childLaunchContext()
         // The UI gate above normally resolves this first; failing closed here
         // too keeps a silent fallback impossible for any future caller.
@@ -477,9 +534,11 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         }
 
         activeLaunchAllowedBootRecovery = allowBootRecovery
-        let managementSession = UUID()
+        let managementSession = requestedManagementSession ?? UUID()
         activeManagementSession = managementSession
-        _ = recordManagementEvent(.launchRequested(session: managementSession))
+        if !launchRequestAlreadyPublished {
+            _ = recordManagementEvent(.launchRequested(session: managementSession))
+        }
         do {
             try supervisor.start(
                 executableURL: launcherURL,
@@ -487,8 +546,14 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 environment: environment,
                 launchEvent: { [weak self] event in
                     switch event {
-                    case .virtualMachineReady(let qmpSocketPath):
-                        self?.virtualMachineDidStart(qmpSocketPath: qmpSocketPath)
+                    case .virtualMachineReady(
+                        let qmpSocketPath,
+                        let processIdentifier
+                    ):
+                        self?.virtualMachineDidStart(
+                            qmpSocketPath: qmpSocketPath,
+                            processIdentifier: processIdentifier
+                        )
                     }
                 }
             ) { [weak self] status in
@@ -503,10 +568,18 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         childRunning = true
     }
 
-    private func virtualMachineDidStart(qmpSocketPath: String?) {
-        guard let qmpSocketPath else {
+    private func virtualMachineDidStart(
+        qmpSocketPath: String?,
+        processIdentifier: Int32?
+    ) {
+        guard let qmpSocketPath,
+              let processIdentifier,
+              connectManagementRuntime(
+                  qmpSocketPath: qmpSocketPath,
+                  processIdentifier: processIdentifier
+              ) else {
             failHostSleepControlSetup(
-                detail: "the launcher did not provide a valid control socket"
+                detail: "the launcher did not provide a valid control identity"
             )
             return
         }
@@ -842,11 +915,20 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private func childDidExit(status: Int32) {
         guard childRunning else { return }
         childRunning = false
+        activeRuntimeController = nil
+        activeQEMUProcessIdentifier = nil
+        var restartSession: UUID?
         if let managementSession = activeManagementSession {
+            let wasRestarting = managementViewModel.state.lifecycle == .restarting
             activeManagementSession = nil
-            _ = recordManagementEvent(
+            let accepted = recordManagementEvent(
                 .childExited(session: managementSession, status: status)
             )
+            if accepted,
+               wasRestarting,
+               managementViewModel.state.lifecycle == .launching {
+                restartSession = managementViewModel.state.sessionID
+            }
         }
         let launchAllowedBootRecovery = activeLaunchAllowedBootRecovery
         activeLaunchAllowedBootRecovery = false
@@ -866,6 +948,17 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         lifecycle.childExited()
         if applicationTerminationPending {
             NSApp.reply(toApplicationShouldTerminate: true)
+        } else if let restartSession {
+            virtualMachineReachedStart = false
+            do {
+                try launch(
+                    arguments: launchArguments(),
+                    managementSession: restartSession,
+                    launchRequestAlreadyPublished: true
+                )
+            } catch {
+                fputs("my-omarchy: restart failed: \(error.localizedDescription)\n", stderr)
+            }
         } else if let hostSleepControlFailure {
             startMenuWindow?.launchDidFail(
                 errorMessage: launchFailureMessage(

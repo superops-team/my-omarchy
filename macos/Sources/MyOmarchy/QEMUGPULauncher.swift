@@ -840,7 +840,10 @@ final class LaunchDiagnosticsLog: @unchecked Sendable {
 
 final class QEMUGPUProcessSupervisor: @unchecked Sendable {
     enum LaunchEvent: Equatable {
-        case virtualMachineReady(qmpSocketPath: String?)
+        case virtualMachineReady(
+            qmpSocketPath: String?,
+            processIdentifier: Int32?
+        )
     }
 
     struct StandardErrorDrain {
@@ -1131,9 +1134,7 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
                 line.removeLast()
             }
             if line.hasPrefix(marker) {
-                return .virtualMachineReady(
-                    qmpSocketPath: qmpSocketPath(inReadyLine: line)
-                )
+                return readyEvent(in: line)
             }
             lineStart = standardError.index(after: newline)
         }
@@ -1143,7 +1144,13 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
     static func qmpSocketPath(inReadyLine line: String) -> String? {
         let linePrefix = "[qemu-gpu] Ready. QMP: "
         guard line.hasPrefix(linePrefix) else { return nil }
-        let path = String(line.dropFirst(linePrefix.count))
+        let fields = line.dropFirst(linePrefix.count).split(
+            separator: " PID: ",
+            maxSplits: 1,
+            omittingEmptySubsequences: false
+        )
+        guard fields.count == 2 else { return nil }
+        let path = String(fields[0])
         let pathPrefix = "/tmp/my-omarchy-qemu-gpu."
         let pathSuffix = "/qmp.sock"
         guard path.hasPrefix(pathPrefix), path.hasSuffix(pathSuffix) else { return nil }
@@ -1154,6 +1161,28 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
               token.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) })
         else { return nil }
         return path
+    }
+
+    static func processIdentifier(inReadyLine line: String) -> Int32? {
+        let separator = " PID: "
+        guard let range = line.range(of: separator),
+              let identifier = Int32(line[range.upperBound...]),
+              identifier > 1 else { return nil }
+        return identifier
+    }
+
+    private static func readyEvent(in line: String) -> LaunchEvent {
+        guard let qmpSocketPath = qmpSocketPath(inReadyLine: line),
+              let processIdentifier = processIdentifier(inReadyLine: line) else {
+            return .virtualMachineReady(
+                qmpSocketPath: nil,
+                processIdentifier: nil
+            )
+        }
+        return .virtualMachineReady(
+            qmpSocketPath: qmpSocketPath,
+            processIdentifier: processIdentifier
+        )
     }
 
     private static func status(for process: Process) -> Int32 {
@@ -1198,3 +1227,37 @@ final class QEMUGPUProcessSupervisor: @unchecked Sendable {
         return "[my-omarchy] Environment: " + values.joined(separator: " ")
     }
 }
+
+protocol QEMUGPUProcessSupervising: AnyObject {
+    var recentStandardError: String { get }
+    var recentDiagnosticsLogPath: String? { get }
+
+    func start(
+        executableURL: URL,
+        arguments: [String],
+        environment: [String: String],
+        launchEvent: @escaping @MainActor @Sendable (QEMUGPUProcessSupervisor.LaunchEvent) -> Void,
+        completion: @escaping @MainActor @Sendable (Int32) -> Void
+    ) throws
+
+    func forward(signal: Int32)
+}
+
+extension QEMUGPUProcessSupervising {
+    func start(
+        executableURL: URL,
+        arguments: [String],
+        environment: [String: String],
+        completion: @escaping @MainActor @Sendable (Int32) -> Void
+    ) throws {
+        try start(
+            executableURL: executableURL,
+            arguments: arguments,
+            environment: environment,
+            launchEvent: { _ in },
+            completion: completion
+        )
+    }
+}
+
+extension QEMUGPUProcessSupervisor: QEMUGPUProcessSupervising {}

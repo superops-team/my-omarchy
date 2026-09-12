@@ -59,9 +59,9 @@ mktemp_template_count=$(grep -Fxc -- \
 }
 
 ready_control_count=$(grep -Fxc -- \
-  'echo "[qemu-gpu] Ready. QMP: $qmp_socket" >&2' "$launcher" || true)
+  'echo "[qemu-gpu] Ready. QMP: $qmp_socket PID: $qemu_pid" >&2' "$launcher" || true)
 [[ $ready_control_count == 1 ]] || {
-  fail 'the Ready event must advertise the same private QMP socket used by QEMU'
+  fail 'the Ready event must advertise the private QMP socket and QEMU pid'
 }
 
 ready_emission_count=$(grep -Ec -- \
@@ -74,7 +74,7 @@ qmp_check_line=$(grep -nF -- \
   '[[ -S $qmp_socket ]] || fail "QEMU did not create its private QMP socket"' \
   "$launcher" | cut -d: -f1)
 ready_line=$(grep -nF -- \
-  'echo "[qemu-gpu] Ready. QMP: $qmp_socket" >&2' "$launcher" | cut -d: -f1)
+  'echo "[qemu-gpu] Ready. QMP: $qmp_socket PID: $qemu_pid" >&2' "$launcher" | cut -d: -f1)
 [[ -n $qmp_check_line && -n $ready_line && $qmp_check_line -lt $ready_line ]] || {
   fail 'the Ready event must follow QMP socket validation'
 }

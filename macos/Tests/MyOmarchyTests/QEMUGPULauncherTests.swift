@@ -183,7 +183,7 @@ struct QEMUStandardErrorDrainTests {
             """
             #!/bin/sh
             echo '[qemu-gpu] Starting test launcher' >&2
-            echo '[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock' >&2
+            echo '[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock PID: 4242' >&2
             echo 'guest diagnostic line' >&2
             exit 7
             """.utf8
@@ -199,8 +199,9 @@ struct QEMUStandardErrorDrainTests {
             arguments: ["--flag"],
             environment: ["OMARCHY_QEMU_GPU_RESOURCE_PROFILE": "balanced"],
             launchEvent: { event in
-                if case .virtualMachineReady(let path) = event {
+                if case .virtualMachineReady(let path, let processIdentifier) = event {
                     result.setReadySocket(path)
+                    result.setReadyProcessIdentifier(processIdentifier)
                 }
             }
         ) { status in
@@ -211,6 +212,7 @@ struct QEMUStandardErrorDrainTests {
         #expect(waitFor(finished, timeout: 2))
         #expect(result.exitStatus == 7)
         #expect(result.readySocket == "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock")
+        #expect(result.readyProcessIdentifier == 4242)
         #expect(supervisor.recentStandardError.contains("guest diagnostic line"))
         let logPath = try #require(supervisor.recentDiagnosticsLogPath)
         let contents = try String(contentsOfFile: logPath, encoding: .utf8)
@@ -267,15 +269,16 @@ struct QEMUStandardErrorDrainTests {
         #expect(Darwin.fcntl(descriptor, F_GETFL) == originalFlags)
     }
 
-    @Test("waits for a complete Ready line and carries its private QMP socket")
+    @Test("waits for a complete Ready line and carries its private QMP socket and QEMU pid")
     func parsesReadyControlSocket() {
-        let partial = "startup output\n[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp"
+        let partial = "startup output\n[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock PID:"
         #expect(QEMUGPUProcessSupervisor.virtualMachineReadyEvent(in: partial) == nil)
 
-        let complete = partial + ".sock\nmore output\n"
+        let complete = partial + " 4242\nmore output\n"
         #expect(QEMUGPUProcessSupervisor.virtualMachineReadyEvent(in: complete) ==
             .virtualMachineReady(
-                qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock"
+                qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock",
+                processIdentifier: 4242
             ))
     }
 
@@ -283,11 +286,12 @@ struct QEMUStandardErrorDrainTests {
     func readyMarkerMustStartItsLine() {
         let output = """
             shared folder: /tmp/[qemu-gpu] Ready. QMP: not-a-socket
-            [qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.Z9y8X7/qmp.sock
+            [qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.Z9y8X7/qmp.sock PID: 4242
             """ + "\n"
         #expect(QEMUGPUProcessSupervisor.virtualMachineReadyEvent(in: output) ==
             .virtualMachineReady(
-                qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.Z9y8X7/qmp.sock"
+                qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.Z9y8X7/qmp.sock",
+                processIdentifier: 4242
             ))
 
         let lookalike = "[qemu-gpu] Ready.bad QMP: /tmp/my-omarchy-qemu-gpu.Z9y8X7/qmp.sock\n"
@@ -302,9 +306,18 @@ struct QEMUStandardErrorDrainTests {
             "/private/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock",
             "/tmp/other.A1b2C3/qmp.sock",
         ] {
-            let output = "[qemu-gpu] Ready. QMP: \(path)\n"
+            let output = "[qemu-gpu] Ready. QMP: \(path) PID: 4242\n"
             #expect(QEMUGPUProcessSupervisor.virtualMachineReadyEvent(in: output) ==
-                .virtualMachineReady(qmpSocketPath: nil))
+                .virtualMachineReady(qmpSocketPath: nil, processIdentifier: nil))
+        }
+    }
+
+    @Test("does not trust an invalid QEMU pid advertised by the launcher")
+    func rejectsMalformedReadyProcessIdentifier() {
+        for pid in ["0", "-1", "abc", "999999999999999999999"] {
+            let output = "[qemu-gpu] Ready. QMP: /tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock PID: \(pid)\n"
+            #expect(QEMUGPUProcessSupervisor.virtualMachineReadyEvent(in: output) ==
+                .virtualMachineReady(qmpSocketPath: nil, processIdentifier: nil))
         }
     }
 
@@ -328,6 +341,7 @@ struct QEMUStandardErrorDrainTests {
         private let lock = NSLock()
         private var storedExitStatus: Int32?
         private var storedReadySocket: String?
+        private var storedReadyProcessIdentifier: Int32?
 
         var exitStatus: Int32? {
             lock.lock()
@@ -341,6 +355,12 @@ struct QEMUStandardErrorDrainTests {
             return storedReadySocket
         }
 
+        var readyProcessIdentifier: Int32? {
+            lock.lock()
+            defer { lock.unlock() }
+            return storedReadyProcessIdentifier
+        }
+
         func setExitStatus(_ status: Int32) {
             lock.lock()
             storedExitStatus = status
@@ -350,6 +370,12 @@ struct QEMUStandardErrorDrainTests {
         func setReadySocket(_ socket: String?) {
             lock.lock()
             storedReadySocket = socket
+            lock.unlock()
+        }
+
+        func setReadyProcessIdentifier(_ processIdentifier: Int32?) {
+            lock.lock()
+            storedReadyProcessIdentifier = processIdentifier
             lock.unlock()
         }
     }
