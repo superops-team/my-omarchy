@@ -6,17 +6,14 @@
 
 My Omarchy 当前以未使用 Developer ID 签名、未公证的 prerelease 形式发布。用户需要手动下载 DMG、拖动 App，并在终端执行 `xattr -dr com.apple.quarantine`。这条路径步骤多、容易输错，也无法在安装前自动校验下载物是否与 Release 中声明的制品一致。
 
-当前 v0.5.0 已公开发布以下资产：
-
-- `MyOmarchy-0.5.0-arm64-unsigned.dmg`
-- `MyOmarchy-0.5.0-arm64-unsigned.zip`
+GitHub 当前存在三个包含可验证 DMG 的公开 prerelease：`v0.3.1`、`v0.4.0` 和 `v0.5.0`。`v0.1.0`、`v0.2.0`、`v0.3.0` 只有 Git tag，没有 GitHub Release 和可校验 DMG，不在历史页面补齐范围内。
 
 本功能为 GitHub README 与 Release 页面提供一条可复制执行的安装命令，由版本固定的 shell 脚本完成下载、校验、安装、解除 quarantine 和首次启动。
 
 ### 1.2 目标
 
 - 用户只需复制并执行一条命令即可完成安装。
-- 安装脚本、目标版本、资产名称和 SHA-256 必须相互固定，不通过 `latest` 或可变分支解析版本。
+- 每个历史安装脚本、目标 Release、资产名称、Bundle 版本和 SHA-256 必须相互固定，不通过 `latest` 或可变分支解析版本。
 - 安装前验证平台、下载摘要、DMG 内容、Bundle ID、App 版本、架构和代码签名结构。
 - 已安装版本升级时保留 `~/Library/Application Support/My Omarchy` 中的 VM 和用户数据。
 - VM 运行中拒绝替换 App，不强杀 QEMU 或桥接进程。
@@ -76,23 +73,25 @@ My Omarchy 当前以未使用 Developer ID 签名、未公证的 prerelease 形�
 
 ### FR-1：不可变安装入口
 
-v0.5.0 页面使用：
+每个已有 Release 页面都使用自身 tag 下的脚本，例如 v0.5.0：
 
 ```sh
 curl -fsSL https://github.com/superops-team/my-omarchy/releases/download/v0.5.0/install-my-omarchy.sh | bash
 ```
 
-README 的 Quick start 在每次发布时更新到当前明确版本。脚本 URL 不使用 `main`、`raw/main` 或 `/releases/latest/`。
+README 的 Quick start 在每次发布时更新到当前明确版本。v0.3.1、v0.4.0 和 v0.5.0 Release Notes 分别引用各自 tag 下的脚本。脚本 URL 不使用 `main`、`raw/main` 或 `/releases/latest/`。
 
 ### FR-2：版本与摘要绑定
 
-发布资产 `install-my-omarchy.sh` 内固定：
+每份发布资产 `install-my-omarchy.sh` 内固定 repository、Release 版本、Bundle 版本、DMG 资产名和 DMG 摘要。现有 Release 的配置为：
 
-- repository：`superops-team/my-omarchy`；
-- version：`0.5.0`；
-- DMG asset：`MyOmarchy-0.5.0-arm64-unsigned.dmg`；
-- DMG SHA-256：`4bd2b39e66bcb7b952f5ea9d90ba85b48268f91295375c0b7257f451349801fa`；
-- Bundle ID：`team.superops.myomarchy`。
+| Release | Bundle 版本 | DMG asset | SHA-256 |
+|---------|-------------|-----------|---------|
+| `v0.3.1` | `0.4.0` | `MyOmarchy-0.3.1-arm64-unsigned.dmg` | `e66f4dcbc266e803efc610eac502c1e9297286a1b02f72d37d27e75e95143ed3` |
+| `v0.4.0` | `0.4.0` | `MyOmarchy-0.4.0-arm64-unsigned.dmg` | `6f2972a1ce0d7c734e4330f67d7ad3f8f2c9b80c325898bd4c2f8c0f60ee7968` |
+| `v0.5.0` | `0.5.0` | `MyOmarchy-0.5.0-arm64-unsigned.dmg` | `4bd2b39e66bcb7b952f5ea9d90ba85b48268f91295375c0b7257f451349801fa` |
+
+所有版本的 Bundle ID 均固定为 `team.superops.myomarchy`。Release 版本与 Bundle 版本分开建模，因为 v0.3.1 的历史制品沿用了 `0.4.0` Bundle 版本；安装器必须忠实校验已发布制品，不能重写或替换历史 DMG。
 
 脚本不得从 Release 正文、GitHub API 或远端 checksum 文件动态获取这些信任根。
 
@@ -120,7 +119,7 @@ DMG 必须以只读、不自动打开方式挂载到脚本创建的明确挂载�
 - DMG 根目录恰有预期的 `My Omarchy.app`；
 - App 不是符号链接；
 - `CFBundleIdentifier` 等于 `team.superops.myomarchy`；
-- `CFBundleShortVersionString` 等于脚本固定版本；
+- `CFBundleShortVersionString` 等于脚本固定的 Bundle 版本；
 - 主可执行文件包含 `arm64`；
 - `codesign --verify --deep --strict` 通过。
 
@@ -146,14 +145,21 @@ DMG 必须以只读、不自动打开方式挂载到脚本创建的明确挂载�
 
 - README Quick start 首先展示一键安装命令，并在其后保留手动下载说明作为回退。
 - README 明确脚本作用、unsigned prerelease 限制、管理员授权原因和 VM 数据保留边界。
-- v0.5.0 Release 上传 `install-my-omarchy.sh`，Release Notes 用同一条固定 URL 命令替换手工 `xattr` 主路径；手动方式保留为故障回退。
+- v0.3.1、v0.4.0 和 v0.5.0 Release 分别上传 `install-my-omarchy.sh`，各自 Release Notes 用对应固定 URL 命令替换手工 `xattr` 主路径；手动方式保留为故障回退。
 - 后续发版必须更新脚本内版本/摘要、README URL 和对应 Release Notes，不复用旧版本脚本。
 
 ## 4. 实现方案
 
 ### 4.1 仓库脚本
 
-新增 `scripts/install-my-omarchy.sh`，采用 Bash 3.2 兼容语法并启用 `set -euo pipefail`。脚本不接受任意 URL、安装路径或 checksum 参数，减少把便捷入口变成通用下载执行器的风险。
+新增一个可测试的安装器模板和三个提交到仓库的不可变渲染结果：
+
+- `scripts/install-my-omarchy.sh`：当前 README 使用的 v0.5.0 安装器；
+- `scripts/release-installers/v0.3.1/install-my-omarchy.sh`；
+- `scripts/release-installers/v0.4.0/install-my-omarchy.sh`；
+- `scripts/release-installers/v0.5.0/install-my-omarchy.sh`。
+
+脚本采用 Bash 3.2 兼容语法并启用 `set -euo pipefail`。三个历史脚本共享相同逻辑，仅版本固定配置不同。当前脚本必须与 v0.5.0 历史脚本逐字节相同。脚本不接受任意 URL、安装路径或 checksum 参数，减少把便捷入口变成通用下载执行器的风险。
 
 脚本输出按 `检查环境 → 下载 → 校验 → 安装 → 启动` 展示简短阶段信息；错误信息写入 stderr 并返回非零状态。
 
@@ -181,16 +187,16 @@ DMG 必须以只读、不自动打开方式挂载到脚本创建的明确挂载�
 
 ### 4.3 发布资产
 
-源码脚本与 v0.5.0 固定信息一起提交。实现完成并通过测试后：
+源码脚本与三个 Release 的固定信息一起提交。实现完成并通过测试后：
 
 1. 推送脚本与 README 提交；
-2. 将精确提交中的脚本上传为 v0.5.0 Release asset；
-3. 读取 GitHub 返回的 asset size/digest；
-4. 更新 v0.5.0 Release Notes；
-5. 从公开 URL 下载脚本并比较其 SHA-256 与仓库文件；
+2. 将各版本对应脚本上传到 v0.3.1、v0.4.0、v0.5.0 Release；
+3. 读取三个 Release 返回的 script asset size/digest，并确认原有 DMG/zip 的 asset ID、size 和 digest 不变；
+4. 更新三个 Release Notes；
+5. 从三个公开 URL 下载脚本并逐一比较其 SHA-256 与仓库文件；
 6. 使用隔离临时 Applications 根目录执行无提权测试，不覆盖真实安装。
 
-v0.5.0 tag 不移动，现有 DMG/zip 不替换。安装脚本属于 Release 的补充资产，脚本自身记录目标 DMG 的既有不可变 digest。
+所有历史 tag 均不移动，现有 DMG/zip 不替换。安装脚本属于各 Release 的补充资产，脚本自身记录目标 DMG 的既有不可变 digest。没有 Release/DMG 的 v0.1.0、v0.2.0、v0.3.0 不创建安装页面或脚本。
 
 ### 4.4 测试接口
 
@@ -225,20 +231,23 @@ v0.5.0 tag 不移动，现有 DMG/zip 不替换。安装脚本属于 Release 的
 
 ## 6. 涉及文件
 
-- `scripts/install-my-omarchy.sh`：公开一键安装脚本。
+- `scripts/install-my-omarchy.sh`：README 当前公开的一键安装脚本。
+- `scripts/release-installers/v0.3.1/install-my-omarchy.sh`：v0.3.1 固定安装器。
+- `scripts/release-installers/v0.4.0/install-my-omarchy.sh`：v0.4.0 固定安装器。
+- `scripts/release-installers/v0.5.0/install-my-omarchy.sh`：v0.5.0 固定安装器。
 - `tests/test-install-my-omarchy.py`：脚本静态契约和隔离安装事务测试。
 - `README.md`：一键安装入口、行为与安全边界。
 - `docs/releasing.md`：发布时固化版本/摘要、上传和远端复验步骤。
-- GitHub Release `v0.5.0`：新增脚本资产并更新说明，不替换现有 DMG/zip。
+- GitHub Release `v0.3.1`、`v0.4.0`、`v0.5.0`：新增脚本资产并更新说明，不替换现有 DMG/zip。
 
 ## 7. 验收标准
 
-1. README 和 v0.5.0 Release 页面都提供同一条版本固定安装命令。
-2. 公开 URL 下载的脚本与仓库中的脚本 SHA-256 一致。
+1. README 提供 v0.5.0 固定安装命令；v0.3.1、v0.4.0 和 v0.5.0 Release 页面分别提供自身版本固定命令。
+2. 三个公开 URL 下载的脚本分别与仓库中的对应脚本 SHA-256 一致。
 3. 正确 DMG 在隔离安装根中完成下载、摘要校验、身份校验、复制、quarantine 清理和启动步骤模拟。
 4. 错误摘要、错误 Bundle ID、错误版本、非 arm64、损坏签名分别在覆盖现有 App 前失败。
 5. 模拟 VM 运行时脚本在下载和安装前失败，且不发送终止信号。
 6. 模拟已有 App 的成功升级保留应用支持目录；模拟复制或最终验证失败会恢复旧 App。
 7. 脚本通过 `bash -n` 和 ShellCheck；测试覆盖包含空格的路径。
-8. GitHub Release 中脚本资产状态为 `uploaded`，DMG 和 zip 的既有 ID、size、digest 不发生变化。
-9. `main`、v0.5.0 tag 和 Release 的关系保持可追踪；v0.5.0 tag 不移动。
+8. 三个 GitHub Release 中脚本资产状态均为 `uploaded`，所有历史 DMG 和 zip 的既有 ID、size、digest 不发生变化。
+9. `main`、三个历史 tag 和 Release 的关系保持可追踪；任何历史 tag 均不移动。
