@@ -13,6 +13,7 @@ GitHub 当前存在三个包含可验证 DMG 的公开 prerelease：`v0.3.1`、`
 ### 1.2 目标
 
 - 用户只需复制并执行一条命令即可完成安装。
+- README 提供“安装最新公开版本”的稳定入口；这里的最新版本包含 prerelease。
 - 每个历史安装脚本、目标 Release、资产名称、Bundle 版本和 SHA-256 必须相互固定，不通过 `latest` 或可变分支解析版本。
 - 安装前验证平台、下载摘要、DMG 内容、Bundle ID、App 版本、架构和代码签名结构。
 - 已安装版本升级时保留 `~/Library/Application Support/My Omarchy` 中的 VM 和用户数据。
@@ -23,7 +24,7 @@ GitHub 当前存在三个包含可验证 DMG 的公开 prerelease：`v0.3.1`、`
 
 - 不绕过 Developer ID 签名、公证或 Gatekeeper 的正式发布要求。
 - 不静默授予 Accessibility、摄像头或麦克风权限。
-- 不下载或执行 `main` 分支上的可变脚本。
+- 版本固定安装器不下载或执行 `main` 分支上的可变脚本；只有 README 明确标注的 latest bootstrap 来自 `main`，其职责仅限于选择公开 Release 并委托给该 Release 的不可变安装器。
 - 不更新、重置、迁移或删除已有 VM。
 - 不把 prerelease 描述为正式生产分发。
 
@@ -80,6 +81,18 @@ curl -fsSL https://github.com/superops-team/my-omarchy/releases/download/v0.5.0/
 ```
 
 README 的 Quick start 在每次发布时更新到当前明确版本。v0.3.1、v0.4.0 和 v0.5.0 Release Notes 分别引用各自 tag 下的脚本。脚本 URL 不使用 `main`、`raw/main` 或 `/releases/latest/`。
+
+### FR-1A：最新版本安装入口
+
+README 同时提供面向普通用户的最新版本命令：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/superops-team/my-omarchy/main/scripts/install-latest-my-omarchy.sh | bash
+```
+
+`install-latest-my-omarchy.sh` 是可变 bootstrap，仅负责通过 GitHub Releases API 选择最新的公开非 Draft Release，包括 prerelease；它不直接下载或安装 DMG。bootstrap 必须下载所选 Release 自带的 `install-my-omarchy.sh` 资产，再交给版本固定安装器完成 DMG 摘要和 App 身份验证。
+
+最新版选择规则固定为 GitHub API 返回的第一个 `draft == false` Release，不依赖 `/releases/latest/`，因为该接口默认排除 prerelease。若最新公开 Release 缺少版本安装器、tag 不是 `vX.Y.Z`、API 返回格式无效或下载失败，bootstrap 必须失败，不回退到任意 DMG 或旧版本。
 
 ### FR-2：版本与摘要绑定
 
@@ -232,6 +245,7 @@ DMG 必须以只读、不自动打开方式挂载到脚本创建的明确挂载�
 ## 6. 涉及文件
 
 - `scripts/install-my-omarchy.sh`：README 当前公开的一键安装脚本。
+- `scripts/install-latest-my-omarchy.sh`：解析最新公开 Release 并委托给该 Release 固定安装器的 bootstrap。
 - `scripts/release-installers/v0.3.1/install-my-omarchy.sh`：v0.3.1 固定安装器。
 - `scripts/release-installers/v0.4.0/install-my-omarchy.sh`：v0.4.0 固定安装器。
 - `scripts/release-installers/v0.5.0/install-my-omarchy.sh`：v0.5.0 固定安装器。
@@ -242,7 +256,7 @@ DMG 必须以只读、不自动打开方式挂载到脚本创建的明确挂载�
 
 ## 7. 验收标准
 
-1. README 提供 v0.5.0 固定安装命令；v0.3.1、v0.4.0 和 v0.5.0 Release 页面分别提供自身版本固定命令。
+1. README 首先提供包含 prerelease 的最新版安装命令，并保留 v0.5.0 固定安装命令；v0.3.1、v0.4.0 和 v0.5.0 Release 页面分别提供自身版本固定命令。
 2. 三个公开 URL 下载的脚本分别与仓库中的对应脚本 SHA-256 一致。
 3. 正确 DMG 在隔离安装根中完成下载、摘要校验、身份校验、复制、quarantine 清理和启动步骤模拟。
 4. 错误摘要、错误 Bundle ID、错误版本、非 arm64、损坏签名分别在覆盖现有 App 前失败。
@@ -251,3 +265,4 @@ DMG 必须以只读、不自动打开方式挂载到脚本创建的明确挂载�
 7. 脚本通过 `bash -n` 和 ShellCheck；测试覆盖包含空格的路径。
 8. 三个 GitHub Release 中脚本资产状态均为 `uploaded`，所有历史 DMG 和 zip 的既有 ID、size、digest 不发生变化。
 9. `main`、三个历史 tag 和 Release 的关系保持可追踪；任何历史 tag 均不移动。
+10. latest bootstrap 从模拟 GitHub API 响应中选择第一个非 Draft Release，拒绝非法 tag、缺少安装器资产和非 HTTPS 下载 URL，并将下载到的脚本原样交给 Bash。
