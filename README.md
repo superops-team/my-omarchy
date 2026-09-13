@@ -160,13 +160,21 @@ port. The `dtc` mirror should be reverted once kernel.org returns.
 ## Quick start
 
 My Omarchy currently publishes unsigned Apple Silicon prereleases for testing.
-Install the current v0.5.0 prerelease with one command:
+Install the latest public release, including prereleases, with one command:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/superops-team/my-omarchy/main/scripts/install-latest-my-omarchy.sh | bash
+```
+
+The small bootstrap checks the GitHub Releases API, selects the newest public
+non-draft Release, downloads that Release's version-pinned installer, and hands
+off to it. To install the reproducible v0.5.0 release explicitly instead, run:
 
 ```sh
 curl -fsSL https://github.com/superops-team/my-omarchy/releases/download/v0.5.0/install-my-omarchy.sh | bash
 ```
 
-The version-pinned installer downloads the matching DMG, verifies its fixed
+Each version-pinned installer downloads the matching DMG, verifies its fixed
 SHA-256 and app identity, installs it in `/Applications`, removes quarantine
 from that verified app, and opens My Omarchy. It may request administrator
 authorization to write to `/Applications`. It never modifies the persistent VM

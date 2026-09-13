@@ -9,11 +9,13 @@ from pathlib import Path
 import plistlib
 import subprocess
 import tempfile
+import textwrap
 import unittest
 
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 INSTALLER = REPOSITORY / "scripts/install-my-omarchy.sh"
+LATEST_INSTALLER = REPOSITORY / "scripts/install-latest-my-omarchy.sh"
 INSTALLERS = {
     "v0.3.1": {
         "bundle_version": "0.4.0",
@@ -155,6 +157,35 @@ class InstallerContractTests(unittest.TestCase):
             env=environment,
         )
 
+    def run_latest_installer(
+        self, releases: list[dict], assets: dict[str, str]
+    ) -> subprocess.CompletedProcess[str]:
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        api = root / "releases.json"
+        api.write_text(__import__("json").dumps(releases), encoding="utf-8")
+        asset_directory = root / "assets"
+        asset_directory.mkdir()
+        for tag, contents in assets.items():
+            (asset_directory / f"{tag}.sh").write_text(contents, encoding="utf-8")
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "MY_OMARCHY_LATEST_INSTALLER_TEST_MODE": "1",
+                "MY_OMARCHY_LATEST_INSTALLER_TEST_API_PATH": str(api),
+                "MY_OMARCHY_LATEST_INSTALLER_TEST_ASSET_DIRECTORY": str(asset_directory),
+            }
+        )
+        return subprocess.run(
+            ["/bin/bash", str(LATEST_INSTALLER)],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            env=environment,
+        )
+
     def test_each_existing_release_has_an_immutable_installer(self) -> None:
         for tag, expected in INSTALLERS.items():
             with self.subTest(tag=tag):
@@ -198,6 +229,22 @@ class InstallerContractTests(unittest.TestCase):
             "v0.5.0/install-my-omarchy.sh",
             readme,
         )
+        self.assertIn(
+            "https://raw.githubusercontent.com/superops-team/my-omarchy/"
+            "main/scripts/install-latest-my-omarchy.sh",
+            readme,
+        )
+        latest_source = LATEST_INSTALLER.read_text(encoding="utf-8")
+        self.assertIn("api.github.com/repos/$repository/releases?per_page=20", latest_source)
+        self.assertNotIn("/releases/latest/", latest_source)
+        latest_syntax = subprocess.run(
+            ["/bin/bash", "-n", str(LATEST_INSTALLER)],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        self.assertEqual(0, latest_syntax.returncode, latest_syntax.stdout)
 
     def test_installs_a_verified_app_without_touching_vm_data(self) -> None:
         with tempfile.TemporaryDirectory(prefix="my-omarchy installer " ) as temporary:
@@ -329,6 +376,89 @@ class InstallerContractTests(unittest.TestCase):
             self.assertIn("symbolic link", result.stdout)
             self.assertTrue(target.is_symlink())
             self.assertTrue(outside.is_dir())
+
+    def test_latest_installer_selects_the_first_public_release_including_prerelease(self) -> None:
+        releases = [
+            {
+                "tag_name": "v9.0.0",
+                "draft": True,
+                "prerelease": False,
+                "assets": [{
+                    "name": "install-my-omarchy.sh",
+                    "browser_download_url": "https://github.com/superops-team/my-omarchy/releases/download/v9.0.0/install-my-omarchy.sh",
+                }],
+            },
+            {
+                "tag_name": "v0.6.0",
+                "draft": False,
+                "prerelease": True,
+                "assets": [{
+                    "name": "install-my-omarchy.sh",
+                    "browser_download_url": "https://github.com/superops-team/my-omarchy/releases/download/v0.6.0/install-my-omarchy.sh",
+                }],
+            },
+            {
+                "tag_name": "v0.5.0",
+                "draft": False,
+                "prerelease": False,
+                "assets": [{
+                    "name": "install-my-omarchy.sh",
+                    "browser_download_url": "https://github.com/superops-team/my-omarchy/releases/download/v0.5.0/install-my-omarchy.sh",
+                }],
+            },
+        ]
+        delegated = textwrap.dedent(
+            """\
+            #!/bin/bash
+            set -euo pipefail
+            printf 'delegated-version=%s\n' 'v0.6.0'
+            """
+        )
+
+        result = self.run_latest_installer(releases, {"v0.6.0": delegated})
+
+        self.assertEqual(0, result.returncode, result.stdout)
+        self.assertIn("Latest public release: v0.6.0 (prerelease)", result.stdout)
+        self.assertIn("delegated-version=v0.6.0", result.stdout)
+
+    def test_latest_installer_fails_closed_for_invalid_release_metadata(self) -> None:
+        cases = {
+            "valid semantic version tag": [
+                {
+                    "tag_name": "latest",
+                    "draft": False,
+                    "prerelease": False,
+                    "assets": [{
+                        "name": "install-my-omarchy.sh",
+                        "browser_download_url": "https://github.com/superops-team/my-omarchy/releases/download/latest/install-my-omarchy.sh",
+                    }],
+                }
+            ],
+            "does not publish install-my-omarchy.sh": [
+                {
+                    "tag_name": "v0.6.0",
+                    "draft": False,
+                    "prerelease": False,
+                    "assets": [{"name": "other.sh"}],
+                }
+            ],
+            "unexpected or non-HTTPS download URL": [
+                {
+                    "tag_name": "v0.6.0",
+                    "draft": False,
+                    "prerelease": True,
+                    "assets": [{
+                        "name": "install-my-omarchy.sh",
+                        "browser_download_url": "https://example.invalid/install-my-omarchy.sh",
+                    }],
+                }
+            ],
+        }
+        for expected, releases in cases.items():
+            with self.subTest(expected=expected):
+                result = self.run_latest_installer(releases, {})
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn(expected, result.stdout)
 
 
 if __name__ == "__main__":

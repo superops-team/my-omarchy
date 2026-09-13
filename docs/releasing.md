@@ -84,6 +84,13 @@ or zip, infer trust data from `latest`, or create an installer for a tag that ha
 no Release artifact. The release tag and the embedded Bundle version are
 separate values because older artifacts may retain an earlier Bundle version.
 
+README's convenience command runs `scripts/install-latest-my-omarchy.sh` from
+`main`. That bootstrap treats the first non-draft entry returned by the GitHub
+Releases API as the latest public version, including prereleases. It must only
+delegate to the exact `install-my-omarchy.sh` asset under that Release's semver
+tag; the delegated version installer remains responsible for the fixed DMG
+name, SHA-256, Bundle identity, architecture, and signature checks.
+
 Never publish generated artifacts from an unreviewed or locally modified build
 input.
 
