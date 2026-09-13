@@ -32,6 +32,11 @@ INSTALLERS = {
         "asset": "MyOmarchy-0.5.0-arm64-unsigned.dmg",
         "sha256": "4bd2b39e66bcb7b952f5ea9d90ba85b48268f91295375c0b7257f451349801fa",
     },
+    "v0.5.1": {
+        "bundle_version": "0.5.1",
+        "asset": "MyOmarchy-0.5.1-arm64-unsigned.dmg",
+        "sha256": "ddf32767afa5fdb837bb8730862120bf08cc05901d7b1b5caaaa595e5047e4ec",
+    },
 }
 RENDERER_SPEC = importlib.util.spec_from_file_location(
     "render_release_installers",
@@ -59,7 +64,7 @@ class InstallerContractTests(unittest.TestCase):
         root: Path,
         *,
         bundle_identifier: str = "team.superops.myomarchy",
-        bundle_version: str = "0.5.0",
+        bundle_version: str = "0.5.1",
         architecture: str = "arm64",
         break_signature: bool = False,
     ) -> Path:
@@ -220,13 +225,13 @@ class InstallerContractTests(unittest.TestCase):
         current = REPOSITORY / "scripts/install-my-omarchy.sh"
         release = (
             REPOSITORY
-            / "scripts/release-installers/v0.5.0/install-my-omarchy.sh"
+            / "scripts/release-installers/v0.5.1/install-my-omarchy.sh"
         )
         self.assertEqual(current.read_bytes(), release.read_bytes())
         readme = (REPOSITORY / "README.md").read_text(encoding="utf-8")
         self.assertIn(
             "https://github.com/superops-team/my-omarchy/releases/download/"
-            "v0.5.0/install-my-omarchy.sh",
+            "v0.5.1/install-my-omarchy.sh",
             readme,
         )
         self.assertIn(
@@ -269,7 +274,7 @@ class InstallerContractTests(unittest.TestCase):
             ).stdout.splitlines()
             self.assertNotIn("com.apple.quarantine", attributes)
             self.assertEqual("preserve me\n", vm_data.read_text(encoding="utf-8"))
-            self.assertIn("My Omarchy v0.5.0 is installed", result.stdout)
+            self.assertIn("My Omarchy v0.5.1 is installed", result.stdout)
 
     def test_rejects_bad_checksum_and_running_vm_before_replacing_app(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

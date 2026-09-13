@@ -25,6 +25,11 @@ RELEASES = {
         "dmg_asset": "MyOmarchy-0.5.0-arm64-unsigned.dmg",
         "dmg_sha256": "4bd2b39e66bcb7b952f5ea9d90ba85b48268f91295375c0b7257f451349801fa",
     },
+    "v0.5.1": {
+        "bundle_version": "0.5.1",
+        "dmg_asset": "MyOmarchy-0.5.1-arm64-unsigned.dmg",
+        "dmg_sha256": "ddf32767afa5fdb837bb8730862120bf08cc05901d7b1b5caaaa595e5047e4ec",
+    },
 }
 
 
@@ -49,7 +54,7 @@ def main() -> None:
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(render(tag, config))
         destination.chmod(0o755)
-    CURRENT.write_bytes((RELEASE_ROOT / "v0.5.0/install-my-omarchy.sh").read_bytes())
+    CURRENT.write_bytes((RELEASE_ROOT / "v0.5.1/install-my-omarchy.sh").read_bytes())
     CURRENT.chmod(0o755)
 
 

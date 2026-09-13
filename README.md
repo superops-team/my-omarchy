@@ -168,10 +168,10 @@ curl -fsSL https://raw.githubusercontent.com/superops-team/my-omarchy/main/scrip
 
 The small bootstrap checks the GitHub Releases API, selects the newest public
 non-draft Release, downloads that Release's version-pinned installer, and hands
-off to it. To install the reproducible v0.5.0 release explicitly instead, run:
+off to it. To install the reproducible v0.5.1 release explicitly instead, run:
 
 ```sh
-curl -fsSL https://github.com/superops-team/my-omarchy/releases/download/v0.5.0/install-my-omarchy.sh | bash
+curl -fsSL https://github.com/superops-team/my-omarchy/releases/download/v0.5.1/install-my-omarchy.sh | bash
 ```
 
 Each version-pinned installer downloads the matching DMG, verifies its fixed
