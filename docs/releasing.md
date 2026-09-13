@@ -72,6 +72,17 @@ make release \
    backports remain pinned until an explicit in-guest migration channel exists.
 8. Record SHA-256 digests for the final app archive/DMG and publish them with the
    release notes.
+9. Render a version-pinned `install-my-omarchy.sh` with the final DMG asset name,
+   Bundle version, and SHA-256 embedded as trust roots. Run the installer tests,
+   upload the script without replacing the DMG or zip, and put its immutable
+   Release URL in the Release notes. Download the public script again and verify
+   its SHA-256 against the reviewed repository copy.
+
+Historical Releases with an existing verified DMG may receive their own fixed
+installer asset and documentation. Do not move a historical tag, replace a DMG
+or zip, infer trust data from `latest`, or create an installer for a tag that has
+no Release artifact. The release tag and the embedded Bundle version are
+separate values because older artifacts may retain an earlier Bundle version.
 
 Never publish generated artifacts from an unreviewed or locally modified build
 input.

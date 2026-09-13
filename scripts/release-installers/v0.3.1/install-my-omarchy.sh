@@ -1,0 +1,241 @@
+#!/bin/bash
+
+set -euo pipefail
+
+repository='superops-team/my-omarchy'
+release_tag='v0.3.1'
+bundle_version='0.4.0'
+dmg_asset='MyOmarchy-0.3.1-arm64-unsigned.dmg'
+dmg_sha256='e66f4dcbc266e803efc610eac502c1e9297286a1b02f72d37d27e75e95143ed3'
+bundle_identifier='team.superops.myomarchy'
+app_name='My Omarchy.app'
+
+fail() {
+  printf 'install-my-omarchy: %s\n' "$*" >&2
+  exit 1
+}
+
+progress() {
+  printf '==> %s\n' "$*"
+}
+
+test_mode=${MY_OMARCHY_INSTALLER_TEST_MODE:-0}
+[[ $test_mode == 0 || $test_mode == 1 ]] || fail 'invalid installer test mode'
+
+download_url="https://github.com/$repository/releases/download/$release_tag/$dmg_asset"
+expected_sha256=$dmg_sha256
+install_root='/Applications'
+system_name=$(/usr/bin/uname -s)
+architecture=$(/usr/bin/uname -m)
+system_version=$(/usr/bin/sw_vers -productVersion 2>/dev/null || true)
+skip_launch=0
+simulated_vm_running=0
+fail_after_backup=0
+fail_after_install=0
+
+if [[ $test_mode == 1 ]]; then
+  [[ -n ${MY_OMARCHY_INSTALLER_TEST_DMG_PATH:-} ]] ||
+    fail 'test mode requires MY_OMARCHY_INSTALLER_TEST_DMG_PATH'
+  download_url=$MY_OMARCHY_INSTALLER_TEST_DMG_PATH
+  expected_sha256=${MY_OMARCHY_INSTALLER_TEST_DMG_SHA256:-$expected_sha256}
+  install_root=${MY_OMARCHY_INSTALLER_TEST_INSTALL_ROOT:-$install_root}
+  system_name=${MY_OMARCHY_INSTALLER_TEST_SYSTEM_NAME:-$system_name}
+  architecture=${MY_OMARCHY_INSTALLER_TEST_ARCHITECTURE:-$architecture}
+  system_version=${MY_OMARCHY_INSTALLER_TEST_SYSTEM_VERSION:-$system_version}
+  skip_launch=${MY_OMARCHY_INSTALLER_TEST_SKIP_LAUNCH:-1}
+  simulated_vm_running=${MY_OMARCHY_INSTALLER_TEST_VM_RUNNING:-0}
+  fail_after_backup=${MY_OMARCHY_INSTALLER_TEST_FAIL_AFTER_BACKUP:-0}
+  fail_after_install=${MY_OMARCHY_INSTALLER_TEST_FAIL_AFTER_INSTALL:-0}
+fi
+
+[[ $system_name == Darwin ]] || fail 'My Omarchy requires macOS'
+[[ $architecture == arm64 ]] || fail 'My Omarchy requires an Apple Silicon Mac'
+system_major=${system_version%%.*}
+[[ $system_major =~ ^[0-9]+$ && $system_major -ge 15 ]] ||
+  fail 'My Omarchy requires macOS 15 or newer'
+
+for tool in /usr/bin/awk /usr/bin/codesign /usr/bin/curl /usr/bin/ditto \
+  /usr/bin/hdiutil /usr/bin/lipo /usr/bin/mktemp /usr/bin/open \
+  /usr/bin/osascript /usr/bin/plutil /usr/bin/shasum /usr/bin/sw_vers \
+  /usr/bin/uname /usr/bin/xattr /bin/cp /bin/mkdir /bin/mv /bin/ps /bin/rm \
+  /bin/sleep; do
+  [[ -x $tool ]] || fail "required macOS tool is unavailable: $tool"
+done
+
+vm_is_running() {
+  [[ $simulated_vm_running == 1 ]] && return 0
+  while IFS= read -r command_line; do
+    case $command_line in
+      *'/My Omarchy.app/Contents/Resources/runtime/bin/My Omarchy'* | \
+      *'/My Omarchy.app/Contents/Resources/scripts/run-qemu-gpu.sh'* | \
+      *'/My Omarchy.app/Contents/MacOS/my-omarchy --run-qemu'* | \
+      *'/My Omarchy.app/Contents/MacOS/my-omarchy --bridge-native-'*)
+        return 0
+        ;;
+    esac
+  done < <(/bin/ps -axo command=)
+  return 1
+}
+
+if vm_is_running; then
+  fail 'a My Omarchy virtual machine is running; stop it safely from the management window, then run this installer again'
+fi
+
+temporary_directory=$(/usr/bin/mktemp -d /private/tmp/my-omarchy-installer.XXXXXX)
+dmg_path="$temporary_directory/$dmg_asset"
+mount_path="$temporary_directory/mount"
+install_target="$install_root/$app_name"
+install_staging="$install_root/.My Omarchy.installing.$$.app"
+install_backup="$install_root/.My Omarchy.backup.$$.app"
+mounted=0
+use_sudo=0
+installation_committed=0
+target_installed_by_this_run=0
+
+run_privileged() {
+  if (( use_sudo )); then
+    /usr/bin/sudo "$@"
+  else
+    "$@"
+  fi
+}
+
+cleanup() {
+  result=$?
+  trap - EXIT HUP INT TERM
+  set +e
+  if (( mounted )); then
+    /usr/bin/hdiutil detach "$mount_path" -force >/dev/null 2>&1
+  fi
+  if (( installation_committed == 0 )); then
+    if (( target_installed_by_this_run )); then
+      run_privileged /bin/rm -rf -- "$install_target"
+    fi
+    if [[ -e $install_backup && ! -L $install_backup ]]; then
+      run_privileged /bin/mv -- "$install_backup" "$install_target"
+    fi
+    [[ ! -e $install_staging && ! -L $install_staging ]] ||
+      run_privileged /bin/rm -rf -- "$install_staging"
+  fi
+  /bin/rm -rf -- "$temporary_directory"
+  exit "$result"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+validate_app() {
+  candidate=$1
+  [[ -d $candidate && ! -L $candidate ]] || fail "expected app is missing or unsafe: $candidate"
+  info_plist="$candidate/Contents/Info.plist"
+  [[ -f $info_plist && ! -L $info_plist ]] || fail 'app Info.plist is missing or unsafe'
+  actual_identifier=$(/usr/bin/plutil -extract CFBundleIdentifier raw "$info_plist" 2>/dev/null || true)
+  [[ $actual_identifier == "$bundle_identifier" ]] || fail 'downloaded app has an unexpected bundle identifier'
+  actual_version=$(/usr/bin/plutil -extract CFBundleShortVersionString raw "$info_plist" 2>/dev/null || true)
+  [[ $actual_version == "$bundle_version" ]] || fail "downloaded app has version $actual_version; expected $bundle_version"
+  executable_name=$(/usr/bin/plutil -extract CFBundleExecutable raw "$info_plist" 2>/dev/null || true)
+  executable="$candidate/Contents/MacOS/$executable_name"
+  [[ -f $executable && -x $executable && ! -L $executable ]] || fail 'app executable is missing or unsafe'
+  architectures=$(/usr/bin/lipo -archs "$executable" 2>/dev/null || true)
+  case " $architectures " in
+    *' arm64 '*) ;;
+    *) fail 'downloaded app does not contain an arm64 executable' ;;
+  esac
+  /usr/bin/codesign --verify --deep --strict "$candidate" >/dev/null 2>&1 ||
+    fail 'downloaded app failed code-signature structure verification'
+}
+
+progress "Checking this Mac for My Omarchy $release_tag"
+progress "Downloading $dmg_asset"
+if [[ $test_mode == 1 ]]; then
+  /bin/cp -- "$download_url" "$dmg_path"
+else
+  /usr/bin/curl --fail --location --proto '=https' --proto-redir '=https' \
+    --tlsv1.2 --retry 3 \
+    --output "$dmg_path" "$download_url"
+fi
+
+actual_sha256=$(/usr/bin/shasum -a 256 "$dmg_path" | /usr/bin/awk '{print $1}')
+[[ $actual_sha256 == "$expected_sha256" ]] || fail 'downloaded DMG checksum does not match this release'
+progress 'Download verified'
+
+/bin/mkdir "$mount_path"
+/usr/bin/hdiutil attach -readonly -nobrowse -noautoopen \
+  -mountpoint "$mount_path" "$dmg_path" >/dev/null
+mounted=1
+source_app="$mount_path/$app_name"
+validate_app "$source_app"
+vm_is_running &&
+  fail 'a My Omarchy virtual machine started during download; stop it safely, then run this installer again'
+
+if [[ ! -d $install_root ]]; then
+  fail "installation directory does not exist: $install_root"
+fi
+[[ $install_root == /* && $install_root != / ]] ||
+  fail 'installation directory must be a safe absolute path'
+[[ ! -L $install_target ]] ||
+  fail 'existing My Omarchy app path is a symbolic link; remove it manually before installing'
+if [[ ! -w $install_root ]]; then
+  [[ -x /usr/bin/sudo ]] || fail 'administrator access is required to write to /Applications'
+  progress 'Administrator authorization is required to install in /Applications'
+  /usr/bin/sudo -v
+  use_sudo=1
+fi
+
+if [[ -e $install_staging || -L $install_staging || -e $install_backup || -L $install_backup ]]; then
+  fail 'installer temporary path already exists; run the installer again'
+fi
+
+installed_app_is_running() {
+  while IFS= read -r command_line; do
+    case $command_line in
+      *"$install_target/Contents/MacOS/my-omarchy"*) return 0 ;;
+    esac
+  done < <(/bin/ps -axo command=)
+  return 1
+}
+
+if [[ $test_mode != 1 ]] && installed_app_is_running; then
+  /usr/bin/osascript -e 'tell application id "team.superops.myomarchy" to quit' \
+    >/dev/null 2>&1 || true
+  for _ in {1..40}; do
+    installed_app_is_running || break
+    /bin/sleep 0.25
+  done
+  installed_app_is_running &&
+    fail 'My Omarchy is still open; quit it and run this installer again'
+fi
+
+progress "Installing $app_name in $install_root"
+run_privileged /usr/bin/ditto "$source_app" "$install_staging"
+validate_app "$install_staging"
+if [[ -e $install_target || -L $install_target ]]; then
+  run_privileged /bin/mv -- "$install_target" "$install_backup"
+fi
+if [[ $fail_after_backup == 1 ]]; then
+  fail 'simulated failure after backup'
+fi
+run_privileged /bin/mv -- "$install_staging" "$install_target"
+target_installed_by_this_run=1
+if [[ $fail_after_install == 1 ]]; then
+  fail 'simulated failure after install'
+fi
+run_privileged /usr/bin/xattr -dr com.apple.quarantine "$install_target"
+validate_app "$install_target"
+[[ ! -e $install_backup && ! -L $install_backup ]] || \
+  run_privileged /bin/rm -rf -- "$install_backup"
+installation_committed=1
+
+if [[ $skip_launch != 1 ]]; then
+  /usr/bin/open "$install_target" || \
+    fail "My Omarchy was installed but could not be opened; open $install_target manually"
+  /usr/bin/open 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility' \
+    >/dev/null 2>&1 || true
+fi
+
+progress "My Omarchy $release_tag is installed"
+printf '%s\n' \
+  'This is an unsigned prerelease. The downloaded DMG was verified against its fixed SHA-256.' \
+  'If prompted, enable My Omarchy in System Settings > Privacy & Security > Accessibility.' \
+  'Existing virtual-machine data was not changed.'

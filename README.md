@@ -159,12 +159,27 @@ port. The `dtc` mirror should be reverted once kernel.org returns.
 
 ## Quick start
 
-My Omarchy does not yet have a product-qualified release. Do not publish or
-redistribute the current legacy app as My Omarchy. Once the product-foundation
-and release-gate specifications are complete, signed and notarized builds will
-be published only through
-[My Omarchy Releases](https://github.com/superops-team/my-omarchy/releases).
-The remaining launch description documents the current implementation baseline.
+My Omarchy currently publishes unsigned Apple Silicon prereleases for testing.
+Install the current v0.5.0 prerelease with one command:
+
+```sh
+curl -fsSL https://github.com/superops-team/my-omarchy/releases/download/v0.5.0/install-my-omarchy.sh | bash
+```
+
+The version-pinned installer downloads the matching DMG, verifies its fixed
+SHA-256 and app identity, installs it in `/Applications`, removes quarantine
+from that verified app, and opens My Omarchy. It may request administrator
+authorization to write to `/Applications`. It never modifies the persistent VM
+under `~/Library/Application Support/My Omarchy`, and refuses to replace the app
+while a My Omarchy VM is running. Accessibility permission still requires your
+confirmation in System Settings.
+
+This prerelease is ad-hoc signed and not notarized. For a manual fallback,
+download the DMG from
+[My Omarchy Releases](https://github.com/superops-team/my-omarchy/releases), drag
+the app to `/Applications`, and follow that Release's installation notes. A
+product-qualified distribution still requires Developer ID signing, Apple
+notarization, Gatekeeper verification, and the documented device matrix.
 
 Every launch opens a native five-page management window: **Overview**,
 **Virtual Machine**, **Integrations**, **Permissions**, and **Diagnostics**. Start,
