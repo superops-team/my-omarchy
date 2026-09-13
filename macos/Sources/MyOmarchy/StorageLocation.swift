@@ -169,11 +169,6 @@ enum StorageLocationPolicy {
     /// StorageLocationContractTests pins them together.
     static let rootMarkerContent = "my-omarchy-storage-root-v1"
 
-    /// Kept byte-identical to `validatedConfiguredRoot` in QEMUGPULauncher.swift
-    /// and `_qps_assert_safe_root_path` in qemu-persistent-storage.sh. Change
-    /// one and you must change all three.
-    static let unsafeRoots: Set<String> = ["/", "/Users", "/private", "/private/tmp", "/tmp"]
-
     /// Normalizes a chosen container path. The container itself is always the
     /// workspace root — `validate` below is what decides whether a container
     /// is acceptable, not this function.
@@ -236,12 +231,36 @@ enum StorageLocationPolicy {
         return entries.allSatisfy { ignorableEntries.contains($0.lastPathComponent) }
     }
 
+    static func isAllowedCustomRoot(
+        _ path: String,
+        homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
+        volumesDirectory: URL = URL(fileURLWithPath: "/Volumes", isDirectory: true)
+    ) -> Bool {
+        guard path.hasPrefix("/"),
+              !path.contains("\n"),
+              !path.contains("\r"),
+              !path.utf8.contains(0) else {
+            return false
+        }
+        let candidate = URL(fileURLWithPath: path, isDirectory: true)
+            .standardizedFileURL.pathComponents
+        let home = homeDirectory.standardizedFileURL.pathComponents
+        if candidate.count > home.count, candidate.starts(with: home) {
+            return true
+        }
+        let volumes = volumesDirectory.standardizedFileURL.pathComponents
+        return candidate.count >= volumes.count + 2
+            && candidate.starts(with: volumes)
+    }
+
     static func validate(
         _ path: String,
         metrics: BundledGuestMetrics?,
         probe: VolumeProbing,
         volumeRootDetector: VolumeRootDetecting = FileManagerVolumeRootDetector(),
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
+        volumesDirectory: URL = URL(fileURLWithPath: "/Volumes", isDirectory: true)
     ) throws -> StorageLocationResolution {
         guard path.hasPrefix("/") else { throw StorageLocationPolicyError.notAbsolute }
         guard !path.contains("\n"), !path.contains("\r"), !path.utf8.contains(0) else {
@@ -260,11 +279,16 @@ enum StorageLocationPolicy {
             throw StorageLocationPolicyError.notDirectory(standardized.path)
         }
 
+        let container = standardized.resolvingSymlinksInPath().path
         // Breadth is checked before ownership, as SharedFolderPolicy does, so a
         // system directory reports what is actually wrong with it rather than
-        // complaining that root owns it.
-        let container = standardized.resolvingSymlinksInPath().path
-        guard !unsafeRoots.contains(container) else {
+        // complaining that root owns it. Resolve ancestor symlinks before this
+        // component-aware allowlist check so they cannot escape an allowed root.
+        guard isAllowedCustomRoot(
+            container,
+            homeDirectory: homeDirectory,
+            volumesDirectory: volumesDirectory
+        ) else {
             throw StorageLocationPolicyError.unsafeRoot(container)
         }
         guard information.st_uid == getuid() else {
@@ -397,11 +421,9 @@ struct StorageLocationLaunchConfiguration: Equatable {
 
     /// Publishes the chosen workspace to the launcher script.
     ///
-    /// Unlike the shared folder, an inherited value is *kept*:
-    /// `OMARCHY_QEMU_GPU_STATE_ROOT` is the documented development and test
-    /// override, and the storage suite drives the whole library through it. A
-    /// leaked value here only relocates VM data, so the override wins over the
-    /// stored preference rather than being stripped for safety.
+    /// An inherited override wins over the stored preference only after the
+    /// same validation as a user-picked location. Reject it explicitly rather
+    /// than dropping it and silently targeting the default workspace.
     static func make(
         baseEnvironment: [String: String],
         preference: StorageLocationPreference,
@@ -410,11 +432,10 @@ struct StorageLocationLaunchConfiguration: Equatable {
         volumeRootDetector: VolumeRootDetecting = FileManagerVolumeRootDetector(),
         fileManager: FileManager = .default
     ) -> Self {
-        if let inherited = baseEnvironment[StorageLocationPolicy.environmentKey], !inherited.isEmpty {
-            return Self(stateRoot: inherited, environment: baseEnvironment, unavailableReason: nil)
-        }
         var environment = baseEnvironment
-        guard let container = preference.containerPath else {
+        let inherited = baseEnvironment[StorageLocationPolicy.environmentKey]
+        let container = (inherited?.isEmpty == false) ? inherited : preference.containerPath
+        guard let container else {
             return Self(stateRoot: nil, environment: environment, unavailableReason: nil)
         }
         do {
@@ -429,6 +450,7 @@ struct StorageLocationLaunchConfiguration: Equatable {
             return Self(stateRoot: resolution.stateRoot, environment: environment, unavailableReason: nil)
         } catch {
             fputs("[storage] \(error.localizedDescription); refusing to fall back to the default data folder\n", stderr)
+            environment.removeValue(forKey: StorageLocationPolicy.environmentKey)
             return Self(
                 stateRoot: nil,
                 environment: environment,
@@ -465,33 +487,6 @@ struct StorageLocationMenuState: Equatable {
         isEnvironmentOverride: false
     )
 
-    /// The workspace an override points at.
-    ///
-    /// The override is the documented development and test escape hatch and it
-    /// beats the stored preference in `StorageLocationLaunchConfiguration`, so
-    /// the launcher — not this policy — owns validating it. Reporting it
-    /// unvalidated is deliberate: the alternative is a confirmation sheet that
-    /// names one workspace while reset erases another.
-    static func overriding(
-        stateRoot: String,
-        homeDirectory: String
-    ) -> Self {
-        Self(
-            containerPath: stateRoot,
-            stateRoot: stateRoot,
-            displayPath: StorageLocationPolicy.displayPath(
-                stateRoot,
-                homeDirectory: homeDirectory
-            ),
-            volumeName: nil,
-            isDefault: false,
-            isExternal: false,
-            problem: nil,
-            warning: nil,
-            isEnvironmentOverride: true
-        )
-    }
-
     static func make(
         preference: StorageLocationPreference,
         metrics: BundledGuestMetrics?,
@@ -502,7 +497,44 @@ struct StorageLocationMenuState: Equatable {
         fileManager: FileManager = .default
     ) -> Self {
         if let environmentOverride, !environmentOverride.isEmpty {
-            return .overriding(stateRoot: environmentOverride, homeDirectory: homeDirectory)
+            do {
+                let resolution = try StorageLocationPolicy.validate(
+                    environmentOverride,
+                    metrics: metrics,
+                    probe: probe,
+                    volumeRootDetector: volumeRootDetector,
+                    fileManager: fileManager
+                )
+                return Self(
+                    containerPath: resolution.containerPath,
+                    stateRoot: resolution.stateRoot,
+                    displayPath: StorageLocationPolicy.displayPath(
+                        resolution.stateRoot,
+                        homeDirectory: homeDirectory
+                    ),
+                    volumeName: resolution.capabilities.volumeName,
+                    isDefault: false,
+                    isExternal: !resolution.capabilities.isInternal,
+                    problem: nil,
+                    warning: resolution.spaceWarning,
+                    isEnvironmentOverride: true
+                )
+            } catch {
+                return Self(
+                    containerPath: environmentOverride,
+                    stateRoot: nil,
+                    displayPath: StorageLocationPolicy.displayPath(
+                        environmentOverride,
+                        homeDirectory: homeDirectory
+                    ),
+                    volumeName: nil,
+                    isDefault: false,
+                    isExternal: false,
+                    problem: error.localizedDescription,
+                    warning: nil,
+                    isEnvironmentOverride: true
+                )
+            }
         }
         guard let container = preference.containerPath else { return .defaultLocation }
         do {

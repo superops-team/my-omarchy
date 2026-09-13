@@ -447,14 +447,18 @@ host allocated bytes must be measured before and after guest `fstrim`.
 
 ### Choosing where the VM lives
 
-**Virtual Machine → Storage → Choose…** moves the VM to any folder
-you pick, including one on an external drive. Omarchy uses exactly the folder
-you choose — it never creates a folder inside it on your behalf.
+**Virtual Machine → Storage → Choose…** can place the VM in a folder inside
+your macOS home directory or inside a mounted volume under `/Volumes`. Omarchy
+uses exactly the folder you choose — it never creates a folder inside it on
+your behalf.
 
 - The folder must be **empty**, or one Omarchy has already used. A folder with
   other files in it, or a drive's top level, is turned away with an
   explanation instead of being restructured; create or pick an empty folder
   (for example, one named "My Omarchy") to use instead.
+- For safety, the home directory itself, `/Volumes`, a volume's top level,
+  system locations, and paths that resolve outside those two allowed areas are
+  refused. An inherited storage override is subject to the same checks.
 - The drive must be **APFS**. The VM disk grows as you use it, which only APFS
   supports here: on exFAT, FAT, or NTFS the same disk would claim its full size
   the moment it was created. Network volumes are refused because the VM's disk

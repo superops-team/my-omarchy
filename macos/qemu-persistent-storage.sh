@@ -246,19 +246,34 @@ _qps_assert_free_space() {
   }
 }
 
-_qps_assert_safe_root_path() {
+_qps_account_home() {
+  local qps_user=''
+  local qps_home=''
+
+  qps_user=$(/usr/bin/id -un) || return 1
+  qps_home=$(/usr/bin/dscl . -read "/Users/$qps_user" NFSHomeDirectory 2>/dev/null \
+    | /usr/bin/awk 'NR == 1 { sub(/^[^:]*:[[:space:]]*/, ""); print; exit }')
+  [[ $qps_home == /* && -d $qps_home && ! -L $qps_home ]] || {
+    _qps_fail 'cannot resolve the current account Home directory'
+    return 1
+  }
+  (cd "$qps_home" && pwd -P)
+}
+
+_qps_assert_allowed_custom_root() {
   local qps_root=$1
+  local qps_account_home=$2
 
   [[ $qps_root == /* && $qps_root != *$'\n'* && $qps_root != *$'\r'* ]] || {
     _qps_fail "state root must be an absolute single-line path"
     return 1
   }
   case "$qps_root" in
-    /|/Users|/private|/private/tmp|/tmp)
-      _qps_fail "refusing unsafe broad state root: $qps_root"
-      return 1
-      ;;
+    "$qps_account_home"/*) return 0 ;;
+    /Volumes/?*/*) return 0 ;;
   esac
+  _qps_fail "state root must be inside the current account Home or a mounted volume: $qps_root"
+  return 1
 }
 
 _qps_write_root_marker() {
@@ -284,17 +299,36 @@ _qps_prepare_state_root() {
   local qps_marker=''
   local qps_marker_status=0
   local qps_child=''
+  # A function argument is reserved for repository-owned contract tests. Live
+  # callers pass nothing and therefore always use the account database.
+  local qps_account_home=${1:-}
+  local qps_is_override=0
 
+  if [[ -z $qps_account_home ]]; then
+    qps_account_home=$(_qps_account_home) || return 1
+  else
+    [[ -d $qps_account_home && ! -L $qps_account_home ]] || return 1
+    qps_account_home=$(cd "$qps_account_home" && pwd -P) || return 1
+  fi
   if [[ -n ${OMARCHY_QEMU_GPU_STATE_ROOT:-} ]]; then
+    qps_is_override=1
     qps_configured_root=$OMARCHY_QEMU_GPU_STATE_ROOT
   else
-    [[ -n ${HOME:-} ]] || {
-      _qps_fail 'HOME is unavailable; cannot locate Application Support'
+    qps_configured_root="$qps_account_home/Library/Application Support/My Omarchy/VM/v1"
+  fi
+  _qps_assert_allowed_custom_root "$qps_configured_root" "$qps_account_home" || return 1
+
+  if (( qps_is_override )); then
+    [[ -d $qps_configured_root && ! -L $qps_configured_root ]] || {
+      _qps_fail "explicit state root must be an existing direct directory: $qps_configured_root"
       return 1
     }
-    qps_configured_root="$HOME/Library/Application Support/My Omarchy/VM/v1"
+    qps_root=$(cd "$qps_configured_root" && pwd -P) || {
+      _qps_fail "cannot resolve state root: $qps_configured_root"
+      return 1
+    }
+    _qps_assert_allowed_custom_root "$qps_root" "$qps_account_home" || return 1
   fi
-  _qps_assert_safe_root_path "$qps_configured_root" || return 1
 
   umask 077
   mkdir -p "$qps_configured_root" || {
@@ -316,7 +350,7 @@ _qps_prepare_state_root() {
     _qps_fail "cannot resolve state root: $qps_configured_root"
     return 1
   }
-  _qps_assert_safe_root_path "$qps_root" || return 1
+  _qps_assert_allowed_custom_root "$qps_root" "$qps_account_home" || return 1
 
   qps_marker="$qps_root/.my-omarchy-storage"
   if [[ ! -e $qps_marker && ! -L $qps_marker ]]; then

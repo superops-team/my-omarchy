@@ -37,6 +37,28 @@ class Recorder:
 
 
 class MessageCodingTests(unittest.TestCase):
+    def test_payload_boundary_is_exactly_10_mib(self) -> None:
+        limit = 10 * 1024 * 1024
+        self.assertEqual(bridge.MAX_PAYLOAD_BYTES, limit)
+        self.assertEqual(bridge.MAX_LINE_BYTES, limit * 4 // 3 + 4096)
+
+        accepted = b"x" * limit
+        self.assertEqual(
+            bridge.decode_message(bridge.encode_message(bridge.PNG_FORMAT, accepted)),
+            (bridge.PNG_FORMAT, accepted),
+        )
+        self.assertIsNone(
+            bridge.decode_message(
+                json.dumps(
+                    {
+                        "type": "clipboard",
+                        "format": bridge.PNG_FORMAT,
+                        "data": base64.b64encode(b"x" * (limit + 1)).decode(),
+                    }
+                ).encode()
+            )
+        )
+
     def test_encode_matches_host_schema(self) -> None:
         line = bridge.encode_message(bridge.TEXT_FORMAT, "héllo\n".encode())
         self.assertTrue(line.endswith(b"\n"))

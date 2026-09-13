@@ -42,9 +42,10 @@ struct StorageLocationContractTests {
         let library = try source(named: "qemu-persistent-storage.sh")
         #expect(
             library.contains(
-                "qps_configured_root=\"$HOME/Library/Application Support/My Omarchy/VM/v1\""
+                "qps_configured_root=\"$qps_account_home/Library/Application Support/My Omarchy/VM/v1\""
             )
         )
+        #expect(library.contains("qps_account_home=$(_qps_account_home) || return 1"))
         #expect(library.contains("if [[ -n ${\(StorageLocationPolicy.environmentKey):-} ]]; then"))
     }
 

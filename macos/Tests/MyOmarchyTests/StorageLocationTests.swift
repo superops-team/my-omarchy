@@ -63,7 +63,14 @@ private func captureStorageLocationPolicyError(
 }
 
 private func temporaryDirectory() throws -> URL {
-    let url = FileManager.default.temporaryDirectory
+    let repository = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+    let testRoot = repository.appendingPathComponent(".build/storage-location-tests", isDirectory: true)
+    try FileManager.default.createDirectory(at: testRoot, withIntermediateDirectories: true)
+    let url = testRoot
         .appendingPathComponent("omarchy-storage-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     return url.standardizedFileURL.resolvingSymlinksInPath()
@@ -127,6 +134,28 @@ private func writeRecordedPersistentDisk(
 
 @Suite("Storage location policy")
 struct StorageLocationPolicyTests {
+    @Test(
+        "allows only true descendants of Home or a mounted volume",
+        arguments: [
+            ("/Users/tester/VMs", true),
+            ("/Users/tester/VMs/My Omarchy", true),
+            ("/Volumes/Fast SSD/My Omarchy", true),
+            ("/Users/tester", false),
+            ("/Users/tester-copy/VMs", false),
+            ("/Volumes", false),
+            ("/Volumes/Fast SSD", false),
+            ("/private/tmp/My Omarchy", false),
+            ("/opt/My Omarchy", false),
+        ]
+    )
+    func customRootAllowlist(candidate: String, expected: Bool) {
+        #expect(StorageLocationPolicy.isAllowedCustomRoot(
+            candidate,
+            homeDirectory: URL(fileURLWithPath: "/Users/tester", isDirectory: true),
+            volumesDirectory: URL(fileURLWithPath: "/Volumes", isDirectory: true)
+        ) == expected)
+    }
+
     @Test("accepts an owned, empty APFS folder and uses it directly")
     func acceptsOwnedAPFSFolder() throws {
         let container = try temporaryDirectory()
@@ -751,19 +780,39 @@ struct StorageLocationPreferenceStoreTests {
 
 @Suite("Storage location launch configuration")
 struct StorageLocationLaunchConfigurationTests {
-    @Test("the development override wins over a stored preference")
+    @Test("a valid environment override wins over a stored preference")
     func environmentOverrideWins() throws {
         let container = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: container) }
+        let override = try temporaryDirectory()
+        defer {
+            try? FileManager.default.removeItem(at: container)
+            try? FileManager.default.removeItem(at: override)
+        }
 
         let configuration = StorageLocationLaunchConfiguration.make(
-            baseEnvironment: [StorageLocationPolicy.environmentKey: "/tmp/override-root"],
+            baseEnvironment: [StorageLocationPolicy.environmentKey: override.path],
             preference: StorageLocationPreference(containerPath: container.path),
             metrics: metrics,
             probe: FakeVolumeProbe(result: volume())
         )
-        #expect(configuration.stateRoot == "/tmp/override-root")
-        #expect(configuration.environment[StorageLocationPolicy.environmentKey] == "/tmp/override-root")
+        #expect(configuration.stateRoot == override.path)
+        #expect(configuration.environment[StorageLocationPolicy.environmentKey] == override.path)
+        #expect(configuration.unavailableReason == nil)
+    }
+
+    @Test("an environment override outside the allowlist fails without falling back")
+    func unsafeEnvironmentOverrideIsRejected() {
+        let configuration = StorageLocationLaunchConfiguration.make(
+            baseEnvironment: [StorageLocationPolicy.environmentKey: "/opt"],
+            preference: .default,
+            metrics: metrics,
+            probe: FakeVolumeProbe(result: volume())
+        )
+        #expect(configuration.stateRoot == nil)
+        #expect(configuration.environment[StorageLocationPolicy.environmentKey] == nil)
+        #expect(configuration.unavailableReason == StorageLocationPolicyError.unsafeRoot(
+            "/opt"
+        ).localizedDescription)
     }
 
     @Test("a valid preference is published to the launcher")
@@ -858,16 +907,17 @@ struct StorageLocationEffectiveConfigurationTests {
     func menuMatchesLaunchConfiguration() throws {
         let usable = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: usable) }
+        let override = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: override) }
         let absent = usable.appendingPathComponent("gone", isDirectory: true)
-        let override = "/Volumes/Scratch/override-root"
 
         let cases: [(name: String, preference: StorageLocationPreference, override: String?)] = [
             ("default, no override", .default, nil),
             ("chosen folder, no override", StorageLocationPreference(containerPath: usable.path), nil),
             ("unreachable folder, no override", StorageLocationPreference(containerPath: absent.path), nil),
-            ("default, override set", .default, override),
-            ("chosen folder, override set", StorageLocationPreference(containerPath: usable.path), override),
-            ("unreachable folder, override set", StorageLocationPreference(containerPath: absent.path), override),
+            ("default, override set", .default, override.path),
+            ("chosen folder, override set", StorageLocationPreference(containerPath: usable.path), override.path),
+            ("unreachable folder, override set", StorageLocationPreference(containerPath: absent.path), override.path),
         ]
 
         for scenario in cases {
@@ -901,21 +951,38 @@ struct StorageLocationEffectiveConfigurationTests {
     func overrideIsReported() throws {
         let chosen = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: chosen) }
+        let override = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: override) }
 
         let menu = StorageLocationMenuState.make(
             preference: StorageLocationPreference(containerPath: chosen.path),
             metrics: metrics,
             homeDirectory: "/Users/example",
-            environmentOverride: "/Volumes/Scratch/override-root",
+            environmentOverride: override.path,
             probe: FakeVolumeProbe(result: volume())
         )
         #expect(menu.isEnvironmentOverride)
-        #expect(menu.stateRoot == "/Volumes/Scratch/override-root")
-        #expect(menu.displayPath == "/Volumes/Scratch/override-root")
+        #expect(menu.stateRoot == override.path)
+        #expect(menu.displayPath == override.path)
         #expect(menu.isDefault == false)
-        // Nothing to fix, so nothing to warn about: the launcher owns validating
-        // the override and fails loudly if it is unusable.
         #expect(menu.problem == nil)
+    }
+
+    @Test("an invalid override is reported and cannot name an actionable workspace")
+    func invalidOverrideIsReported() {
+        let override = "/opt"
+        let menu = StorageLocationMenuState.make(
+            preference: .default,
+            metrics: metrics,
+            homeDirectory: "/Users/example",
+            environmentOverride: override,
+            probe: FakeVolumeProbe(result: volume())
+        )
+
+        #expect(menu.isEnvironmentOverride)
+        #expect(menu.containerPath == override)
+        #expect(menu.stateRoot == nil)
+        #expect(menu.problem == StorageLocationPolicyError.unsafeRoot(override).localizedDescription)
     }
 
     @Test("an empty override is ignored so the stored choice still applies")

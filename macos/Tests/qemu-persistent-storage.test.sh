@@ -117,9 +117,12 @@ else:
 PY
 }
 
-test_root=$(mktemp -d '/private/tmp/my-omarchy-qemu-storage-test.XXXXXX')
+verification_root="$native_dir/../.build/qemu-persistent-storage-tests"
+mkdir -p "$verification_root"
+verification_root=$(cd "$verification_root" && pwd -P)
+test_root=$(mktemp -d "$verification_root/run.XXXXXX")
 case "$test_root" in
-  /private/tmp/my-omarchy-qemu-storage-test.??????) ;;
+  "$verification_root"/run.??????) ;;
   *) fail "unexpected test root: $test_root" ;;
 esac
 holder_pid=''
@@ -148,6 +151,37 @@ printf '%s\n' \
 chmod 700 "$shadow_bin/stat"
 export PATH="$shadow_bin:$PATH"
 
+# The runtime allowlist uses the account database Home, never inherited HOME.
+real_account_home=$(_qps_account_home)
+assert test -n "$real_account_home"
+assert test "$real_account_home" != "$test_root/forged-home"
+assert _qps_assert_allowed_custom_root "$test_root/allowed" "$real_account_home"
+assert_fails _qps_assert_allowed_custom_root "$real_account_home" "$real_account_home"
+assert_fails _qps_assert_allowed_custom_root /Volumes/TestDisk "$real_account_home"
+assert _qps_assert_allowed_custom_root /Volumes/TestDisk/Omarchy "$real_account_home"
+assert_fails _qps_assert_allowed_custom_root /private/tmp/omarchy "$real_account_home"
+
+# An explicit override must already exist, and rejection must not create or
+# chmod anything at the candidate path.
+missing_override="$test_root/does-not-exist"
+export OMARCHY_QEMU_GPU_STATE_ROOT="$missing_override"
+assert_fails _qps_prepare_state_root
+assert test ! -e "$missing_override"
+outside_override=/private/tmp/my-omarchy-disallowed-$$
+assert test ! -e "$outside_override"
+export OMARCHY_QEMU_GPU_STATE_ROOT="$outside_override"
+assert_fails _qps_prepare_state_root
+assert test ! -e "$outside_override"
+
+for override_fixture in \
+  state missing-state zstd-boot-state single-state boot-recovery-state \
+  symlink-boot-state orphan-boot-state schema-one-state \
+  current-plus-legacy-state invalid-current-plus-legacy-state \
+  multi-exact-state multi-newest-state unsupported-state cramped-state \
+  marker-state; do
+  mkdir "$test_root/$override_fixture"
+  chmod 700 "$test_root/$override_fixture"
+done
 export OMARCHY_QEMU_GPU_STATE_ROOT="$test_root/state"
 export OMARCHY_QEMU_GPU_DEVELOPMENT_MULTI_DISK=1
 source_disk="$test_root/source.ext4"
@@ -779,14 +813,12 @@ chmod 600 "$old_branded_root/sentinel"
 unset OMARCHY_QEMU_GPU_STATE_ROOT
 export HOME=$default_home
 export OMARCHY_QEMU_GPU_DEVELOPMENT_MULTI_DISK=0
-qemu_persistent_storage_select \
-  persistent "$identity_a" "$source_disk" "$source_sha" "$source_bytes" ''
+_qps_prepare_state_root "$default_home"
 assert_eq \
-  "$QEMU_SELECTED_DISK" \
-  "$default_home/Library/Application Support/My Omarchy/VM/v1/disks/current/rootfs.ext4"
+  "$QEMU_PERSISTENT_STORAGE_ROOT" \
+  "$default_home/Library/Application Support/My Omarchy/VM/v1"
 assert test -f "$old_branded_root/sentinel"
 assert test ! -e "$default_home/Library/Application Support/Omarchy"
-qemu_persistent_storage_release_lock
 export HOME=$saved_home
 export OMARCHY_QEMU_GPU_STATE_ROOT=$saved_state_root
 export OMARCHY_QEMU_GPU_DEVELOPMENT_MULTI_DISK=$saved_multi_disk
@@ -846,7 +878,6 @@ export OMARCHY_QEMU_GPU_STATE_ROOT=$saved_state_root
 # while the user can still choose another folder. Pin the rules here so the two
 # sides cannot drift apart silently.
 marker_root="$test_root/marker-state"
-mkdir -p "$marker_root"
 chmod 700 "$marker_root"
 marker_file="$marker_root/.my-omarchy-storage"
 

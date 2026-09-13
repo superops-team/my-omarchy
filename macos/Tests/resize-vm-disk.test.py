@@ -15,10 +15,15 @@ GIB = 1024**3
 
 class ResizeDiskTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="my-omarchy-resize-test.")
+        test_root = Path.home() / ".my-omarchy-tests"
+        test_root.mkdir(mode=0o700, exist_ok=True)
+        self.temporary = tempfile.TemporaryDirectory(
+            prefix="my-omarchy-resize-test.", dir=test_root
+        )
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.state = self.root / "VM with spaces"
+        self.state.mkdir(mode=0o700)
         self.source = self.root / "source.ext4"
         self.payload = b"existing guest data" + bytes(4096)
         self.source.write_bytes(self.payload)

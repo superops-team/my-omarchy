@@ -32,7 +32,7 @@ PNG_FORMAT = "image/png"
 FORMATS = (TEXT_FORMAT, PNG_FORMAT)
 # Payload bytes before base64. Large enough for screenshots and pasted
 # documents, small enough that a runaway selection cannot exhaust memory.
-MAX_PAYLOAD_BYTES = 16 * 1024 * 1024
+MAX_PAYLOAD_BYTES = 10 * 1024 * 1024
 MAX_LINE_BYTES = MAX_PAYLOAD_BYTES * 4 // 3 + 4096
 # An echo follows its write within milliseconds; a marker older than this
 # no longer protects anything and must not swallow a genuine repeat.

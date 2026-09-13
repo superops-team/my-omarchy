@@ -78,13 +78,15 @@ That destructive flow keeps **Reset** disabled until the user types
 `My Omarchy` exactly in a native sheet. Cancelling or dismissing the sheet
 returns control without invoking the storage reset.
 
-The management window's Virtual Machine page can use any APFS folder the user picks; the
-folder is used exactly as chosen, never with a folder created inside it — a
+The management window's Virtual Machine page can use an APFS folder inside the
+current user's home or inside a mounted volume under `/Volumes`; the folder is
+used exactly as chosen, never with a folder created inside it — a
 folder with other files already in it, or a drive's top level, is refused
 instead of restructured. The choice is stored in `UserDefaults` and published
 to the launcher as `OMARCHY_QEMU_GPU_STATE_ROOT`. An inherited value of that
-variable still wins, so the development and test override keeps working
-unchanged. Reset composes its environment exactly as a launch does, so it
+variable wins only after the same existence, ownership, allowlist, APFS, and
+workspace validation; an invalid override blocks the action without falling
+back to the default VM. Reset composes its environment exactly as a launch does, so it
 always erases the workspace the user is actually running.
 
 Port forwarding is one versioned generic mapping list. The editor's **Add SSH**

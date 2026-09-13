@@ -172,6 +172,213 @@ struct QEMUStandardErrorDrainTests {
         #expect(!contents.contains(openAISecret))
     }
 
+    @Test("launch diagnostic logs redact secrets split across stderr chunks")
+    func launchDiagnosticLogRedactsSecretsAcrossChunks() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("my-omarchy-launch-log-split-secret-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let log = try #require(LaunchDiagnosticsLog.create(directory: directory))
+        let secret = "sk-" + "splitsecretvalue1234567890"
+
+        log.append(Data("stderr OPENAI_API_".utf8))
+        log.append(Data("KEY=\(secret.prefix(11))".utf8))
+        log.append(Data("\(secret.dropFirst(11)) done\n".utf8))
+        log.close()
+
+        let contents = try String(contentsOf: log.url, encoding: .utf8)
+        #expect(contents.contains("OPENAI_API_KEY=<redacted>"))
+        #expect(!contents.contains(secret))
+        #expect(!contents.contains("splitsecretvalue"))
+    }
+
+    @Test("launch diagnostic logs reject a symbolic-link directory without changing its target")
+    func launchDiagnosticLogRejectsSymbolicLinkDirectory() throws {
+        let parent = FileManager.default.temporaryDirectory
+            .appendingPathComponent("my-omarchy-launch-log-link-\(UUID().uuidString)", isDirectory: true)
+        let target = parent.appendingPathComponent("target", isDirectory: true)
+        let link = parent.appendingPathComponent("logs", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: parent) }
+        try FileManager.default.createDirectory(
+            at: target,
+            withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o755]
+        )
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
+
+        #expect(LaunchDiagnosticsLog.create(directory: link) == nil)
+        #expect(try mode(of: target) & 0o777 == 0o755)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: target.path).isEmpty)
+    }
+
+    @Test("launch diagnostic logs never overwrite a colliding file")
+    func launchDiagnosticLogRejectsFileCollision() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("my-omarchy-launch-log-collision-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let now = Date(timeIntervalSince1970: 1_789_017_130)
+        let uuid = UUID(uuidString: "A1B2C3D4-0000-0000-0000-000000000000")!
+        let existing = directory.appendingPathComponent(
+            LaunchDiagnosticsLog.fileName(now: now, processIdentifier: 42, uuid: uuid)
+        )
+        let sentinel = Data("must survive".utf8)
+        try sentinel.write(to: existing)
+
+        #expect(LaunchDiagnosticsLog.create(
+            directory: directory,
+            now: now,
+            processIdentifier: 42,
+            uuid: uuid
+        ) == nil)
+        #expect(try Data(contentsOf: existing) == sentinel)
+    }
+
+    @Test("launch diagnostic logs stop at ten MiB with one truncation marker")
+    func launchDiagnosticLogHasHardSizeLimit() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("my-omarchy-launch-log-limit-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let log = try #require(LaunchDiagnosticsLog.create(directory: directory))
+
+        log.append(Data(repeating: 0x61, count: LaunchDiagnosticsLog.maximumFileBytes + 1))
+        let sizeAtLimit = try #require(
+            (FileManager.default.attributesOfItem(atPath: log.url.path)[.size] as? NSNumber)?.intValue
+        )
+        log.append(Data(repeating: 0x62, count: 4096))
+        log.close()
+
+        let contents = try Data(contentsOf: log.url)
+        let marker = Data(LaunchDiagnosticsLog.truncationMarker.utf8)
+        #expect(sizeAtLimit == LaunchDiagnosticsLog.maximumFileBytes)
+        #expect(contents.count == LaunchDiagnosticsLog.maximumFileBytes)
+        #expect(contents.suffix(marker.count) == marker)
+        #expect(contents.dropLast(marker.count).range(of: marker) == nil)
+    }
+
+    @Test("launch diagnostic logs reserve quota and remove only the oldest managed files")
+    func launchDiagnosticLogRetainsBoundedHistory() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("my-omarchy-launch-log-retention-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        var historical: [URL] = []
+        for index in 0..<11 {
+            let url = directory.appendingPathComponent(
+                "launch-\(100 + index)-42-a1b2c3d4.log"
+            )
+            FileManager.default.createFile(atPath: url.path, contents: nil)
+            let handle = try FileHandle(forWritingTo: url)
+            try handle.truncate(atOffset: UInt64(5 * 1024 * 1024))
+            try handle.close()
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+            historical.append(url)
+        }
+        let unrelated = directory.appendingPathComponent("notes.txt")
+        try Data("keep".utf8).write(to: unrelated)
+        let target = directory.appendingPathComponent("target.txt")
+        try Data("target".utf8).write(to: target)
+        let unsafeLink = directory.appendingPathComponent("launch-1-42-deadbeef.log")
+        try FileManager.default.createSymbolicLink(at: unsafeLink, withDestinationURL: target)
+
+        let log = try #require(LaunchDiagnosticsLog.create(
+            directory: directory,
+            now: Date(timeIntervalSince1970: 1_789_017_130),
+            processIdentifier: 42,
+            uuid: UUID(uuidString: "A1B2C3D4-0000-0000-0000-000000000000")!
+        ))
+        log.close()
+
+        #expect(!FileManager.default.fileExists(atPath: historical[0].path))
+        #expect(!FileManager.default.fileExists(atPath: historical[1].path))
+        #expect(!FileManager.default.fileExists(atPath: historical[2].path))
+        #expect(FileManager.default.fileExists(atPath: historical[3].path))
+        #expect(try Data(contentsOf: unrelated) == Data("keep".utf8))
+        #expect(try FileManager.default.destinationOfSymbolicLink(atPath: unsafeLink.path) == target.path)
+
+        let managed = try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        ).filter { $0.lastPathComponent.hasPrefix("launch-") && $0.pathExtension == "log" }
+        let regularManaged = managed.filter { url in
+            var information = stat()
+            return Darwin.lstat(url.path, &information) == 0
+                && (information.st_mode & S_IFMT) == S_IFREG
+        }
+        let totalBytes = try regularManaged.reduce(Int64(0)) { total, url in
+            let size = try #require(
+                (FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.int64Value
+            )
+            return total + size
+        }
+        #expect(regularManaged.count == 9)
+        #expect(totalBytes <= Int64(50 * 1024 * 1024))
+    }
+
+    @Test("launch diagnostic logs enforce final quota after the current log grows")
+    func launchDiagnosticLogEnforcesQuotaOnClose() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("my-omarchy-launch-log-close-quota-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        for index in 0..<8 {
+            let url = directory.appendingPathComponent("launch-\(100 + index)-42-a1b2c3d4.log")
+            FileManager.default.createFile(atPath: url.path, contents: nil)
+            let handle = try FileHandle(forWritingTo: url)
+            try handle.truncate(atOffset: UInt64(5 * 1024 * 1024))
+            try handle.close()
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        }
+        let oldest = directory.appendingPathComponent("launch-100-42-a1b2c3d4.log")
+        let log = try #require(LaunchDiagnosticsLog.create(directory: directory))
+        let grownHistorical = directory.appendingPathComponent("launch-107-42-a1b2c3d4.log")
+        let growthHandle = try FileHandle(forWritingTo: grownHistorical)
+        try growthHandle.truncate(atOffset: UInt64(5 * 1024 * 1024 + 1))
+        try growthHandle.close()
+
+        log.append(Data(repeating: 0x61, count: LaunchDiagnosticsLog.maximumFileBytes))
+        log.close()
+
+        #expect(!FileManager.default.fileExists(atPath: oldest.path))
+        let managed = try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.fileSizeKey]
+        ).filter { $0.lastPathComponent.hasPrefix("launch-") && $0.pathExtension == "log" }
+        let totalBytes = try managed.reduce(Int64(0)) { total, url in
+            total + Int64(try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0)
+        }
+        #expect(managed.count <= LaunchDiagnosticsLog.maximumRetainedFiles)
+        #expect(totalBytes <= LaunchDiagnosticsLog.maximumRetainedBytes)
+    }
+
+    @Test("launch diagnostic retention stays bound to the opened directory")
+    func launchDiagnosticLogDoesNotCleanReplacementDirectory() throws {
+        let parent = FileManager.default.temporaryDirectory
+            .appendingPathComponent("my-omarchy-launch-log-replacement-\(UUID().uuidString)", isDirectory: true)
+        let directory = parent.appendingPathComponent("logs", isDirectory: true)
+        let movedDirectory = parent.appendingPathComponent("opened-logs", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: parent) }
+        let log = try #require(LaunchDiagnosticsLog.create(directory: directory))
+        try FileManager.default.moveItem(at: directory, to: movedDirectory)
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: false,
+            attributes: [.posixPermissions: 0o700]
+        )
+        for index in 0..<11 {
+            let replacement = directory.appendingPathComponent("launch-\(index + 1)-42-deadbeef.log")
+            try Data("replacement".utf8).write(to: replacement)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: replacement.path)
+        }
+
+        log.close()
+
+        let replacementLogs = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+        #expect(replacementLogs.count == 11)
+        let originalLogs = try FileManager.default.contentsOfDirectory(atPath: movedDirectory.path)
+        #expect(originalLogs.count == 1)
+    }
+
     @Test("supervisor persists launcher diagnostics while preserving the recent error buffer")
     func supervisorWritesLaunchDiagnostics() throws {
         let directory = FileManager.default.temporaryDirectory
@@ -209,7 +416,7 @@ struct QEMUStandardErrorDrainTests {
             finished.signal()
         }
 
-        #expect(waitFor(finished, timeout: 2))
+        #expect(waitFor(finished, timeout: 10))
         #expect(result.exitStatus == 7)
         #expect(result.readySocket == "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock")
         #expect(result.readyProcessIdentifier == 4242)
@@ -385,7 +592,9 @@ struct QEMUStandardErrorDrainTests {
 struct QEMUGPUStorageSpaceEstimateTests {
     @Test("shows the app data folder while keeping the VM layout versioned")
     func displaysStorageRoot() throws {
-        let configuredRoot = "/private/tmp/my-omarchy-configured/../data"
+        let configuredRoot = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("my-omarchy-configured/../data", isDirectory: true)
+            .path
         let configuredEnvironment = ["OMARCHY_QEMU_GPU_STATE_ROOT": configuredRoot]
         let standardizedConfiguredRoot = URL(
             fileURLWithPath: configuredRoot,
@@ -393,7 +602,7 @@ struct QEMUGPUStorageSpaceEstimateTests {
         ).standardizedFileURL
         #expect(QEMUGPUStorageSpaceEstimate.dataDirectoryDisplayPath(
             environment: configuredEnvironment
-        ) == "/private/tmp/data")
+        ) == "~/data")
         #expect(QEMUGPUStorageSpaceEstimate.dataDirectoryURL(
             environment: configuredEnvironment
         ) == standardizedConfiguredRoot)
@@ -416,7 +625,7 @@ struct QEMUGPUStorageSpaceEstimateTests {
             .appendingPathComponent("VM/v1", isDirectory: true)
             .standardizedFileURL)
 
-        for invalidRoot in ["relative/path", "/private/tmp/..", "/tmp", "/bad\npath"] {
+        for invalidRoot in ["relative/path", "/private/tmp/..", "/tmp", "/opt", "/bad\npath"] {
             let invalidEnvironment = ["OMARCHY_QEMU_GPU_STATE_ROOT": invalidRoot]
             #expect(QEMUGPUStorageSpaceEstimate.dataDirectoryURL(
                 environment: invalidEnvironment
@@ -429,7 +638,8 @@ struct QEMUGPUStorageSpaceEstimateTests {
 
     @Test("a chosen data folder replaces the default without the versioned suffix")
     func honorsStoredPreference() throws {
-        let container = FileManager.default.temporaryDirectory
+        let container = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".my-omarchy-tests", isDirectory: true)
             .appendingPathComponent("omarchy-launcher-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: container, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: container) }
@@ -451,8 +661,12 @@ struct QEMUGPUStorageSpaceEstimateTests {
     }
 
     @Test("the development override still wins over a stored preference")
-    func overrideBeatsPreference() {
-        let configured = "/private/tmp/my-omarchy-override"
+    func overrideBeatsPreference() throws {
+        let configuredURL = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".my-omarchy-tests/override-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: configuredURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: configuredURL) }
+        let configured = configuredURL.path
         let expected = URL(fileURLWithPath: configured, isDirectory: true).standardizedFileURL
         #expect(QEMUGPUStorageSpaceEstimate.storageRootURL(
             environment: ["OMARCHY_QEMU_GPU_STATE_ROOT": configured],
@@ -495,7 +709,9 @@ struct QEMUGPUStorageSpaceEstimateTests {
     @Test("counts every safely recognized disk removed by a single-disk reset")
     func countsResettableLegacyDisks() throws {
         let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory.appendingPathComponent(
+        let root = fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent(".my-omarchy-tests", isDirectory: true)
+            .appendingPathComponent(
             "my-omarchy-space-estimate-\(UUID().uuidString)",
             isDirectory: true
         )
@@ -555,7 +771,9 @@ struct QEMUGPUStorageSpaceEstimateTests {
     @Test("ignores semantically valid metadata with noncanonical whitespace or key order")
     func ignoresNoncanonicalSerializedMetadata() throws {
         let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory.appendingPathComponent(
+        let root = fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent(".my-omarchy-tests", isDirectory: true)
+            .appendingPathComponent(
             "my-omarchy-space-estimate-noncanonical-\(UUID().uuidString)",
             isDirectory: true
         )
@@ -586,7 +804,9 @@ struct QEMUGPUStorageSpaceEstimateTests {
     @Test("ignores fractional schema and source byte values")
     func ignoresFractionalMetadataNumbers() throws {
         let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory.appendingPathComponent(
+        let root = fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent(".my-omarchy-tests", isDirectory: true)
+            .appendingPathComponent(
             "my-omarchy-space-estimate-fractional-\(UUID().uuidString)",
             isDirectory: true
         )

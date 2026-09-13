@@ -2,7 +2,6 @@ import SwiftUI
 
 struct OverviewView: View {
     @ObservedObject var viewModel: ManagementViewModel
-    @State private var confirmsForceStop = false
 
     private var presentation: OverviewPresentation {
         OverviewPresentation.make(from: viewModel.state)
@@ -17,21 +16,6 @@ struct OverviewView: View {
             }
             .frame(maxWidth: 720, alignment: .leading)
             .padding(32)
-        }
-        .confirmationDialog(
-            ManagementLocalization.string("overview.force_stop.title"),
-            isPresented: $confirmsForceStop,
-            titleVisibility: .visible
-        ) {
-            Button(
-                ManagementLocalization.string("command.force_stop"),
-                role: .destructive
-            ) {
-                _ = viewModel.send(.forceStop)
-            }
-            Button(ManagementLocalization.string("command.cancel"), role: .cancel) {}
-        } message: {
-            Text(ManagementLocalization.string("overview.force_stop.message"))
         }
     }
 
@@ -112,11 +96,7 @@ struct OverviewView: View {
                     id: \.offset
                 ) { _, command in
                     Button(command.title) {
-                        if command == .forceStop {
-                            confirmsForceStop = true
-                        } else {
-                            _ = viewModel.send(command)
-                        }
+                        _ = viewModel.send(command)
                     }
                     .buttonStyle(.bordered)
                 }

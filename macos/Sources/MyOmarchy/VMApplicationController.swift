@@ -63,6 +63,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private let managementViewModel: ManagementViewModel
     private let runtimeControllerFactory: (String) -> VMRuntimeController
     private let windowActivator: VirtualMachineWindowActivator
+    private let injectedForceStopConfirmation: ((@escaping @MainActor @Sendable (Bool) -> Void) -> Void)?
     private let scheduleGracefulStopTimeout: @Sendable (@escaping @MainActor @Sendable () -> Void) -> Void
     private(set) var managementWindow: ManagementWindow?
     private lazy var managementPresenter = ManagementAppKitPresenter { [weak self] in
@@ -89,6 +90,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
     private var activePortMappings: [PortForwardMapping] = []
     private var pendingInitialReset: Bool
     private var virtualMachineReadyDate: Date?
+    private var isForceStopConfirmationPending = false
 
     /// True while a modal alert this controller opened itself (rather than
     /// AppKit) is on screen awaiting a click. `finish()`'s watchdog checks
@@ -118,6 +120,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             VMRuntimeController(socketPath: $0)
         },
         windowActivator: VirtualMachineWindowActivator = VirtualMachineWindowActivator(),
+        confirmForceStop: ((@escaping @MainActor @Sendable (Bool) -> Void) -> Void)? = nil,
         scheduleGracefulStopTimeout: @escaping @Sendable (@escaping @MainActor @Sendable () -> Void) -> Void = { action in
             DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: action)
         }
@@ -139,6 +142,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         self.managementViewModel = managementViewModel ?? ManagementViewModel { _ in }
         self.runtimeControllerFactory = runtimeControllerFactory
         self.windowActivator = windowActivator
+        self.injectedForceStopConfirmation = confirmForceStop
         self.scheduleGracefulStopTimeout = scheduleGracefulStopTimeout
         pendingInitialReset = initialArguments.first == QEMUGPUStorageOption.resetStorage.rawValue
             || initialArguments.first == QEMUGPUStorageOption.resetStorageOnly.rawValue
@@ -300,7 +304,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             case .stop:
                 _ = try requestGracefulStop()
             case .forceStop:
-                supervisor.forward(signal: SIGKILL)
+                requestForceStopConfirmation()
             case .restart:
                 _ = try requestGracefulRestart(nextSession: UUID())
             case .resetStorage:
@@ -380,6 +384,38 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
         } catch {
             fputs("my-omarchy: management command failed: \(error.localizedDescription)\n", stderr)
         }
+    }
+
+    private func requestForceStopConfirmation() {
+        guard !isForceStopConfirmationPending,
+              let session = activeManagementSession else {
+            return
+        }
+        isForceStopConfirmationPending = true
+        let completion: @MainActor @Sendable (Bool) -> Void = { [weak self] confirmed in
+            guard let self else { return }
+            self.isForceStopConfirmationPending = false
+            guard confirmed,
+                  self.activeManagementSession == session,
+                  self.childRunning,
+                  !self.applicationTerminationPending,
+                  ManagementCommandPolicy.allows(.forceStop, in: self.managementViewModel.state) else {
+                return
+            }
+            self.supervisor.forward(signal: SIGKILL)
+        }
+        if let injectedForceStopConfirmation {
+            injectedForceStopConfirmation(completion)
+            return
+        }
+        isPresentingBlockingAlert = true
+        let confirmed = managementPresenter.confirm(
+            title: ManagementLocalization.string("overview.force_stop.title"),
+            detail: ManagementLocalization.string("overview.force_stop.message"),
+            actionTitle: ManagementLocalization.string("command.force_stop")
+        )
+        isPresentingBlockingAlert = false
+        completion(confirmed)
     }
 
     private func presentStorageLocationPicker() {

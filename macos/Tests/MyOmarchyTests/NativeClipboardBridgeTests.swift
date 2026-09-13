@@ -4,6 +4,24 @@ import Testing
 
 @Suite("Native clipboard bridge")
 struct NativeClipboardBridgeTests {
+    @Test("clipboard payloads stop at exactly 10 MiB")
+    func payloadBoundary() throws {
+        let limit = 10 * 1024 * 1024
+        #expect(ClipboardMessage.maximumPayloadBytes == limit)
+        #expect(ClipboardMessage.maximumLineBytes == limit * 4 / 3 + 4096)
+
+        let accepted = try #require(
+            ClipboardMessage(format: .png, payload: Data(repeating: 0xA5, count: limit))
+        )
+        #expect(try ClipboardMessage.decode(accepted.encode().dropLast()) == .clipboard(accepted))
+        #expect(
+            ClipboardMessage(
+                format: .png,
+                payload: Data(repeating: 0xA5, count: limit + 1)
+            ) == nil
+        )
+    }
+
     @Test("clipboard messages round-trip through the newline-delimited JSON schema")
     func roundTrip() throws {
         let message = try #require(ClipboardMessage(format: .text, payload: Data("héllo\n".utf8)))

@@ -219,8 +219,9 @@ not start recovery, reset the VM, or alter its disk contents. Unsupported
 storage or boot ABIs still require a confirmed reset.
 
 The workspace does not have to live in Application Support. The Virtual Machine page can
-put it in any folder the user picks, including one on an external drive, and the
-launcher receives that choice as `OMARCHY_QEMU_GPU_STATE_ROOT`. The chosen
+put it in a true subdirectory of the current user's home or of a mounted volume
+under `/Volumes`, and the launcher receives that choice as
+`OMARCHY_QEMU_GPU_STATE_ROOT`. The chosen
 folder is used as-is: it is never restructured with a folder created inside
 it, so it must already be empty (or already be a workspace Omarchy has used)
 — a populated folder or a drive's top level is refused with an explanation
@@ -231,8 +232,10 @@ lock. QEMU advertises `discard=unmap` on the writable root drive and the guest
 factory enables `fstrim.timer`, so deleted guest data can flow back to the APFS
 sparse-file layer. On exFAT the same expansion allocates the full working size
 immediately, and on a network share the lock is unreliable. Both layers check
-independently, the app when the folder is chosen and the shell library again at
-launch, because the volume can change in between. A location change never moves
+the component-aware allowlist and volume requirements independently, the app
+when the folder is chosen and the shell library again at launch, because the
+volume can change in between. Environment overrides use the same validation and
+never fall back silently. A location change never moves
 the existing VM; unrecognized host files stay untouched, as everywhere else
 here.
 

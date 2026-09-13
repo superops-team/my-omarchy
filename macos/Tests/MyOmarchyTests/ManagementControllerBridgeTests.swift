@@ -118,6 +118,7 @@ struct ManagementControllerBridgeTests {
             supervisor: supervisor,
             managementViewModel: viewModel,
             runtimeControllerFactory: { _ in VMRuntimeController { _ in } },
+            confirmForceStop: { completion in completion(true) },
             scheduleGracefulStopTimeout: { timeout.set($0) }
         )
         let session = UUID()
@@ -138,6 +139,80 @@ struct ManagementControllerBridgeTests {
         supervisor.completeCurrentLaunch(status: 137)
         #expect(viewModel.state.lifecycle == .idle)
         #expect(controller.exitStatus == 0)
+    }
+
+    @Test("force stop requires confirmation and ignores duplicate requests")
+    func forceStopRequiresConfirmation() throws {
+        let supervisor = RecordingProcessSupervisor()
+        let timeout = LockedTimeoutAction()
+        let confirmation = PendingConfirmation()
+        let viewModel = ManagementViewModel { _ in }
+        let controller = VMApplicationController(
+            launcherURL: URL(fileURLWithPath: "/usr/bin/false"),
+            initialArguments: [],
+            baseEnvironment: [:],
+            supervisor: supervisor,
+            managementViewModel: viewModel,
+            runtimeControllerFactory: { _ in VMRuntimeController { _ in } },
+            confirmForceStop: { confirmation.request($0) },
+            scheduleGracefulStopTimeout: { timeout.set($0) }
+        )
+        let session = UUID()
+        try controller.launchPreparedVirtualMachine(session: session)
+        _ = controller.connectManagementRuntime(
+            qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock",
+            processIdentifier: 4242
+        )
+        _ = controller.recordManagementEvent(.virtualMachineReady(session: session))
+        #expect(try controller.requestGracefulStop())
+        timeout.run()
+
+        #expect(viewModel.send(.forceStop))
+        #expect(viewModel.send(.forceStop))
+        #expect(confirmation.requestCount == 1)
+        #expect(supervisor.forwardedSignals.isEmpty)
+        confirmation.resolve(false)
+        #expect(supervisor.forwardedSignals.isEmpty)
+
+        #expect(viewModel.send(.forceStop))
+        confirmation.resolve(true)
+        #expect(supervisor.forwardedSignals == [SIGKILL])
+    }
+
+    @Test("force stop confirmation cannot carry into a later session")
+    func forceStopConfirmationIsSessionBound() throws {
+        let supervisor = RecordingProcessSupervisor()
+        let timeout = LockedTimeoutAction()
+        let confirmation = PendingConfirmation()
+        let viewModel = ManagementViewModel { _ in }
+        let controller = VMApplicationController(
+            launcherURL: URL(fileURLWithPath: "/usr/bin/false"),
+            initialArguments: [],
+            baseEnvironment: [:],
+            supervisor: supervisor,
+            managementViewModel: viewModel,
+            runtimeControllerFactory: { _ in VMRuntimeController { _ in } },
+            confirmForceStop: { confirmation.request($0) },
+            scheduleGracefulStopTimeout: { timeout.set($0) }
+        )
+        let firstSession = UUID()
+        try controller.launchPreparedVirtualMachine(session: firstSession)
+        _ = controller.connectManagementRuntime(
+            qmpSocketPath: "/tmp/my-omarchy-qemu-gpu.A1b2C3/qmp.sock",
+            processIdentifier: 4242
+        )
+        _ = controller.recordManagementEvent(.virtualMachineReady(session: firstSession))
+        #expect(try controller.requestGracefulStop())
+        timeout.run()
+        #expect(viewModel.send(.forceStop))
+
+        supervisor.completeCurrentLaunch(status: 0)
+        let secondSession = UUID()
+        try controller.launchPreparedVirtualMachine(session: secondSession)
+        confirmation.resolve(true)
+
+        #expect(viewModel.state.sessionID == secondSession)
+        #expect(supervisor.forwardedSignals.isEmpty)
     }
 
     @Test("controller publishes and persists virtual machine settings")
@@ -322,6 +397,23 @@ private final class LockedTimeoutAction: @unchecked Sendable {
         let action = self.action
         lock.unlock()
         action?()
+    }
+}
+
+@MainActor
+private final class PendingConfirmation {
+    private var completion: (@MainActor @Sendable (Bool) -> Void)?
+    private(set) var requestCount = 0
+
+    func request(_ completion: @escaping @MainActor @Sendable (Bool) -> Void) {
+        requestCount += 1
+        self.completion = completion
+    }
+
+    func resolve(_ confirmed: Bool) {
+        let completion = self.completion
+        self.completion = nil
+        completion?(confirmed)
     }
 }
 

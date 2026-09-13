@@ -12,7 +12,7 @@ struct ClipboardMessage: Equatable {
 
     /// Raw payload bytes before base64. Large enough for screenshots and
     /// pasted documents; bounded so a runaway selection cannot exhaust memory.
-    static let maximumPayloadBytes = 16 * 1024 * 1024
+    static let maximumPayloadBytes = 10 * 1024 * 1024
     static let maximumLineBytes = maximumPayloadBytes * 4 / 3 + 4096
 
     let format: Format

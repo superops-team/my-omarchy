@@ -22,7 +22,7 @@ fail() {
 }
 
 size_gib=''
-state_root="${HOME:?}/Library/Application Support/My Omarchy/VM/v1"
+state_root=''
 apply=0
 while (($#)); do
   case "$1" in
@@ -53,10 +53,14 @@ script_dir=$(cd "$(dirname "$0")" && pwd -P)
 source "$script_dir/qemu-persistent-storage.sh"
 
 # Unlike the launch path, a maintenance command must never initialize storage.
-_qps_assert_safe_root_path "$state_root"
+account_home=$(_qps_account_home) || fail 'cannot resolve the current account Home directory'
+if [[ -z $state_root ]]; then
+  state_root="$account_home/Library/Application Support/My Omarchy/VM/v1"
+fi
+_qps_assert_allowed_custom_root "$state_root" "$account_home"
 _qps_assert_private_directory "$state_root" 'existing state root'
 state_root=$(cd "$state_root" && pwd -P)
-_qps_assert_safe_root_path "$state_root"
+_qps_assert_allowed_custom_root "$state_root" "$account_home"
 _qps_assert_volume_supported "$state_root"
 _qps_validate_root_marker "$state_root/.my-omarchy-storage"
 for child in disks boot locks; do

@@ -63,11 +63,12 @@ enum QEMUGPUStorageSpaceEstimate {
         fileManager: FileManager = .default
     ) -> URL? {
         if let configuredRoot = environment[stateRootEnvironmentKey], !configuredRoot.isEmpty {
-            return validatedConfiguredRoot(configuredRoot)
+            return validatedConfiguredRoot(configuredRoot, fileManager: fileManager)
         }
         if let container = preference.containerPath {
             return validatedConfiguredRoot(
-                StorageLocationPolicy.stateRoot(forContainer: container)
+                StorageLocationPolicy.stateRoot(forContainer: container),
+                fileManager: fileManager
             )
         }
         guard let applicationSupport = fileManager.urls(
@@ -88,11 +89,12 @@ enum QEMUGPUStorageSpaceEstimate {
         fileManager: FileManager = .default
     ) -> URL? {
         if let configuredRoot = environment[stateRootEnvironmentKey], !configuredRoot.isEmpty {
-            return validatedConfiguredRoot(configuredRoot)
+            return validatedConfiguredRoot(configuredRoot, fileManager: fileManager)
         }
         if let container = preference.containerPath {
             return validatedConfiguredRoot(
-                StorageLocationPolicy.stateRoot(forContainer: container)
+                StorageLocationPolicy.stateRoot(forContainer: container),
+                fileManager: fileManager
             )
         }
         return dataDirectoryURL(environment: environment, fileManager: fileManager)?
@@ -121,13 +123,20 @@ enum QEMUGPUStorageSpaceEstimate {
         return path
     }
 
-    private static func validatedConfiguredRoot(_ path: String) -> URL? {
+    private static func validatedConfiguredRoot(
+        _ path: String,
+        fileManager: FileManager
+    ) -> URL? {
         guard path.hasPrefix("/"), !path.contains("\n"), !path.contains("\r") else {
             return nil
         }
-        let root = URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL
-        let unsafeRoots = ["/", "/Users", "/private", "/private/tmp", "/tmp"]
-        guard !unsafeRoots.contains(root.path) else { return nil }
+        let root = URL(fileURLWithPath: path, isDirectory: true)
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
+        guard StorageLocationPolicy.isAllowedCustomRoot(
+            root.path,
+            homeDirectory: fileManager.homeDirectoryForCurrentUser
+        ) else { return nil }
         return root
     }
 
@@ -721,14 +730,26 @@ enum CameraPreflight {
 
 final class LaunchDiagnosticsLog: @unchecked Sendable {
     static let directoryName = "My Omarchy"
+    static let maximumFileBytes = 10 * 1024 * 1024
+    static let truncationMarker = "[my-omarchy] Launch diagnostics truncated at 10 MiB.\n"
+    static let maximumRetainedFiles = 10
+    static let maximumRetainedBytes: Int64 = 50 * 1024 * 1024
+    private static let historicalFileLimit = maximumRetainedFiles - 1
+    private static let historicalByteLimit = maximumRetainedBytes - Int64(maximumFileBytes)
 
     let url: URL
     private let handle: FileHandle
+    private var directoryDescriptor: Int32
     private let lock = NSLock()
+    private var writtenBytes = 0
+    private var pendingBytes = Data()
+    private var stopsWriting = false
+    private var isClosed = false
 
-    private init(url: URL, handle: FileHandle) {
+    private init(url: URL, handle: FileHandle, directoryDescriptor: Int32) {
         self.url = url
         self.handle = handle
+        self.directoryDescriptor = directoryDescriptor
     }
 
     static func create(
@@ -742,26 +763,80 @@ final class LaunchDiagnosticsLog: @unchecked Sendable {
             return nil
         }
         do {
-            try fileManager.createDirectory(
-                at: directory,
-                withIntermediateDirectories: true,
-                attributes: [.posixPermissions: 0o700]
+            var information = stat()
+            if Darwin.lstat(directory.path, &information) == 0 {
+                guard (information.st_mode & S_IFMT) == S_IFDIR,
+                      information.st_uid == getuid() else {
+                    return nil
+                }
+            } else {
+                guard errno == ENOENT else { return nil }
+                try fileManager.createDirectory(
+                    at: directory,
+                    withIntermediateDirectories: true,
+                    attributes: [.posixPermissions: 0o700]
+                )
+            }
+            let directoryDescriptor = Darwin.open(
+                directory.path,
+                O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW
             )
-            try fileManager.setAttributes(
-                [.posixPermissions: 0o700],
-                ofItemAtPath: directory.path
-            )
+            guard directoryDescriptor >= 0 else { return nil }
+            var ownsDirectoryDescriptor = true
+            defer {
+                if ownsDirectoryDescriptor {
+                    Darwin.close(directoryDescriptor)
+                }
+            }
+            guard Darwin.fstat(directoryDescriptor, &information) == 0,
+                  (information.st_mode & S_IFMT) == S_IFDIR,
+                  information.st_uid == getuid(),
+                  Darwin.fchmod(directoryDescriptor, mode_t(0o700)) == 0,
+                  Darwin.fstat(directoryDescriptor, &information) == 0,
+                  (information.st_mode & S_IFMT) == S_IFDIR,
+                  information.st_uid == getuid(),
+                  (information.st_mode & 0o777) == 0o700 else {
+                return nil
+            }
+            guard retainManagedLogs(
+                in: directoryDescriptor,
+                maximumCount: historicalFileLimit,
+                maximumBytes: historicalByteLimit
+            ) else {
+                return nil
+            }
             let url = directory.appendingPathComponent(
                 fileName(now: now, processIdentifier: processIdentifier, uuid: uuid),
                 isDirectory: false
             )
-            fileManager.createFile(
-                atPath: url.path,
-                contents: nil,
-                attributes: [.posixPermissions: 0o600]
+            let descriptor = Darwin.openat(
+                directoryDescriptor,
+                url.lastPathComponent,
+                O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW,
+                mode_t(0o600)
             )
-            let handle = try FileHandle(forWritingTo: url)
-            return LaunchDiagnosticsLog(url: url, handle: handle)
+            guard descriptor >= 0 else { return nil }
+            var completed = false
+            defer {
+                if !completed {
+                    Darwin.close(descriptor)
+                    Darwin.unlinkat(directoryDescriptor, url.lastPathComponent, 0)
+                }
+            }
+            guard Darwin.fstat(descriptor, &information) == 0,
+                  (information.st_mode & S_IFMT) == S_IFREG,
+                  information.st_uid == getuid(),
+                  (information.st_mode & 0o777) == 0o600 else {
+                return nil
+            }
+            let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+            completed = true
+            ownsDirectoryDescriptor = false
+            return LaunchDiagnosticsLog(
+                url: url,
+                handle: handle,
+                directoryDescriptor: directoryDescriptor
+            )
         } catch {
             return nil
         }
@@ -785,21 +860,70 @@ final class LaunchDiagnosticsLog: @unchecked Sendable {
     }
 
     func appendLine(_ line: String) {
-        append(Data((Self.redactSecrets(in: line) + "\n").utf8))
+        append(Data((line + "\n").utf8))
     }
 
     func append(_ data: Data) {
-        let redacted = Self.redactedData(data)
         lock.lock()
         defer { lock.unlock() }
-        try? handle.write(contentsOf: redacted)
+        guard !stopsWriting else { return }
+        pendingBytes.append(data)
+        while let newline = pendingBytes.firstIndex(of: 0x0A) {
+            let end = pendingBytes.index(after: newline)
+            writeRedactedLocked(Data(pendingBytes[..<end]))
+            pendingBytes.removeSubrange(..<end)
+            if stopsWriting {
+                pendingBytes.removeAll(keepingCapacity: false)
+                return
+            }
+        }
+        if pendingBytes.count > Self.maximumFileBytes {
+            writeRedactedLocked(pendingBytes)
+            pendingBytes.removeAll(keepingCapacity: false)
+        }
+    }
+
+    private func writeRedactedLocked(_ data: Data) {
+        let redacted = Self.redactedData(data)
+        let marker = Data(Self.truncationMarker.utf8)
+        let contentLimit = Self.maximumFileBytes - marker.count
+        let remaining = max(0, contentLimit - writtenBytes)
+        do {
+            if redacted.count <= remaining {
+                try handle.write(contentsOf: redacted)
+                writtenBytes += redacted.count
+                return
+            }
+            if remaining > 0 {
+                try handle.write(contentsOf: redacted.prefix(remaining))
+                writtenBytes += remaining
+            }
+            try handle.write(contentsOf: marker)
+            writtenBytes += marker.count
+            stopsWriting = true
+        } catch {
+            stopsWriting = true
+        }
     }
 
     func close() {
         lock.lock()
         defer { lock.unlock() }
+        guard !isClosed else { return }
+        isClosed = true
+        if !pendingBytes.isEmpty, !stopsWriting {
+            writeRedactedLocked(pendingBytes)
+            pendingBytes.removeAll(keepingCapacity: false)
+        }
         try? handle.synchronize()
         try? handle.close()
+        _ = Self.retainManagedLogs(
+            in: directoryDescriptor,
+            maximumCount: Self.maximumRetainedFiles,
+            maximumBytes: Self.maximumRetainedBytes
+        )
+        Darwin.close(directoryDescriptor)
+        directoryDescriptor = -1
     }
 
     static func redactSecrets(in text: String) -> String {
@@ -830,10 +954,128 @@ final class LaunchDiagnosticsLog: @unchecked Sendable {
     }
 
     private static func redactedData(_ data: Data) -> Data {
-        guard let text = String(data: data, encoding: .utf8) else {
-            return data
-        }
+        let text = String(decoding: data, as: UTF8.self)
         return Data(redactSecrets(in: text).utf8)
+    }
+
+    private struct ManagedLog {
+        let fileName: String
+        let epoch: UInt64
+        let modified: timespec
+        let size: Int64
+        let device: dev_t
+        let inode: ino_t
+    }
+
+    private static func retainManagedLogs(
+        in directoryDescriptor: Int32,
+        maximumCount: Int,
+        maximumBytes: Int64
+    ) -> Bool {
+        guard maximumCount >= 0, maximumBytes >= 0,
+              let contents = directoryEntryNames(in: directoryDescriptor) else {
+            return false
+        }
+
+        var logs: [ManagedLog] = []
+        for fileName in contents {
+            guard let epoch = managedLogEpoch(fileName: fileName) else {
+                continue
+            }
+            var information = stat()
+            guard Darwin.fstatat(
+                directoryDescriptor,
+                fileName,
+                &information,
+                AT_SYMLINK_NOFOLLOW
+            ) == 0,
+                  (information.st_mode & S_IFMT) == S_IFREG,
+                  information.st_uid == getuid(),
+                  (information.st_mode & 0o777) == 0o600,
+                  information.st_size >= 0 else {
+                continue
+            }
+            logs.append(ManagedLog(
+                fileName: fileName,
+                epoch: epoch,
+                modified: information.st_mtimespec,
+                size: information.st_size,
+                device: information.st_dev,
+                inode: information.st_ino
+            ))
+        }
+        logs.sort { left, right in
+            if left.epoch != right.epoch { return left.epoch < right.epoch }
+            if left.modified.tv_sec != right.modified.tv_sec {
+                return left.modified.tv_sec < right.modified.tv_sec
+            }
+            if left.modified.tv_nsec != right.modified.tv_nsec {
+                return left.modified.tv_nsec < right.modified.tv_nsec
+            }
+            return left.fileName < right.fileName
+        }
+
+        var totalBytes = logs.reduce(Int64(0)) { total, log in
+            let (sum, overflow) = total.addingReportingOverflow(log.size)
+            return overflow ? Int64.max : sum
+        }
+        while logs.count > maximumCount || totalBytes > maximumBytes {
+            let oldest = logs.removeFirst()
+            var current = stat()
+            guard Darwin.fstatat(
+                directoryDescriptor,
+                oldest.fileName,
+                &current,
+                AT_SYMLINK_NOFOLLOW
+            ) == 0,
+                  (current.st_mode & S_IFMT) == S_IFREG,
+                  current.st_uid == getuid(),
+                  current.st_dev == oldest.device,
+                  current.st_ino == oldest.inode else {
+                return false
+            }
+            guard Darwin.unlinkat(directoryDescriptor, oldest.fileName, 0) == 0 else { return false }
+            totalBytes = max(0, totalBytes - oldest.size)
+        }
+        return logs.count <= maximumCount && totalBytes <= maximumBytes
+    }
+
+    private static func directoryEntryNames(in directoryDescriptor: Int32) -> [String]? {
+        let duplicate = Darwin.dup(directoryDescriptor)
+        guard duplicate >= 0 else { return nil }
+        guard let stream = Darwin.fdopendir(duplicate) else {
+            Darwin.close(duplicate)
+            return nil
+        }
+        defer { Darwin.closedir(stream) }
+        Darwin.rewinddir(stream)
+
+        var names: [String] = []
+        errno = 0
+        while let entry = Darwin.readdir(stream) {
+            let name = withUnsafePointer(to: &entry.pointee.d_name) { pointer in
+                pointer.withMemoryRebound(to: CChar.self, capacity: Int(entry.pointee.d_namlen) + 1) {
+                    String(cString: $0)
+                }
+            }
+            if name != "." && name != ".." {
+                names.append(name)
+            }
+            errno = 0
+        }
+        return errno == 0 ? names : nil
+    }
+
+    private static func managedLogEpoch(fileName: String) -> UInt64? {
+        let pattern = #"^launch-([0-9]+)-([0-9]+)-([0-9a-f]{8})\.log$"#
+        guard let expression = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(fileName.startIndex..<fileName.endIndex, in: fileName)
+        guard let match = expression.firstMatch(in: fileName, range: range),
+              match.range == range,
+              let epochRange = Range(match.range(at: 1), in: fileName) else {
+            return nil
+        }
+        return UInt64(fileName[epochRange])
     }
 
 }
