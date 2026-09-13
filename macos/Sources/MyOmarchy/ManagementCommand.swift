@@ -7,6 +7,9 @@ enum ManagementCommand: Equatable {
     case resetStorage
     case setImmersive(Bool)
     case setResourceProfile(VMResourceProfilePreference)
+    case setResourceProfileSelection(VMResourceProfileSelection)
+    case setCustomVCPUCount(Int)
+    case setCustomMemoryMiB(Int)
     case chooseStorageLocation
     case useDefaultStorageLocation
     case openStorageLocation
@@ -38,6 +41,9 @@ enum ManagementCommandPolicy {
             true
         case (.setImmersive, .idle), (.setImmersive, .failed),
              (.setResourceProfile, .idle), (.setResourceProfile, .failed),
+             (.setResourceProfileSelection, .idle), (.setResourceProfileSelection, .failed),
+             (.setCustomVCPUCount, .idle), (.setCustomVCPUCount, .failed),
+             (.setCustomMemoryMiB, .idle), (.setCustomMemoryMiB, .failed),
              (.chooseStorageLocation, .idle), (.chooseStorageLocation, .failed),
              (.useDefaultStorageLocation, .idle), (.useDefaultStorageLocation, .failed):
             true

@@ -11,6 +11,8 @@ struct ManagementDetails: Equatable {
     var isImmersive: Bool = true
     var resourcePreference: VMResourceProfilePreference = .automatic
     var effectiveResourceProfile: VMResourceProfile?
+    var customResourceLimits: VMCustomResourceLimits?
+    var hostPhysicalMemoryMiB = Int(ProcessInfo.processInfo.physicalMemory / 1_048_576)
     var storage: StorageLocationMenuState = .defaultLocation
     var reclaimableStorage: String?
     var logicalDiskSize: String?

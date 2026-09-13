@@ -29,14 +29,20 @@ struct VirtualMachineView: View {
             Section(ManagementLocalization.string("virtual_machine.resources.title")) {
                 Picker(
                     ManagementLocalization.string("virtual_machine.resources.profile"),
-                    selection: resourceBinding
+                    selection: resourceSelectionBinding
                 ) {
                     Text(ManagementLocalization.string("virtual_machine.resources.automatic"))
-                        .tag(VMResourceProfilePreference.automatic)
+                        .tag(VMResourceProfileSelection.automatic)
                     Text(ManagementLocalization.string("virtual_machine.resources.low"))
-                        .tag(VMResourceProfilePreference.lowResource)
+                        .tag(VMResourceProfileSelection.lowResource)
+                    Text(ManagementLocalization.string("virtual_machine.resources.custom"))
+                        .tag(VMResourceProfileSelection.custom)
+                        .disabled(viewModel.details.customResourceLimits == nil)
                 }
                 .disabled(!presentation.canEditResources)
+                if viewModel.details.resourcePreference.selection == .custom {
+                    customResourceControls
+                }
                 if let profile = viewModel.details.effectiveResourceProfile {
                     LabeledContent(
                         ManagementLocalization.string("virtual_machine.resources.effective"),
@@ -46,6 +52,12 @@ struct VirtualMachineView: View {
                             profile.memoryMiB
                         )
                     )
+                }
+                if viewModel.details.resourcePreference.selection == .custom,
+                   let custom = customResourcePresentation,
+                   let validationMessage = custom.validationMessage {
+                    Label(validationMessage, systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
                 }
                 Text(ManagementLocalization.string("setting.next_launch"))
                     .font(.caption)
@@ -123,10 +135,88 @@ struct VirtualMachineView: View {
         )
     }
 
-    private var resourceBinding: Binding<VMResourceProfilePreference> {
+    private var resourceSelectionBinding: Binding<VMResourceProfileSelection> {
         Binding(
-            get: { viewModel.details.resourcePreference },
-            set: { _ = viewModel.send(.setResourceProfile($0)) }
+            get: { viewModel.details.resourcePreference.selection },
+            set: { _ = viewModel.send(.setResourceProfileSelection($0)) }
         )
+    }
+
+    @ViewBuilder
+    private var customResourceControls: some View {
+        if let custom = customResourcePresentation {
+            Stepper(
+                value: customVCPUBinding,
+                in: custom.vcpuRange,
+                step: 1
+            ) {
+                LabeledContent(
+                    ManagementLocalization.string("virtual_machine.resources.cpu"),
+                    value: String(
+                        format: ManagementLocalization.string("virtual_machine.resources.cpu_value"),
+                        viewModel.details.resourcePreference.customVCPUCount
+                    )
+                )
+            }
+            .disabled(!presentation.canEditResources)
+
+            Stepper(
+                value: customMemoryBinding,
+                in: custom.memoryRange,
+                step: custom.memoryStepMiB
+            ) {
+                LabeledContent(
+                    ManagementLocalization.string("virtual_machine.resources.memory"),
+                    value: Self.formatMemory(
+                        mib: viewModel.details.resourcePreference.customMemoryMiB
+                    )
+                )
+            }
+            .disabled(!presentation.canEditResources)
+
+            Text(String(
+                format: ManagementLocalization.string("virtual_machine.resources.host_reserve"),
+                custom.reservedHostVCPUCount,
+                Self.formatMemory(mib: custom.reservedHostMemoryMiB)
+            ))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        } else {
+            Label(
+                ManagementLocalization.string("virtual_machine.resources.custom_unavailable"),
+                systemImage: "exclamationmark.triangle"
+            )
+            .foregroundStyle(.orange)
+        }
+    }
+
+    private var customResourcePresentation: CustomResourcePresentation? {
+        guard let limits = viewModel.details.customResourceLimits else { return nil }
+        return .make(
+            preference: viewModel.details.resourcePreference,
+            limits: limits,
+            hostPhysicalMemoryMiB: viewModel.details.hostPhysicalMemoryMiB
+        )
+    }
+
+    private var customVCPUBinding: Binding<Int> {
+        Binding(
+            get: { customResourcePresentation?.clampedVCPUCount ?? 4 },
+            set: { _ = viewModel.send(.setCustomVCPUCount($0)) }
+        )
+    }
+
+    private var customMemoryBinding: Binding<Int> {
+        Binding(
+            get: { customResourcePresentation?.clampedMemoryMiB ?? 2_048 },
+            set: { _ = viewModel.send(.setCustomMemoryMiB($0)) }
+        )
+    }
+
+    private static func formatMemory(mib: Int) -> String {
+        let gib = Double(mib) / 1_024
+        return gib.rounded() == gib
+            ? String(format: "%.0f GiB", gib)
+            : String(format: "%.1f GiB", gib)
     }
 }

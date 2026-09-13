@@ -176,6 +176,41 @@ struct ManagementControllerBridgeTests {
         #expect(resourceStore.load() == .lowResource)
     }
 
+    @Test("controller preserves custom resources while switching profiles")
+    func customResourceSettingsBridge() {
+        let suiteName = "ManagementControllerCustomResources-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let resourceStore = VMResourceProfilePreferenceStore(defaults: defaults)
+        let viewModel = ManagementViewModel { _ in }
+        let controller = VMApplicationController(
+            launcherURL: URL(fileURLWithPath: "/usr/bin/false"),
+            initialArguments: [],
+            baseEnvironment: [:],
+            resourceProfilePreferenceStore: resourceStore,
+            bundledMetrics: nil,
+            managementViewModel: viewModel
+        )
+
+        controller.refreshManagementDetails()
+        #expect(viewModel.details.customResourceLimits?.maximumVCPUCount
+            == ProcessInfo.processInfo.activeProcessorCount - 4)
+        #expect(viewModel.send(.setResourceProfileSelection(.custom)))
+        #expect(viewModel.send(.setCustomVCPUCount(4)))
+        #expect(viewModel.send(.setCustomMemoryMiB(2_048)))
+        #expect(resourceStore.load().selection == .custom)
+
+        #expect(viewModel.send(.setResourceProfileSelection(.automatic)))
+        #expect(resourceStore.load().selection == .automatic)
+        #expect(resourceStore.load().customVCPUCount == 4)
+        #expect(resourceStore.load().customMemoryMiB == 2_048)
+
+        let session = UUID()
+        _ = controller.recordManagementEvent(.launchRequested(session: session))
+        #expect(!viewModel.send(.setCustomVCPUCount(5)))
+        #expect(!viewModel.send(.setCustomMemoryMiB(2_560)))
+    }
+
     @Test("restart enters restarting before the child exits")
     func restartWaitsForExit() throws {
         let viewModel = ManagementViewModel { _ in }

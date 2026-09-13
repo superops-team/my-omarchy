@@ -31,7 +31,11 @@ versioned `VMResourceProfile` before each start and passes the selected vCPU and
 RAM values to the shell launcher; the shell only validates and consumes those
 values. The automatic profile gives 8 GiB Macs 4 vCPUs and 2560 MiB RAM,
 16-23 GiB Macs 4 vCPUs and 4096 MiB RAM, and 24 GiB or larger Macs 6 vCPUs and
-4096 MiB RAM, while always reserving 2 active CPUs for macOS. Because both the
+4096 MiB RAM, while always reserving 2 active CPUs for macOS. The low-resource
+profile remains 4 vCPUs / 2048 MiB. A custom profile accepts user-selected CPU
+and memory values while leaving four logical CPUs for macOS and limiting guest
+RAM to 70% of host memory, aligned to 512 MiB. Swift and the shell independently
+validate the same limits. Because both the
 Mac and the guest are ARM64, Apple Hypervisor Framework runs the guest CPU
 instructions on the Apple Silicon processor. QEMU provides the virtual devices
 around that CPU.

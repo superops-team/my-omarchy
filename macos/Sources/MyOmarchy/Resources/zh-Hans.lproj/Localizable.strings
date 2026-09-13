@@ -50,6 +50,12 @@
 "virtual_machine.resources.profile" = "配置";
 "virtual_machine.resources.automatic" = "自动";
 "virtual_machine.resources.low" = "低资源";
+"virtual_machine.resources.custom" = "自定义";
+"virtual_machine.resources.cpu" = "CPU";
+"virtual_machine.resources.cpu_value" = "%d 核";
+"virtual_machine.resources.memory" = "内存";
+"virtual_machine.resources.host_reserve" = "至少为 macOS 保留 %d 个 CPU 核心和约 %@ 内存。";
+"virtual_machine.resources.custom_unavailable" = "此 Mac 无法在为 macOS 保留四个 CPU 核心的同时提供自定义档。";
 "virtual_machine.resources.effective" = "实际资源";
 "virtual_machine.resources.summary" = "%d 个 vCPU，%d MiB 内存";
 "virtual_machine.storage.title" = "存储";

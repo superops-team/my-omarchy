@@ -20,6 +20,9 @@ final class ManagementViewModel: ObservableObject {
         guard ManagementCommandPolicy.allows(command, in: state) else {
             return false
         }
+        if command == .launch, details.effectiveResourceProfile == nil {
+            return false
+        }
         perform(command)
         return true
     }

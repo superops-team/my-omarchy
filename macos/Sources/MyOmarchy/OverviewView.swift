@@ -206,7 +206,8 @@ private extension ManagementCommand {
         case .forceStop: ManagementLocalization.string("command.force_stop")
         case .restart: ManagementLocalization.string("command.restart")
         case .resetStorage: ManagementLocalization.string("command.reset_storage")
-        case .setImmersive, .setResourceProfile, .chooseStorageLocation,
+        case .setImmersive, .setResourceProfile, .setResourceProfileSelection,
+             .setCustomVCPUCount, .setCustomMemoryMiB, .chooseStorageLocation,
              .useDefaultStorageLocation, .openStorageLocation, .chooseSharedFolder,
              .setSharedFolderEnabled, .editPortForwarding, .requestAccessibility,
              .requestMicrophone, .requestCamera, .openMicrophoneSettings,

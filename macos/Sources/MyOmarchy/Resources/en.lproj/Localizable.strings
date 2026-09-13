@@ -50,6 +50,12 @@
 "virtual_machine.resources.profile" = "Profile";
 "virtual_machine.resources.automatic" = "Automatic";
 "virtual_machine.resources.low" = "Low Resource";
+"virtual_machine.resources.custom" = "Custom";
+"virtual_machine.resources.cpu" = "CPU";
+"virtual_machine.resources.cpu_value" = "%d cores";
+"virtual_machine.resources.memory" = "Memory";
+"virtual_machine.resources.host_reserve" = "Keeps at least %d CPU cores and about %@ available to macOS.";
+"virtual_machine.resources.custom_unavailable" = "This Mac cannot provide a custom profile while reserving four CPU cores for macOS.";
 "virtual_machine.resources.effective" = "Effective resources";
 "virtual_machine.resources.summary" = "%d vCPUs, %d MiB RAM";
 "virtual_machine.storage.title" = "Storage";

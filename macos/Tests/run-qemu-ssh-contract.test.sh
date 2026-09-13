@@ -278,7 +278,11 @@ SH
 cat >"$shim_dir/sysctl" <<'SH'
 #!/bin/bash
 if [[ $# == 2 && $1 == -n && ($2 == hw.logicalcpu || $2 == hw.ncpu) ]]; then
-  printf '8\n'
+  printf '12\n'
+  exit 0
+fi
+if [[ $# == 2 && $1 == -n && $2 == hw.memsize ]]; then
+  printf '38654705664\n'
   exit 0
 fi
 exec /usr/sbin/sysctl "$@"
@@ -667,6 +671,35 @@ run_scenario invalid-resource-values 1 '' \
   fail 'invalid resource values touched storage'
 assert_contains "$(<"$test_root/invalid-resource-values/stderr")" \
   'VM vCPU count must be between 4 and 6'
+
+run_scenario custom-resource-profile 0 '' \
+  OMARCHY_QEMU_GPU_RESOURCE_PROFILE=custom-v1 \
+  OMARCHY_QEMU_GPU_VCPUS=8 \
+  OMARCHY_QEMU_GPU_MEMORY_MIB=12288
+assert_line_pair "$test_root/custom-resource-profile/qemu.log" -smp \
+  '8,sockets=1,cores=8,threads=1'
+assert_line_pair "$test_root/custom-resource-profile/qemu.log" -m '12288M'
+
+run_scenario custom-resource-cpu-over-limit 1 '' \
+  OMARCHY_QEMU_GPU_RESOURCE_PROFILE=custom-v1 \
+  OMARCHY_QEMU_GPU_VCPUS=9 \
+  OMARCHY_QEMU_GPU_MEMORY_MIB=4096
+assert_contains "$(<"$test_root/custom-resource-cpu-over-limit/stderr")" \
+  'must reserve at least 4 host CPUs'
+
+run_scenario custom-resource-memory-over-limit 1 '' \
+  OMARCHY_QEMU_GPU_RESOURCE_PROFILE=custom-v1 \
+  OMARCHY_QEMU_GPU_VCPUS=4 \
+  OMARCHY_QEMU_GPU_MEMORY_MIB=26112
+assert_contains "$(<"$test_root/custom-resource-memory-over-limit/stderr")" \
+  'must not exceed 70 percent of host memory'
+
+run_scenario custom-resource-memory-misaligned 1 '' \
+  OMARCHY_QEMU_GPU_RESOURCE_PROFILE=custom-v1 \
+  OMARCHY_QEMU_GPU_VCPUS=4 \
+  OMARCHY_QEMU_GPU_MEMORY_MIB=2304
+assert_contains "$(<"$test_root/custom-resource-memory-misaligned/stderr")" \
+  'must use 512 MiB increments'
 
 /usr/bin/plutil -replace kernelCommandLine -string \
   'root=/dev/vda rw rootwait console=tty0 console=hvc0 myomarchy.ssh_access=0' \

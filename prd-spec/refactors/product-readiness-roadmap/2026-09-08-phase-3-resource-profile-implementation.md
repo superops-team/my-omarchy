@@ -46,9 +46,11 @@ Swift sets these environment variables for `run-qemu-gpu.sh`:
 
 The shell validates:
 
-- profile is `automatic-v1` or `low-resource-v1`;
-- vCPU count is a positive integer in `[4, 6]`;
-- memory is a positive integer in `[2048, 4096]` MiB.
+- profile is `automatic-v1`, `low-resource-v1`, or `custom-v1`;
+- built-in profile vCPU count is a positive integer in `[4, 6]`; custom profile
+  vCPU count is `[4, host logical CPUs - 4]`;
+- built-in profile memory is `[2048, 4096]` MiB; custom profile memory is
+  `[2048, floor(host memory MiB * 70% / 512) * 512]`.
 
 Invalid or missing resource variables must fail before persistent storage
 selection so a bad launch request cannot create, reset, or migrate VM disks.
@@ -67,7 +69,7 @@ Required checks:
 
 ## 5. Deferred Phase 3 Work
 
-- UI selection for automatic vs low-resource profile.
+- UI selection for automatic, low-resource, and user-customized profiles.
 - Dynamic memory balloon policy.
 - Guest fstrim/discard implementation and APFS allocated-byte evidence.
 - Benchmark schema and real-device performance evidence.

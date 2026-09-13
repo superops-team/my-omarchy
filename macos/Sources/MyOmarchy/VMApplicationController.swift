@@ -219,6 +219,7 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             baseEnvironment: [:],
             preference: resourcePreference
         ).profile
+        let customResourceLimits = try? VMCustomResourceLimits.make()
         let sharedFolder = sharedFolderMenuState()
         let rawError = managementViewModel.state.lastFailureSummary
             ?? supervisor.recentStandardError
@@ -233,6 +234,8 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
             isImmersive: fullscreenPreferenceStore.load().isImmersive,
             resourcePreference: resourcePreference,
             effectiveResourceProfile: effectiveResourceProfile,
+            customResourceLimits: customResourceLimits,
+            hostPhysicalMemoryMiB: Int(ProcessInfo.processInfo.physicalMemory / 1_048_576),
             storage: storageLocationMenuState(),
             reclaimableStorage: QEMUGPUStorageSpaceEstimate.formattedReclaimableSpace(
                 environment: baseEnvironment,
@@ -310,6 +313,35 @@ final class VMApplicationController: NSObject, NSApplicationDelegate {
                 refreshManagementDetails()
             case .setResourceProfile(let preference):
                 resourceProfilePreferenceStore.save(preference)
+                refreshManagementDetails()
+            case .setResourceProfileSelection(let selection):
+                let preference = resourceProfilePreferenceStore.load().selecting(selection)
+                resourceProfilePreferenceStore.save(preference)
+                refreshManagementDetails()
+            case .setCustomVCPUCount(let vcpuCount):
+                let current = resourceProfilePreferenceStore.load()
+                guard let limits = try? VMCustomResourceLimits.make(),
+                      limits.minimumVCPUCount...limits.maximumVCPUCount ~= vcpuCount else {
+                    return
+                }
+                resourceProfilePreferenceStore.save(VMResourceProfilePreference(
+                    selection: current.selection,
+                    customVCPUCount: vcpuCount,
+                    customMemoryMiB: current.customMemoryMiB
+                ))
+                refreshManagementDetails()
+            case .setCustomMemoryMiB(let memoryMiB):
+                let current = resourceProfilePreferenceStore.load()
+                guard let limits = try? VMCustomResourceLimits.make(),
+                      limits.minimumMemoryMiB...limits.maximumMemoryMiB ~= memoryMiB,
+                      memoryMiB.isMultiple(of: limits.memoryStepMiB) else {
+                    return
+                }
+                resourceProfilePreferenceStore.save(VMResourceProfilePreference(
+                    selection: current.selection,
+                    customVCPUCount: current.customVCPUCount,
+                    customMemoryMiB: memoryMiB
+                ))
                 refreshManagementDetails()
             case .chooseStorageLocation:
                 presentStorageLocationPicker()

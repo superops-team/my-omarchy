@@ -177,10 +177,13 @@ bar and Dock hidden. Change the launch mode under Virtual Machine to use a
 resizable window on the next launch. Whenever the Omarchy window is focused,
 Command belongs to the guest as Super in either mode; Accessibility permission
 lets system shortcuts such as Command-Space reach it before macOS. Microphone
-and camera access are optional. The launcher chooses a lightweight resource
-profile from the Mac's memory and active CPU count before QEMU starts: 8 GiB
-Macs use 4 vCPUs and 2560 MiB RAM, 16-23 GiB Macs use 4 vCPUs and 4096 MiB RAM,
-and larger Macs use 6 vCPUs and 4096 MiB RAM while reserving 2 CPUs for macOS.
+and camera access are optional. The launcher offers Automatic, Low Resource,
+and Custom resource profiles. Automatic chooses from the Mac's memory and
+active CPU count before QEMU starts: 8 GiB Macs use 4 vCPUs and 2560 MiB RAM,
+16-23 GiB Macs use 4 vCPUs and 4096 MiB RAM, and larger Macs use 6 vCPUs and
+4096 MiB RAM while reserving 2 CPUs for macOS. Low Resource uses 4 vCPUs and
+2 GiB. Custom starts at 4 vCPUs / 2 GiB, always leaves at least 4 logical CPUs
+for macOS, and caps memory at 70% of host RAM in 512 MiB increments.
 The first launch takes longer while the app prepares Linux and starts Omarchy's
 account provisioning. The management UI follows the macOS App language and
 ships in English and Simplified Chinese.

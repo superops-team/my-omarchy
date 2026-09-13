@@ -999,13 +999,28 @@ fi
 resource_profile=${OMARCHY_QEMU_GPU_RESOURCE_PROFILE:-}
 vcpu_count=${OMARCHY_QEMU_GPU_VCPUS:-}
 memory_mib=${OMARCHY_QEMU_GPU_MEMORY_MIB:-}
-[[ $resource_profile == automatic-v1 || $resource_profile == low-resource-v1 ]] || {
+[[ $resource_profile == automatic-v1 || $resource_profile == low-resource-v1 || \
+   $resource_profile == custom-v1 ]] || {
   fail "VM resource profile must be provided by the My Omarchy launcher"
 }
 [[ $vcpu_count =~ ^[1-9][0-9]*$ ]] || fail "VM vCPU count is invalid: $vcpu_count"
 [[ $memory_mib =~ ^[1-9][0-9]*$ ]] || fail "VM memory size is invalid: $memory_mib"
-(( vcpu_count >= 4 && vcpu_count <= 6 )) || fail "VM vCPU count must be between 4 and 6"
-(( memory_mib >= 2048 && memory_mib <= 4096 )) || fail "VM memory must be between 2048 and 4096 MiB"
+if [[ $resource_profile == custom-v1 ]]; then
+  host_logical_cpus=$(sysctl -n hw.logicalcpu) || fail "could not read host logical CPU count"
+  host_memory_bytes=$(sysctl -n hw.memsize) || fail "could not read host physical memory"
+  [[ $host_logical_cpus =~ ^[1-9][0-9]*$ ]] || fail "host logical CPU count is invalid"
+  [[ $host_memory_bytes =~ ^[1-9][0-9]*$ ]] || fail "host physical memory is invalid"
+  maximum_custom_vcpus=$((host_logical_cpus - 4))
+  maximum_custom_memory_mib=$((host_memory_bytes / 1048576 * 70 / 100 / 512 * 512))
+  (( vcpu_count >= 4 && vcpu_count <= maximum_custom_vcpus )) || \
+    fail "custom VM CPU must reserve at least 4 host CPUs"
+  (( memory_mib >= 2048 && memory_mib <= maximum_custom_memory_mib )) || \
+    fail "custom VM memory must not exceed 70 percent of host memory"
+  (( memory_mib % 512 == 0 )) || fail "custom VM memory must use 512 MiB increments"
+else
+  (( vcpu_count >= 4 && vcpu_count <= 6 )) || fail "VM vCPU count must be between 4 and 6"
+  (( memory_mib >= 2048 && memory_mib <= 4096 )) || fail "VM memory must be between 2048 and 4096 MiB"
+fi
 
 # The launcher publishes one optional Mac folder for the guest. The Swift app
 # canonicalizes and validates the selection first; re-check here so a stray

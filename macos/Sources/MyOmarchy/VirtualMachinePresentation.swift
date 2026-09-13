@@ -34,3 +34,52 @@ struct VirtualMachinePresentation: Equatable {
         )
     }
 }
+
+struct CustomResourcePresentation: Equatable {
+    let vcpuRange: ClosedRange<Int>
+    let memoryRange: ClosedRange<Int>
+    let memoryStepMiB: Int
+    let reservedHostVCPUCount: Int
+    let reservedHostMemoryMiB: Int
+    let clampedVCPUCount: Int
+    let clampedMemoryMiB: Int
+    let validationMessage: String?
+
+    static func make(
+        preference: VMResourceProfilePreference,
+        limits: VMCustomResourceLimits,
+        hostPhysicalMemoryMiB: Int
+    ) -> Self {
+        let vcpuRange = limits.minimumVCPUCount...limits.maximumVCPUCount
+        let memoryRange = limits.minimumMemoryMiB...limits.maximumMemoryMiB
+        let clampedVCPUCount = min(
+            max(preference.customVCPUCount, limits.minimumVCPUCount),
+            limits.maximumVCPUCount
+        )
+        let clampedMemoryMiB = min(
+            max(preference.customMemoryMiB, limits.minimumMemoryMiB),
+            limits.maximumMemoryMiB
+        )
+        let validationMessage: String?
+        do {
+            _ = try VMResourceProfile.custom(
+                vcpuCount: preference.customVCPUCount,
+                memoryMiB: preference.customMemoryMiB,
+                limits: limits
+            )
+            validationMessage = nil
+        } catch {
+            validationMessage = error.localizedDescription
+        }
+        return Self(
+            vcpuRange: vcpuRange,
+            memoryRange: memoryRange,
+            memoryStepMiB: limits.memoryStepMiB,
+            reservedHostVCPUCount: VMCustomResourceLimits.reservedHostCPUs,
+            reservedHostMemoryMiB: max(0, hostPhysicalMemoryMiB - preference.customMemoryMiB),
+            clampedVCPUCount: clampedVCPUCount,
+            clampedMemoryMiB: clampedMemoryMiB,
+            validationMessage: validationMessage
+        )
+    }
+}

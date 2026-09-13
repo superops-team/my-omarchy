@@ -100,5 +100,12 @@ action repairs a stale Accessibility entry and registers the installed build,
 but a stable Apple Development or Developer ID signature is required for the
 grant to survive future updates.
 
+The Virtual Machine page provides Automatic, Low Resource, and Custom resource
+profiles. Custom values are stored independently from the selected profile so
+switching away and back restores the previous CPU and memory settings. A custom
+VM receives at least 4 vCPUs and 2048 MiB, reserves four logical CPUs for macOS,
+and can use at most 70% of host memory in 512 MiB increments. Changes apply on
+the next VM launch.
+
 See the root `README.md`, `docs/architecture.md`, and `docs/releasing.md` for the
 supported platform, runtime boundaries, and distribution checklist.
