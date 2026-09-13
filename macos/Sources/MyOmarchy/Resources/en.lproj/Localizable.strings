@@ -11,6 +11,7 @@
 "navigation.permissions" = "Permissions";
 "navigation.diagnostics" = "Diagnostics";
 "navigation.sidebar" = "Management pages";
+"navigation.toggle_sidebar" = "Show or hide the sidebar";
 "search.prompt" = "Search settings";
 "page.placeholder" = "Settings and status will appear here.";
 "overview.title" = "My Omarchy";

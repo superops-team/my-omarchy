@@ -11,6 +11,7 @@
 "navigation.permissions" = "权限";
 "navigation.diagnostics" = "诊断";
 "navigation.sidebar" = "管理页面";
+"navigation.toggle_sidebar" = "显示或隐藏侧边栏";
 "search.prompt" = "搜索设置";
 "page.placeholder" = "设置和状态将在此显示。";
 "overview.title" = "My Omarchy";

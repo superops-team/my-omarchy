@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 final class ManagementWindow: NSObject, NSWindowDelegate {
     let window: NSWindow
+    let sidebarState = ManagementSidebarState()
 
     init(viewModel: ManagementViewModel, navigation: ManagementNavigation) {
         window = NSWindow(
@@ -15,8 +16,7 @@ final class ManagementWindow: NSObject, NSWindowDelegate {
         super.init()
 
         window.title = "My Omarchy"
-        window.minSize = NSSize(width: 720, height: 520)
-        window.setContentSize(NSSize(width: 860, height: 620))
+        window.titleVisibility = .hidden
         window.isReleasedWhenClosed = false
         window.tabbingMode = .disallowed
         window.titlebarAppearsTransparent = false
@@ -25,9 +25,12 @@ final class ManagementWindow: NSObject, NSWindowDelegate {
         window.contentView = NSHostingView(
             rootView: ManagementRootView(
                 viewModel: viewModel,
-                navigation: navigation
+                navigation: navigation,
+                sidebarState: sidebarState
             )
         )
+        window.minSize = NSSize(width: 720, height: 520)
+        window.setContentSize(NSSize(width: 860, height: 620))
     }
 
     func show(activateApplication: Bool = true) {
@@ -38,6 +41,10 @@ final class ManagementWindow: NSObject, NSWindowDelegate {
         if activateApplication {
             NSApp.activate()
         }
+    }
+
+    func toggleSidebar() {
+        sidebarState.toggle()
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {

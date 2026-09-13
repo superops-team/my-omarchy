@@ -27,3 +27,12 @@ final class ManagementNavigation: ObservableObject {
             .flatMap(ManagementPage.init(rawValue:)) ?? .overview
     }
 }
+
+@MainActor
+final class ManagementSidebarState: ObservableObject {
+    @Published private(set) var isVisible = true
+
+    func toggle() {
+        isVisible.toggle()
+    }
+}
